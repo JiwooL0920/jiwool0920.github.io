@@ -1,6 +1,6 @@
 const typedTextSpan = document.querySelector(".typed-text");
 
-const textArray = ["Hello","World",":)"];
+const textArray = ["Hello World!","Bonjour","안녕하세요","你好","こんにちは","Hola","สวัสดี"];
 const typingDelay = 200;
 const erasingDelay = 100;
 const newTextDelay = 2000;
