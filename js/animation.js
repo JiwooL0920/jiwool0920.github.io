@@ -1,6 +1,11 @@
 const typedTextSpan = document.querySelector(".typed-text");
 
-const textArray = ["Hello","World",":)"];
+const textArray = [
+                     "print(\"Hello World!\")"
+                   , "System.out.println(\"Hello World!\");"
+                   , "printf(\"Hello World!\");"
+                   , "<h1>Hello World!</h1>"
+                  ]
 const typingDelay = 200;
 const erasingDelay = 100;
 const newTextDelay = 2000;
