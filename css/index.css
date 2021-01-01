@@ -16,6 +16,7 @@ body {
 }
 
 .square {
+    overflow:auto;
     height: 50%;
     width: 100%;
     /* display: block; */
@@ -24,7 +25,7 @@ body {
     /* margin-top: 14%; */
     position: relative;
     top: 23%;
-    background-color: rgba(255, 0, 0, 0.5);
+    background: rgba(255, 0, 0, 0.5);
     /* background-color: rgba(34, 33, 33,0.5); */
     z-index: 900;
   }
