@@ -15,6 +15,18 @@ body {
     background-position: center;
 }
 
+.square {
+    height: 50%;
+    width: 100%;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    /* margin-top: 14%; */
+    position: relative;
+    top: 23%;
+    background-color: rgba(34, 33, 33,0.5);
+  }
+
 h1 {
     position: relative;
     font-weight: 600;
@@ -117,14 +129,3 @@ a {
     }
 }
 
-.square {
-    height: 50%;
-    width: 100%;
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
-    /* margin-top: 14%; */
-    position: relative;
-    top: 23%;
-    background-color: rgba(34, 33, 33,0.5);
-  }
