@@ -124,7 +124,7 @@ a {
     margin-left: auto;
     margin-right: auto;
     /* margin-top: 14%; */
-    position: absolute;
-    top: 20%;
+    position: relative;
+    top: 23%;
     background-color: rgba(34, 33, 33,0.5);
   }
