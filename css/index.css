@@ -7,7 +7,8 @@
 
 body {
     margin: 0;
-    padding: 0;
+    height: 100%;
+    /* padding: 0; */
     /* background-image: url(../images/login.jpg); */
     background-image: url(../images/img6.jpeg);
     background-size: cover;
