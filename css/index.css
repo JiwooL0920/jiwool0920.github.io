@@ -4,50 +4,71 @@
 @font-face { font-family: Lato-Regular; 
     src: url('../fonts/Lato-Regular.ttf'); }    
 
+* {
+    margin: 0;
+    padding: 0;
+}
 
 body {
-    margin: 0;
-    height: 100%;
-    /* padding: 0; */
-    /* background-image: url(../images/login.jpg); */
+    display: flex; 
+    flex-direction: column;
     background-image: url(../images/img6.jpeg);
     background-size: cover;
     background-position: center;
 }
 
-.square {
-    height: 50%;
+/* grey box  */
+.box {
+    margin: 0;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 70%;
     width: 100%;
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
-    /* margin-top: 14%; */
-    position: relative;
-    top: 23%;
     background-color: rgba(34, 33, 33,0.5);
-    /* z-index: -900; */
+    display: flex;
+    flex-direction: column;
   }
 
-h1 {
-    position: relative;
+.content-container {
+    width: 80%;
+    height: 100%;
+    margin: 0 auto;
+}
+
+.text-container {
+    display: flex; 
+    flex-direction: column;
+}
+
+/* jiwoo lee  */
+.name {
     font-weight: 600;
-    font-size: 6em;
+    font-size: 6.5em;
     text-align:center;
     color: white;
-    top:80px;
     font-family: Lato-Thin;
-
+    margin: 140px 0 20px 0;
 }    
 
+/* compsci student  */
+.description {
+    font-weight: 1000;
+    font-size: 1.2em;
+    text-align: center;
+    color: white;
+    font-family: Lato-Thin;
+    margin-bottom: 10px;
+}
 
-h2 {
-    position: relative;
+/* cursor  */
+.cursor-container {
     font-weight: 100;
     font-size: 2em;
     text-align: center;
     color: white;
-    top: 30px;
     font-family: Lato-Regular;
+    margin: 20px 0;
 }
 
 .cursor {
@@ -67,14 +88,32 @@ h2 {
 }
 
 
-h3 {
-    position: relative;
-    font-weight: 1000;
-    font-size: 1.2em;
+
+
+
+
+
+/* buttons: resume, github linkedin  */
+.button-container {
     text-align: center;
-    color: white;
-    top: 30px;
-    font-family: Lato-Thin;
+    margin-top:  40px;
+}
+
+
+.button {
+    outline:white;
+    height: 40px;
+    width: 200px;
+    background: #fbfbfb11;
+    border: 1px solid #fff;
+    border-radius: 40px;
+    margin-right: 20px;
+}
+
+.button:hover
+{
+    cursor: pointer;
+    background: #f0f0f078;
 }
 
 a {
@@ -87,29 +126,12 @@ a {
     font-size: 20px;  
 }
 
-.button-groups {
-    position:relative; 
-    text-align: center;
-}
 
-.button {
-    position: relative;
-    outline:white;
-    height: 40px;
-    width: 200px;
-    background: #fbfbfb11;
-    border: 1px solid #fff;
-    border-radius: 40px;
-    top: 50px;
-    margin-left: 10px;
-}
 
-.button:hover
-{
-    cursor: pointer;
-    background: #f0f0f078;
-}
 
+
+
+/* screen dynamic resizing */
 @media screen and (max-width : 700px)
 {
     h1 {
