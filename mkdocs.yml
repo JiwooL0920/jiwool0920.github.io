@@ -1,0 +1,104 @@
+site_name: Jiwoo Lee | Technical Blog
+site_url: https://jiwool0920.github.io
+site_description: Infrastructure, AI, and Engineering Patterns
+site_author: Jiwoo Lee
+
+repo_url: https://github.com/jiwool0920/jiwool0920.github.io
+repo_name: jiwool0920.github.io
+
+theme:
+  name: material
+  palette:
+    - scheme: slate
+      primary: indigo
+      accent: cyan
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+    - scheme: default
+      primary: indigo
+      accent: cyan
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - navigation.path
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.tabs.link
+    - toc.follow
+  icon:
+    repo: fontawesome/brands/github
+
+plugins:
+  - search
+  - tags
+  - blog:
+      blog_dir: blog
+  - git-revision-date-localized:
+      enable_creation_date: true
+      fallback_to_build_date: true
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Projects:
+      - projects/index.md
+      - Fleet Infrastructure:
+          - projects/fleet-infra/index.md
+          - Architecture: projects/fleet-infra/architecture.md
+          - Components: projects/fleet-infra/components.md
+          - Runbooks: projects/fleet-infra/runbooks.md
+      - Terraform Infrastructure:
+          - projects/terraform-infra/index.md
+          - Architecture: projects/terraform-infra/architecture.md
+          - Modules: projects/terraform-infra/modules.md
+      - Grafana Dashboards:
+          - projects/grafana-dashboards/index.md
+          - Dashboards: projects/grafana-dashboards/dashboards.md
+      - Agentic AI:
+          - projects/agentic-ai/index.md
+          - Architecture: projects/agentic-ai/architecture.md
+          - Packages: projects/agentic-ai/packages.md
+          - Decisions: projects/agentic-ai/decisions.md
+  - Engineering Patterns:
+      - patterns/index.md
+      - GitOps: patterns/gitops.md
+      - Terraform Modules: patterns/terraform-modules.md
+      - Observability: patterns/observability.md
+      - Agent Architectures: patterns/agent-architectures.md
+  - Blog:
+      - blog/index.md
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/jiwool0920
+    - icon: fontawesome/brands/linkedin
+      link: https://linkedin.com/in/jiwool0920

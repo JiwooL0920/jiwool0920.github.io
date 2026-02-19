@@ -1,0 +1,22 @@
+# Virtual environment
+.venv/
+venv/
+
+# Build output
+site/
+
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
