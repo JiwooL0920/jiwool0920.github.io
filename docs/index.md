@@ -6,41 +6,12 @@ I'm Jiwoo Lee, an infrastructure and AI engineer. This site documents my project
 
 I maintain several infrastructure and AI projects:
 
-<div class="grid cards" markdown>
-
--   :material-kubernetes:{ .lg .middle } **Fleet Infrastructure**
-
-    ---
-
-    Kubernetes GitOps infrastructure using FluxCD
-
-    [:octicons-arrow-right-24: Learn more](projects/fleet-infra/index.md)
-
--   :material-terraform:{ .lg .middle } **Terraform Infrastructure**
-
-    ---
-
-    Modular Terraform configurations for cloud infrastructure
-
-    [:octicons-arrow-right-24: Learn more](projects/terraform-infra/index.md)
-
--   :material-chart-line:{ .lg .middle } **Grafana Dashboards**
-
-    ---
-
-    Observability dashboards and monitoring configurations
-
-    [:octicons-arrow-right-24: Learn more](projects/grafana-dashboards/index.md)
-
--   :material-robot:{ .lg .middle } **Agentic AI**
-
-    ---
-
-    AI agent platform with RAG and multi-agent orchestration
-
-    [:octicons-arrow-right-24: Learn more](projects/agentic-ai/index.md)
-
-</div>
+| Project | Description | Stack |
+|---------|-------------|-------|
+| [Fleet Infrastructure](projects/fleet-infra/index.md) | Kubernetes GitOps infrastructure | FluxCD, Kustomize |
+| [Terraform Infrastructure](projects/terraform-infra/index.md) | Modular cloud infrastructure | Terraform, AWS/GCP |
+| [Grafana Dashboards](projects/grafana-dashboards/index.md) | Observability dashboards | Grafana, Prometheus |
+| [Agentic AI](projects/agentic-ai/index.md) | AI agent platform with RAG | Python, LangChain |
 
 ## Engineering Patterns
 
