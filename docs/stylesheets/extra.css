@@ -27,3 +27,63 @@
 .md-nav__item--nested > .md-nav__link:hover {
   color: var(--md-accent-fg-color--transparent) !important;
 }
+
+/* ===== Heading colors for better readability ===== */
+
+/* Dark mode (slate) - default */
+[data-md-color-scheme="slate"] .md-content h1 {
+  color: #82b1ff;  /* Light blue */
+  font-weight: 700;
+}
+
+[data-md-color-scheme="slate"] .md-content h2 {
+  color: #80cbc4;  /* Teal */
+  font-weight: 600;
+  border-bottom: 1px solid rgba(128, 203, 196, 0.2);
+  padding-bottom: 0.3em;
+}
+
+[data-md-color-scheme="slate"] .md-content h3 {
+  color: #b39ddb;  /* Light purple */
+  font-weight: 600;
+}
+
+[data-md-color-scheme="slate"] .md-content h4 {
+  color: #a5d6a7;  /* Light green */
+  font-weight: 600;
+}
+
+[data-md-color-scheme="slate"] .md-content h5,
+[data-md-color-scheme="slate"] .md-content h6 {
+  color: #ffcc80;  /* Light orange */
+  font-weight: 600;
+}
+
+/* Light mode */
+[data-md-color-scheme="default"] .md-content h1 {
+  color: #1565c0;  /* Dark blue */
+  font-weight: 700;
+}
+
+[data-md-color-scheme="default"] .md-content h2 {
+  color: #00695c;  /* Dark teal */
+  font-weight: 600;
+  border-bottom: 1px solid rgba(0, 105, 92, 0.2);
+  padding-bottom: 0.3em;
+}
+
+[data-md-color-scheme="default"] .md-content h3 {
+  color: #4527a0;  /* Dark purple */
+  font-weight: 600;
+}
+
+[data-md-color-scheme="default"] .md-content h4 {
+  color: #2e7d32;  /* Dark green */
+  font-weight: 600;
+}
+
+[data-md-color-scheme="default"] .md-content h5,
+[data-md-color-scheme="default"] .md-content h6 {
+  color: #e65100;  /* Dark orange */
+  font-weight: 600;
+}
