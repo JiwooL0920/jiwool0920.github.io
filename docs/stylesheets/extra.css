@@ -1,0 +1,29 @@
+/* Custom navigation styling for better visibility */
+
+/* Navigation section labels (Projects, Fleet Infrastructure, etc.) */
+.md-nav__item--nested > .md-nav__link {
+  color: var(--md-accent-fg-color) !important;
+  font-weight: 600;
+}
+
+/* Top-level nav items in sidebar */
+.md-nav--primary > .md-nav__list > .md-nav__item > .md-nav__link {
+  color: var(--md-primary-fg-color) !important;
+  font-weight: 700;
+}
+
+/* Second-level section headings (Fleet Infrastructure, Terraform Infrastructure, etc.) */
+.md-nav--primary .md-nav__item--nested .md-nav__item--nested > .md-nav__link {
+  color: #82b1ff !important;  /* Light blue for dark mode visibility */
+  font-weight: 600;
+}
+
+/* Ensure good contrast in light mode too */
+[data-md-color-scheme="default"] .md-nav--primary .md-nav__item--nested .md-nav__item--nested > .md-nav__link {
+  color: #1565c0 !important;  /* Darker blue for light mode */
+}
+
+/* Hover states */
+.md-nav__item--nested > .md-nav__link:hover {
+  color: var(--md-accent-fg-color--transparent) !important;
+}
