@@ -200,6 +200,251 @@ How it works:
 
 This is AWS's officially recommended method. Packer doesn't even support Bottlerocket AMI customization. It's a much cleaner architecture with significantly better maintainability.
 
+### EKS Cluster Configuration (Terraform)
+
+Before configuring Karpenter, the **base EKS cluster itself** needs to run Bottlerocket. The EKS managed node group that runs cluster-critical components (CoreDNS, Karpenter itself, etc.) must also be migrated — these nodes aren't managed by Karpenter, they're managed by the EKS control plane via the Terraform EKS module.
+
+If you're using the popular [`terraform-aws-modules/eks`](https://registry.terraform.io/modules/terraform-aws-modules/eks/aws/latest) module, the key change is setting `ami_type` to `BOTTLEROCKET_x86_64` (or `BOTTLEROCKET_ARM_64`) in your managed node group:
+
+```hcl
+module "eks" {
+  source  = "terraform-aws-modules/eks/aws"
+  version = "~> 20.0"
+
+  cluster_name    = "my-cluster"
+  cluster_version = "1.31"
+
+  vpc_id     = module.vpc.vpc_id
+  subnet_ids = module.vpc.private_subnets
+
+  cluster_endpoint_public_access = true
+
+  eks_managed_node_groups = {
+    # System node group — runs Karpenter, CoreDNS, etc.
+    system = {
+      # Bottlerocket AMI type instead of AL2
+      ami_type       = "BOTTLEROCKET_x86_64"
+      instance_types = ["m6i.xlarge"]
+
+      min_size     = 2
+      max_size     = 4
+      desired_size = 2
+
+      labels = {
+        "node-role" = "system"
+      }
+
+      taints = {
+        system = {
+          key    = "CriticalAddonsOnly"
+          value  = "true"
+          effect = "NO_SCHEDULE"
+        }
+      }
+
+      # IMDSv2 settings — hop limit must be 2 for containerized workloads
+      # (containers add an extra network hop; default of 1 blocks pod IMDS access)
+      metadata_options = {
+        http_endpoint               = "enabled"
+        http_tokens                 = "required"
+        http_put_response_hop_limit = 2
+      }
+
+      # Bottlerocket uses TOML for node configuration (not bash scripts)
+      # This replaces the AL2 pattern of pre/post bootstrap user data
+      bootstrap_extra_args = <<-EOT
+        [settings.pki.custom-ca]
+        trusted = true
+        data = "-----BEGIN CERTIFICATE-----\nMIIBxTCCAWugAwIBAgIUZ3M...your-base64-cert-data...==\n-----END CERTIFICATE-----"
+      EOT
+    }
+  }
+}
+```
+
+!!! warning "Two separate layers"
+    Don't confuse the Terraform EKS module's managed node groups with Karpenter's NodePools. They serve different purposes:
+
+    - **Terraform EKS managed node groups** → bootstrap nodes that run cluster infrastructure (Karpenter, CoreDNS, kube-proxy). These exist before Karpenter is even installed.
+    - **Karpenter NodePools + EC2NodeClasses** → dynamically provisioned nodes for application workloads. Karpenter manages their lifecycle.
+
+    Both need to be configured for Bottlerocket independently.
+
+### Karpenter Configuration
+
+With the base cluster running Bottlerocket, now configure Karpenter to provision application workload nodes on Bottlerocket as well. This is where the EBS snapshot caching comes in.
+
+**EC2NodeClass** — defines the node template, including the Bottlerocket AMI family and EBS snapshot-backed data volume:
+
+```yaml
+apiVersion: karpenter.k8s.aws/v1
+kind: EC2NodeClass
+metadata:
+  name: default
+spec:
+  role: "KarpenterNodeRole-my-cluster"
+  amiFamily: Bottlerocket
+
+  # IMDSv2 — hop limit must be 2 for containerized workloads
+  metadataOptions:
+    httpEndpoint: enabled
+    httpTokens: required
+    httpPutResponseHopLimit: 2
+
+  # Bottlerocket user data is TOML, not bash
+  userData: |
+    [settings.pki.custom-ca]
+    trusted = true
+    data = "-----BEGIN CERTIFICATE-----\nMIIBxTCCAWugAwIBAgIUZ3M...your-base64-cert-data...==\n-----END CERTIFICATE-----"
+
+    [settings.kubernetes]
+    max-pods = 110
+
+  subnetSelectorTerms:
+    - tags:
+        karpenter.sh/discovery: "my-cluster"
+  securityGroupSelectorTerms:
+    - tags:
+        karpenter.sh/discovery: "my-cluster"
+
+  blockDeviceMappings:
+    # Disk 1: OS volume
+    - deviceName: /dev/xvda
+      ebs:
+        volumeSize: 20Gi
+        volumeType: gp3
+        encrypted: true
+
+    # Disk 2: Data volume — attach EBS snapshot with cached images
+    - deviceName: /dev/xvdb
+      ebs:
+        volumeSize: 100Gi
+        volumeType: gp3
+        encrypted: true
+        # Reference the snapshot containing pre-pulled container images
+        snapshotID: "snap-0123456789abcdef0"
+
+  tags:
+    environment: production
+    managed-by: karpenter
+```
+
+**NodePool** — defines scheduling constraints, instance types, and scaling behavior:
+
+```yaml
+apiVersion: karpenter.sh/v1
+kind: NodePool
+metadata:
+  name: default
+spec:
+  template:
+    metadata:
+      labels:
+        workload-type: general
+    spec:
+      nodeClassRef:
+        group: karpenter.k8s.aws
+        kind: EC2NodeClass
+        name: default
+      requirements:
+        - key: kubernetes.io/arch
+          operator: In
+          values: ["amd64"]
+        - key: karpenter.sh/capacity-type
+          operator: In
+          values: ["on-demand", "spot"]
+        - key: karpenter.k8s.aws/instance-category
+          operator: In
+          values: ["m", "c", "r"]
+        - key: karpenter.k8s.aws/instance-generation
+          operator: Gt
+          values: ["4"]
+      # Karpenter auto-expires nodes for rolling updates
+      expireAfter: 720h
+  disruption:
+    consolidationPolicy: WhenEmptyOrUnderutilized
+    consolidateAfter: 1m
+  # Cluster-wide resource limits
+  limits:
+    cpu: "1000"
+    memory: 1000Gi
+```
+
+For GPU workloads, use a separate NodePool and EC2NodeClass with `amiFamily: Bottlerocket` and NVIDIA-variant instance types:
+
+```yaml
+apiVersion: karpenter.k8s.aws/v1
+kind: EC2NodeClass
+metadata:
+  name: gpu
+spec:
+  role: "KarpenterNodeRole-my-cluster"
+  # Bottlerocket NVIDIA variants have built-in GPU support
+  amiFamily: Bottlerocket
+
+  # IMDSv2 — hop limit must be 2 for containerized workloads
+  metadataOptions:
+    httpEndpoint: enabled
+    httpTokens: required
+    httpPutResponseHopLimit: 2
+
+  subnetSelectorTerms:
+    - tags:
+        karpenter.sh/discovery: "my-cluster"
+  securityGroupSelectorTerms:
+    - tags:
+        karpenter.sh/discovery: "my-cluster"
+
+  blockDeviceMappings:
+    - deviceName: /dev/xvda
+      ebs:
+        volumeSize: 20Gi
+        volumeType: gp3
+        encrypted: true
+    - deviceName: /dev/xvdb
+      ebs:
+        volumeSize: 200Gi
+        volumeType: gp3
+        encrypted: true
+        # GPU workloads typically have larger images
+        snapshotID: "snap-0abcdef1234567890"
+---
+apiVersion: karpenter.sh/v1
+kind: NodePool
+metadata:
+  name: gpu
+spec:
+  template:
+    metadata:
+      labels:
+        workload-type: gpu
+    spec:
+      nodeClassRef:
+        group: karpenter.k8s.aws
+        kind: EC2NodeClass
+        name: gpu
+      requirements:
+        - key: karpenter.k8s.aws/instance-category
+          operator: In
+          values: ["g", "p"]
+        - key: karpenter.sh/capacity-type
+          operator: In
+          values: ["on-demand"]
+      taints:
+        - key: nvidia.com/gpu
+          effect: NoSchedule
+      expireAfter: 720h
+  disruption:
+    consolidationPolicy: WhenEmpty
+    consolidateAfter: 5m
+  limits:
+    cpu: "200"
+    memory: 800Gi
+```
+
+!!! tip
+    Store snapshot IDs in **SSM Parameter Store** and reference them dynamically in your infrastructure-as-code (e.g., Terraform or Helm values) rather than hardcoding them. This way, when the CI pipeline creates new snapshots, Karpenter picks up the latest cached images automatically.
+
 !!! note
     This snapshot-based approach only applies to clusters that require large image caching. Standard service clusters don't need it.
 
