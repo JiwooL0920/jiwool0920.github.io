@@ -99,6 +99,7 @@ nav:
           - projects/terraform-infra/index.md
           - Architecture: projects/terraform-infra/architecture.md
           - Modules: projects/terraform-infra/modules.md
+          - Runbooks: projects/terraform-infra/runbooks.md
       - Grafana Dashboards:
           - projects/grafana-dashboards/index.md
           - Dashboards: projects/grafana-dashboards/dashboards.md
