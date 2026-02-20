@@ -73,7 +73,27 @@ nav:
       - Fleet Infrastructure:
           - projects/fleet-infra/index.md
           - Architecture: projects/fleet-infra/architecture.md
-          - Components: projects/fleet-infra/components.md
+          - Components:
+              - projects/fleet-infra/components/index.md
+              - Traefik: projects/fleet-infra/components/traefik.md
+              - LocalStack: projects/fleet-infra/components/localstack.md
+              - CNPG Operator: projects/fleet-infra/components/cnpg-operator.md
+              - External Secrets: projects/fleet-infra/components/external-secrets.md
+              - Scylla Operator: projects/fleet-infra/components/scylla-operator.md
+              - Metrics Server: projects/fleet-infra/components/metrics-server.md
+              - Kube-Prometheus-Stack: projects/fleet-infra/components/kube-prometheus-stack.md
+              - Weave GitOps: projects/fleet-infra/components/weave-gitops.md
+              - Loki: projects/fleet-infra/components/loki.md
+              - Promtail: projects/fleet-infra/components/promtail.md
+              - Jaeger: projects/fleet-infra/components/jaeger.md
+              - OpenTelemetry: projects/fleet-infra/components/opentelemetry.md
+              - PostgreSQL: projects/fleet-infra/components/postgresql.md
+              - Redis: projects/fleet-infra/components/redis.md
+              - ScyllaDB: projects/fleet-infra/components/scylladb.md
+              - N8N: projects/fleet-infra/components/n8n.md
+              - Temporal: projects/fleet-infra/components/temporal.md
+              - pgAdmin4: projects/fleet-infra/components/pgadmin.md
+              - RedisInsight: projects/fleet-infra/components/redisinsight.md
           - Runbooks: projects/fleet-infra/runbooks.md
       - Terraform Infrastructure:
           - projects/terraform-infra/index.md
