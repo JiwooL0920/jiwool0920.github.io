@@ -32,7 +32,7 @@ Fleet Infrastructure is a personal Kubernetes platform designed for hosting proj
 ## Quick Links
 
 - [Architecture](architecture.md) - System design, dependency layers, and deployment flow
-- [Components](components.md) - Detailed documentation for all 23 services
+- [Components](components/index.md) - Detailed documentation for all 23 services
 - [Runbooks](runbooks.md) - Setup, operations, and troubleshooting guides
 
 ## Repository Structure
