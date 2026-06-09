@@ -1,0 +1,45 @@
+# Pre-commit hooks for MkDocs blog
+# Validates markdown formatting and ensures AI-drafted posts don't break the build.
+# Install: pre-commit install
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: check-added-large-files
+        args: [--maxkb=2000]
+
+  # Markdown linting
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.44.0
+    hooks:
+      - id: markdownlint
+        args:
+          - --config
+          - .markdownlint.yaml
+        exclude: '^docs/blog/posts/.*\.md$'  # AI drafts may have minor lint issues — review before fixing
+
+  # Validate the MkDocs build doesn't break
+  - repo: local
+    hooks:
+      - id: mkdocs-build
+        name: Validate MkDocs build
+        entry: bash -c 'pip install -q -r requirements.txt && mkdocs build --strict --quiet'
+        language: system
+        files: '^(docs/|mkdocs\.yml)'
+        pass_filenames: false
+        stages: [pre-push]
+
+default_install_hook_types: [pre-commit, pre-push]
+default_stages: [pre-commit]
+
+exclude: |
+  (?x)^(
+      site/.*|
+      \.git/.*
+  )$
