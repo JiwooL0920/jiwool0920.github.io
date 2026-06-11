@@ -189,4 +189,4 @@ kubectl exec -n monitoring loki-0 -- wget -qO- http://localhost:3100/metrics | g
 
 - [Kube-Prometheus-Stack](kube-prometheus-stack.md) — Grafana for visualization, dependency
 - [External Secrets](external-secrets.md) — Secret management (redis-password)
-- [Alloy](alloy.md) — Log collection agent
+- [Promtail](promtail.md) — Log collection agent
