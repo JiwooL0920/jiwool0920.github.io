@@ -1,0 +1,147 @@
+---
+catalog_sha: 4d088b0b3a67b4c4
+fleet_infra_commit: 2d36e22
+generated_at: 2026-06-12
+---
+
+# Grafana SA Setup
+
+Grafana exposes a [Service Accounts API](https://grafana.com/docs/grafana/latest/developers/http_api/serviceaccount/) that issues scoped API tokens independent of any human user. Unlike basic auth or personal API keys tied to a user session, service account tokens survive password rotations, can be individually revoked, and carry explicit role bindings (Viewer, Editor, Admin). They are the recommended machine-to-machine authentication path for any automation that needs to query dashboards, manage alerts, or provision data sources programmatically.
+
+However, Grafana's service account database is internal and ephemeral in default Helm deployments — tokens do not survive a pod restart unless backed by persistent storage. This creates a bootstrap problem: downstream services that depend on a valid Grafana token cannot simply mount a static secret, because the token becomes invalid every time Grafana's state resets.
+
+`grafana-sa-setup` solves this with a self-healing Kubernetes Job that validates, creates, and externalizes a Grafana SA token into a secrets manager where other services can consume it through the standard ExternalSecrets flow.
+
+## Overview
+
+| Property | Value |
+|---|---|
+| **Namespace** | `grafana-sa-setup` |
+| **Type** | Job |
+| **Layer** | Foundation services |
+| **Status** | Enabled |
+| **Source** | [`apps/base/grafana-sa-setup/`](https://github.com/JiwooL0920/fleet-infra/tree/develop/apps/base/grafana-sa-setup/) |
+
+## Dependencies
+
+### Upstream — required before Grafana SA Setup starts
+
+| Service | Reason | Status |
+|---|---|---|
+| `kube-prometheus-stack` | Flux `dependsOn` | Active |
+
+### Downstream — services that depend on Grafana SA Setup
+
+| Service | Dependency type | Reason |
+|---|---|---|
+| `kagent` | Flux `dependsOn` | Requires Grafana SA Setup |
+
+## Purpose
+
+This Job exists to bridge Grafana's ephemeral service account store with the platform's secrets distribution layer. Specifically, it ensures that `kagent` always has a valid Grafana API token available — even after cluster restarts wipe Grafana's internal SA database.
+
+The Job runs after `kube-prometheus-stack` brings Grafana online, creates (or validates) a service account named `kagent` with Admin role, generates a token, and writes it to LocalStack Secrets Manager at `kagent/grafana/api-key`. From there, ExternalSecrets syncs the value into a Kubernetes Secret that kagent mounts at runtime. The entire chain is automatic and requires no manual intervention after initial deployment.
+
+**Why a Job instead of Grafana's declarative provisioning (`provisioning/access-control/`):** Grafana's file-based provisioning supports service accounts since v9.1, but it does not expose the generated token — it only ensures the account exists. There is no declarative way to extract the token value and push it elsewhere. A Job with API calls is the only path that both creates the account and captures the token for external storage.
+
+**Why not a persistent Grafana database:** Persisting Grafana's SQLite/PostgreSQL state would make tokens survive restarts, but adds operational complexity (PVCs, backup/restore, migration) for a component whose dashboards and data sources are already provisioned declaratively. Treating Grafana as stateless with a token-bootstrap Job is simpler and aligns with the GitOps philosophy of reproducible state.
+
+
+## Features
+
+| Feature | Detail |
+|---|---|
+| **Idempotent token validation** | Fetches the current token from LocalStack and validates it against Grafana's API before attempting creation, avoiding unnecessary token churn on routine reconciliations |
+| **Self-healing via TTL and Flux reconciliation** | ttlSecondsAfterFinished deletes the completed Job after 300s; Flux recreates it on next interval, guaranteeing the token is refreshed after any cluster restart that invalidates Grafana's SA database |
+| **Init container / main container handoff** | Token generation (curl against Grafana API) runs in an initContainer, passing the result to the main container (aws-cli for LocalStack storage) via a shared emptyDir volume at /shared |
+| **Least-privilege RBAC** | A dedicated ServiceAccount with a Role scoped to a single verb (get) on a single Secret (grafana-admin-credentials) in the monitoring namespace — no cluster-wide permissions |
+| **Flux health gating** | The Flux Kustomization declares a healthCheck on the Job resource, blocking downstream dependents (kagent) from reconciling until the token is confirmed stored |
+
+## Architecture
+
+### Job Execution Topology
+
+```mermaid
+graph TD
+    subgraph monitoring namespace
+        SECRET[Secret: grafana-admin-credentials]
+        SA[ServiceAccount: grafana-sa-setup]
+        INIT["initContainer: create-token<br/>(curlimages/curl)"]
+        MAIN["container: store-secret<br/>(amazon/aws-cli)"]
+        GRAFANA[Grafana API]
+        SHARED[emptyDir: /shared]
+    end
+    subgraph localstack namespace
+        LOCALSTACK[LocalStack Secrets Manager]
+    end
+    subgraph flux-system namespace
+        KUST[Kustomization: grafana-sa-setup]
+    end
+
+    KUST -->|dependsOn| KPS[Kustomization: kube-prometheus-stack]
+    KUST -->|healthCheck batch/v1 Job| INIT
+    SECRET -->|volumeMount /var/secrets/grafana| INIT
+    SA -->|serviceAccountName| INIT
+    INIT -->|"GET /api/serviceaccounts/search"| GRAFANA
+    INIT -->|"POST /api/serviceaccounts/{id}/tokens"| GRAFANA
+    INIT -->|writes grafana-token| SHARED
+    SHARED -->|reads grafana-token| MAIN
+    INIT -->|"POST secretsmanager.GetSecretValue"| LOCALSTACK
+    MAIN -->|"put-secret-value kagent/grafana/api-key"| LOCALSTACK
+```
+
+### Token Bootstrap Flow
+
+```mermaid
+sequenceDiagram
+    participant Flux
+    participant Job as create-grafana-sa-token
+    participant LS as LocalStack
+    participant GF as Grafana API
+
+    Flux->>Job: Reconcile (after kube-prometheus-stack ready)
+    Job->>LS: GetSecretValue(kagent/grafana/api-key)
+    alt Token exists and non-placeholder
+        Job->>GF: GET /api/org (Bearer token)
+        alt HTTP 200
+            Job->>Job: Write SKIP to /shared/action
+            Job-->>Flux: Job Complete (no-op)
+        else HTTP != 200
+            Job->>GF: POST /api/serviceaccounts (name=kagent, role=Admin)
+            Job->>GF: POST /api/serviceaccounts/{id}/tokens
+            Job->>Job: Write token to /shared/grafana-token
+            Job->>LS: put-secret-value(kagent/grafana/api-key, token)
+            Job-->>Flux: Job Complete (refreshed)
+        end
+    else No token or placeholder
+        Job->>GF: POST /api/serviceaccounts (name=kagent, role=Admin)
+        Job->>GF: POST /api/serviceaccounts/{id}/tokens
+        Job->>Job: Write token to /shared/grafana-token
+        Job->>LS: put-secret-value(kagent/grafana/api-key, token)
+        Job-->>Flux: Job Complete (created)
+    end
+    Flux->>Flux: Unblock downstream (kagent)
+```
+
+
+## Configuration
+
+All values sourced from [`base/services/environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/environment.env)
+(base); per-environment overrides in [`clusters/stages/dev/.../environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/clusters/stages/dev/clusters/services-amer/environment.env).
+
+_No environment-specific configuration variables for this service._
+
+
+## Operations
+
+<!-- TODO: Add operations in service-insights/grafana-sa-setup.yaml → operations field -->
+
+## Related
+
+
+- [`apps/base/grafana-sa-setup/`](https://github.com/JiwooL0920/fleet-infra/tree/develop/apps/base/grafana-sa-setup/) — Kubernetes manifests
+- [`base/services/grafana-sa-setup.yaml`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/grafana-sa-setup.yaml) — Flux Kustomization
+- [`base/services/environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/environment.env) — environment variables
+
+---
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/fleet-infra/blob/develop/service-catalog.json) at commit `2d36e22` · catalog sha `4d088b0b3a67b4c4`*
