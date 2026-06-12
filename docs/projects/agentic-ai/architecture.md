@@ -248,7 +248,7 @@ flowchart LR
 
 ## Integration with Fleet Infrastructure
 
-The agentic-ai platform runs on the Kubernetes cluster provisioned by [terraform-infra](../terraform-infra/index.md) and managed by [fleet-infra](../fleet-infra/index.md).
+The agentic-ai platform runs on the Kubernetes cluster provisioned by [terraform-infra](../terraform-infra/index.md) and managed by [flux-infra](../flux-infra/index.md).
 
 ```mermaid
 flowchart TB

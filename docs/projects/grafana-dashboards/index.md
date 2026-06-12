@@ -4,7 +4,7 @@ GitOps-managed observability dashboards deployed via **Grafana Operator CRDs** w
 
 ## Overview
 
-Grafana Dashboards is a dedicated repository for managing Grafana dashboards as code using **Grafana Operator Custom Resource Definitions** (GrafanaFolder, GrafanaDashboard). Dashboards are defined as Kubernetes CRDs with embedded JSON, deployed via Kustomize into the `monitoring` namespace, and automatically reconciled by the Grafana Operator running in the [fleet-infra](../fleet-infra/index.md) cluster.
+Grafana Dashboards is a dedicated repository for managing Grafana dashboards as code using **Grafana Operator Custom Resource Definitions** (GrafanaFolder, GrafanaDashboard). Dashboards are defined as Kubernetes CRDs with embedded JSON, deployed via Kustomize into the `monitoring` namespace, and automatically reconciled by the Grafana Operator running in the [flux-infra](../flux-infra/index.md) cluster.
 
 This GitOps approach ensures dashboards are version-controlled, reviewable, and automatically synced to Grafana without manual UI configuration.
 

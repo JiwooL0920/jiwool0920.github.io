@@ -155,7 +155,7 @@ kubectl cluster-info
 
 ### Next Steps: Bootstrap FluxCD
 
-After the cluster is running, bootstrap FluxCD using the [fleet-infra](https://github.com/JiwooL0920/fleet-infra) repository:
+After the cluster is running, bootstrap FluxCD using the [fleet-infra](https://github.com/JiwooL0920/flux-infra) repository:
 
 ```bash
 # Get the bootstrap command from terraform output

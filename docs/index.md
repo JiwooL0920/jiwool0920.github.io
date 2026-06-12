@@ -8,7 +8,7 @@ I maintain several infrastructure and AI projects:
 
 | Project | Description | Stack |
 |---------|-------------|-------|
-| [Fleet Infrastructure](projects/fleet-infra/index.md) | Kubernetes GitOps infrastructure | FluxCD, Kustomize |
+| [Fleet Infrastructure](projects/flux-infra/index.md) | Kubernetes GitOps infrastructure | FluxCD, Kustomize |
 | [Terraform Infrastructure](projects/terraform-infra/index.md) | Modular cloud infrastructure | Terraform, AWS/GCP |
 | [Grafana Dashboards](projects/grafana-dashboards/index.md) | Observability dashboards | Grafana, Prometheus |
 | [Agentic AI](projects/agentic-ai/index.md) | AI agent platform with RAG | Python, LangChain |
