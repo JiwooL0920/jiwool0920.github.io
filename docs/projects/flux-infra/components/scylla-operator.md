@@ -21,7 +21,7 @@ The operator also manages admission webhooks that validate ScyllaCluster specifi
 | **Layer** | Foundation services |
 | **Chart** | [`scylla-operator`](https://scylla-operator-charts.storage.googleapis.com/stable) v1.12.0 |
 | **Status** | Enabled |
-| **Source** | [`apps/base/scylla-operator/`](https://github.com/JiwooL0920/fleet-infra/tree/develop/apps/base/scylla-operator/) |
+| **Source** | [`apps/base/scylla-operator/`](https://github.com/JiwooL0920/flux-infra/tree/develop/apps/base/scylla-operator/) |
 
 ## Dependencies
 
@@ -90,8 +90,8 @@ graph TD
 
 ## Configuration
 
-All values sourced from [`base/services/environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/environment.env)
-(base); per-environment overrides in [`clusters/stages/dev/.../environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/clusters/stages/dev/clusters/services-amer/environment.env).
+All values sourced from [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env)
+(base); per-environment overrides in [`clusters/stages/dev/.../environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/clusters/stages/dev/clusters/services-amer/environment.env).
 
 | Parameter | Dev | Prod |
 |---|---|---|
@@ -104,14 +104,82 @@ All values sourced from [`base/services/environment.env`](https://github.com/Jiw
 
 ## Operations
 
-<!-- TODO: Add operations in service-insights/scylla-operator.yaml → operations field -->
+### Webhook TLS certificate not provisioned
+
+**Symptoms:** ScyllaCluster creates/updates rejected with `connection refused` or `x509: certificate signed by unknown authority`. The operator pod is running but webhook calls fail. Alert: `KubeWebhookCertExpirySoon` or Flux `HelmRelease` stuck at `upgrade retries exhausted`.
+
+```bash
+kubectl get validatingwebhookconfigurations -l app.kubernetes.io/instance=scylla-operator -o yaml | grep -A5 caBundle
+kubectl get secrets -n scylla-operator -l app.kubernetes.io/component=webhook --show-labels
+kubectl logs -n scylla-operator deploy/scylla-operator --since=10m | grep -i 'webhook\|cert\|tls'
+kubectl delete secret -n scylla-operator -l app.kubernetes.io/component=webhook
+kubectl rollout restart deployment/scylla-operator -n scylla-operator
+kubectl wait --for=condition=Ready pod -l app.kubernetes.io/name=scylla-operator -n scylla-operator --timeout=120s
+```
+---
+
+### CRD installation failure blocking downstream services
+
+**Symptoms:** `scylla-cluster` and `scylla-manager` Kustomizations report `CustomResourceDefinition scyllaclusters.scylla.scylladb.com not found`. The scylla-operator HelmRelease shows `install retries exhausted` or `upgrade retries exhausted` in `kubectl get helmrelease -n flux-system scylla-operator`.
+
+```bash
+kubectl get helmrelease scylla-operator -n flux-system -o jsonpath='{.status.conditions[*].message}'
+kubectl get crds | grep scylla
+kubectl get events -n flux-system --field-selector involvedObject.name=scylla-operator --sort-by='.lastTimestamp' | tail -20
+flux suspend helmrelease scylla-operator -n flux-system
+flux resume helmrelease scylla-operator -n flux-system
+kubectl wait --for=condition=Ready helmrelease/scylla-operator -n flux-system --timeout=600s
+```
+---
+
+### Leader election lease stuck after pod eviction
+
+**Symptoms:** Operator pod is Running but no reconciliation occurs. Logs show `failed to acquire lease scylla-operator/scylla-operator-leader-election` or `leader election lost`. ScyllaCluster resources show stale `.status.conditions` timestamps.
+
+```bash
+kubectl get lease -n scylla-operator -o wide
+kubectl get lease scylla-operator-leader-election -n scylla-operator -o jsonpath='{.spec.holderIdentity}'
+kubectl get pods -n scylla-operator -o wide
+kubectl logs -n scylla-operator deploy/scylla-operator | grep -i 'leader\|lease\|election'
+kubectl delete lease scylla-operator-leader-election -n scylla-operator
+kubectl rollout restart deployment/scylla-operator -n scylla-operator
+```
+---
+
+### HelmRelease reconciliation timeout
+
+**Symptoms:** `flux get helmrelease scylla-operator -n flux-system` shows `reconciliation failed` with timeout. Helm history shows a pending-upgrade or pending-install state. Downstream Kustomizations are blocked.
+
+```bash
+kubectl get helmrelease scylla-operator -n flux-system -o yaml | grep -A10 'status:'
+helm history scylla-operator -n scylla-operator --max 5
+helm status scylla-operator -n scylla-operator
+kubectl get pods -n scylla-operator -l app.kubernetes.io/name=scylla-operator -o wide
+flux suspend helmrelease scylla-operator -n flux-system && helm rollback scylla-operator -n scylla-operator
+flux resume helmrelease scylla-operator -n flux-system
+```
+---
+
+### Operator OOMKilled under high CRD watch load
+
+**Symptoms:** Pod restarts with `OOMKilled` reason visible in `kubectl describe pod -n scylla-operator`. Prometheus alert `KubePodCrashLooping` fires. During restarts, ScyllaCluster reconciliation pauses.
+
+```bash
+kubectl get pods -n scylla-operator -o jsonpath='{.items[*].status.containerStatuses[*].lastState.terminated.reason}'
+kubectl top pod -n scylla-operator
+kubectl describe pod -n scylla-operator -l app.kubernetes.io/name=scylla-operator | grep -A3 'Last State'
+kubectl get configmap cluster-vars -n flux-system -o jsonpath='{.data.SCYLLA_OPERATOR_MEMORY_LIMIT}'
+kubectl logs -n scylla-operator deploy/scylla-operator --previous | tail -50
+```
+---
+
 
 ## Related
 
 
-- [`apps/base/scylla-operator/`](https://github.com/JiwooL0920/fleet-infra/tree/develop/apps/base/scylla-operator/) — Kubernetes manifests
-- [`base/services/scylla-operator.yaml`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/scylla-operator.yaml) — Flux Kustomization
-- [`base/services/environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/environment.env) — environment variables
+- [`apps/base/scylla-operator/`](https://github.com/JiwooL0920/flux-infra/tree/develop/apps/base/scylla-operator/) — Kubernetes manifests
+- [`base/services/scylla-operator.yaml`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/scylla-operator.yaml) — Flux Kustomization
+- [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env) — environment variables
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/fleet-infra/blob/develop/service-catalog.json) at commit `2d36e22` · catalog sha `4d088b0b3a67b4c4`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `2d36e22` · catalog sha `4d088b0b3a67b4c4`*

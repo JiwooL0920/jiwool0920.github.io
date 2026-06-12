@@ -18,7 +18,7 @@ This `agentgateway-config` Kustomization is the **configuration layer** that sit
 | **Type** | Kustomization |
 | **Layer** | AI agent platform |
 | **Status** | Enabled |
-| **Source** | [`apps/base/agentgateway/config/`](https://github.com/JiwooL0920/fleet-infra/tree/develop/apps/base/agentgateway/config/) |
+| **Source** | [`apps/base/agentgateway/config/`](https://github.com/JiwooL0920/flux-infra/tree/develop/apps/base/agentgateway/config/) |
 
 ## Dependencies
 
@@ -117,8 +117,8 @@ sequenceDiagram
 
 ## Configuration
 
-All values sourced from [`base/services/environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/environment.env)
-(base); per-environment overrides in [`clusters/stages/dev/.../environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/clusters/stages/dev/clusters/services-amer/environment.env).
+All values sourced from [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env)
+(base); per-environment overrides in [`clusters/stages/dev/.../environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/clusters/stages/dev/clusters/services-amer/environment.env).
 
 _No environment-specific configuration variables for this service._
 
@@ -130,9 +130,9 @@ _No environment-specific configuration variables for this service._
 ## Related
 
 
-- [`apps/base/agentgateway/config/`](https://github.com/JiwooL0920/fleet-infra/tree/develop/apps/base/agentgateway/config/) — Kubernetes manifests
-- [`base/services/agentgateway-config.yaml`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/agentgateway-config.yaml) — Flux Kustomization
-- [`base/services/environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/environment.env) — environment variables
+- [`apps/base/agentgateway/config/`](https://github.com/JiwooL0920/flux-infra/tree/develop/apps/base/agentgateway/config/) — Kubernetes manifests
+- [`base/services/agentgateway-config.yaml`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/agentgateway-config.yaml) — Flux Kustomization
+- [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env) — environment variables
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/fleet-infra/blob/develop/service-catalog.json) at commit `2d36e22` · catalog sha `4d088b0b3a67b4c4`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `2d36e22` · catalog sha `4d088b0b3a67b4c4`*

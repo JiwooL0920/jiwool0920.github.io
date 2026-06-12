@@ -21,7 +21,7 @@ The chart also bundles recording rules and alerts for Kubernetes internals (kube
 | **Layer** | Foundation services |
 | **Chart** | [`kube-prometheus-stack`](https://prometheus-community.github.io/helm-charts) v65.8.1 |
 | **Status** | Enabled |
-| **Source** | [`apps/base/kube-prometheus-stack/`](https://github.com/JiwooL0920/fleet-infra/tree/develop/apps/base/kube-prometheus-stack/) |
+| **Source** | [`apps/base/kube-prometheus-stack/`](https://github.com/JiwooL0920/flux-infra/tree/develop/apps/base/kube-prometheus-stack/) |
 
 ## Dependencies
 
@@ -141,8 +141,8 @@ sequenceDiagram
 
 ## Configuration
 
-All values sourced from [`base/services/environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/environment.env)
-(base); per-environment overrides in [`clusters/stages/dev/.../environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/clusters/stages/dev/clusters/services-amer/environment.env).
+All values sourced from [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env)
+(base); per-environment overrides in [`clusters/stages/dev/.../environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/clusters/stages/dev/clusters/services-amer/environment.env).
 
 | Parameter | Dev | Prod |
 |---|---|---|
@@ -164,14 +164,94 @@ All values sourced from [`base/services/environment.env`](https://github.com/Jiw
 
 ## Operations
 
-<!-- TODO: Add operations in service-insights/kube-prometheus-stack.yaml → operations field -->
+### Grafana pod CrashLoopBackOff due to missing admin credentials
+
+**Symptoms:** Grafana pod in `CrashLoopBackOff` with logs showing `error: secret grafana-admin-credentials not found` or `key admin-password not found in secret`. The ExternalSecret may show `SecretSyncedError` status.
+
+```bash
+kubectl get externalsecret grafana-admin-credentials -n monitoring -o yaml | grep -A5 status
+kubectl get secret grafana-admin-credentials -n monitoring -o jsonpath='{.data}' | base64 -d
+kubectl get clustersecretstore localstack-secretstore -o yaml | grep -A5 status
+kubectl logs -n external-secrets -l app.kubernetes.io/name=external-secrets --tail=50 | grep -i grafana
+kubectl delete externalsecret grafana-admin-credentials -n monitoring && kubectl apply -k apps/base/kube-prometheus-stack
+```
+---
+
+### Alertmanager not forwarding critical alerts to kagent webhook
+
+**Symptoms:** Critical alerts visible in Alertmanager UI (`amtool alert --alertmanager.url=http://localhost:9093`) but kagent alertmanager-hook receives no POST requests. No entries in alertmanager-hook logs for incoming webhooks.
+
+```bash
+kubectl get alertmanagerconfig kagent-incident-webhook -n monitoring -o yaml
+kubectl port-forward -n monitoring svc/kube-prometheus-stack-alertmanager 9093:9093 &
+curl -s http://localhost:9093/api/v2/alerts | jq '.[].labels.severity'
+kubectl exec -n monitoring -it $(kubectl get pod -n monitoring -l app.kubernetes.io/name=alertmanager -o name | head -1) -- amtool config routes show --config.file=/etc/alertmanager/config_out/alertmanager.env.yaml
+kubectl logs -n kagent -l app=alertmanager-hook --tail=100
+kubectl run curl-test --rm -it --image=curlimages/curl --restart=Never -- curl -v http://alertmanager-hook.kagent.svc.cluster.local:8080/webhook/alertmanager -d '{"alerts":[{"labels":{"severity":"critical"}}]}' -H 'Content-Type: application/json'
+```
+---
+
+### Prometheus storage exhaustion causing sample ingestion failures
+
+**Symptoms:** PrometheusStorageExhausted or PrometheusTSDBCompactionsFailing alerts firing. Prometheus logs show `storage: no space left on device` or `WAL corruption`. `kubectl top pod` shows Prometheus near memory limit.
+
+```bash
+kubectl exec -n monitoring -it $(kubectl get pod -n monitoring -l app.kubernetes.io/name=prometheus -o name | head -1) -- df -h /prometheus
+kubectl exec -n monitoring -it $(kubectl get pod -n monitoring -l app.kubernetes.io/name=prometheus -o name | head -1) -- promtool tsdb list /prometheus
+kubectl get pvc -n monitoring -l app.kubernetes.io/name=prometheus -o custom-columns=NAME:.metadata.name,CAPACITY:.spec.resources.requests.storage,USED:.status.capacity.storage
+kubectl exec -n monitoring -it $(kubectl get pod -n monitoring -l app.kubernetes.io/name=prometheus -o name | head -1) -- curl -s http://localhost:9090/api/v1/status/tsdb | jq '.data.headStats'
+kubectl exec -n monitoring -it $(kubectl get pod -n monitoring -l app.kubernetes.io/name=prometheus -o name | head -1) -- curl -XPOST http://localhost:9090/-/reload
+```
+---
+
+### Grafana dashboard not appearing after ConfigMap apply
+
+**Symptoms:** ConfigMap `grafana-dashboard-kagent` exists in monitoring namespace with correct label, but the dashboard does not appear in Grafana's dashboard list. No errors in Grafana UI.
+
+```bash
+kubectl get configmap grafana-dashboard-kagent -n monitoring --show-labels | grep grafana_dashboard
+kubectl logs -n monitoring $(kubectl get pod -n monitoring -l app.kubernetes.io/name=grafana -o name | head -1) -c grafana-sc-dashboard --tail=50
+kubectl get configmap grafana-dashboard-kagent -n monitoring -o jsonpath='{.data}' | python3 -c 'import sys,json; json.loads(list(json.loads(sys.stdin.read()).values())[0]); print("valid JSON")'
+kubectl rollout restart deployment kube-prometheus-stack-grafana -n monitoring
+kubectl wait --for=condition=available deployment/kube-prometheus-stack-grafana -n monitoring --timeout=120s
+```
+---
+
+### Flux Kustomization stuck due to health check timeout
+
+**Symptoms:** `kubectl get kustomization kube-prometheus-stack -n flux-system` shows `Health check failed after 5m0s timeout`. Downstream services (loki, opentelemetry-collector, grafana-operator) remain in `dependency not ready` state.
+
+```bash
+kubectl get kustomization kube-prometheus-stack -n flux-system -o yaml | grep -A10 'status:'
+kubectl get deployment kube-prometheus-stack-operator -n monitoring -o jsonpath='{.status.conditions[*].message}'
+kubectl get deployment kube-prometheus-stack-grafana -n monitoring -o jsonpath='{.status.conditions[*].message}'
+kubectl get pods -n monitoring -l app.kubernetes.io/managed-by=Helm --field-selector=status.phase!=Running
+kubectl describe pod -n monitoring $(kubectl get pod -n monitoring -l app.kubernetes.io/name=kube-prometheus-stack -o name --field-selector=status.phase!=Running | head -1)
+flux reconcile kustomization kube-prometheus-stack --with-source
+```
+**See also:** docs/adr/001-fine-grained-service-dependencies.md
+---
+
+### Grafana database connection failure after secret rotation
+
+**Symptoms:** Grafana logs show `failed to connect to database` or `pq: password authentication failed`. Pod is running but Grafana UI returns 502. ExternalSecret `grafana-db-credentials` shows `SecretSynced` but Grafana uses stale credentials from prior mount.
+
+```bash
+kubectl get externalsecret grafana-db-credentials -n monitoring -o jsonpath='{.status.conditions[*].message}'
+kubectl get secret grafana-db-credentials -n monitoring -o jsonpath='{.data.password}' | base64 -d
+kubectl logs -n monitoring $(kubectl get pod -n monitoring -l app.kubernetes.io/name=grafana -o name | head -1) -c grafana --tail=30 | grep -i 'database\|pq:\|connect'
+kubectl rollout restart deployment kube-prometheus-stack-grafana -n monitoring
+kubectl wait --for=condition=available deployment/kube-prometheus-stack-grafana -n monitoring --timeout=120s
+```
+---
+
 
 ## Related
 
 
-- [`apps/base/kube-prometheus-stack/`](https://github.com/JiwooL0920/fleet-infra/tree/develop/apps/base/kube-prometheus-stack/) — Kubernetes manifests
-- [`base/services/kube-prometheus-stack.yaml`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/kube-prometheus-stack.yaml) — Flux Kustomization
-- [`base/services/environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/environment.env) — environment variables
+- [`apps/base/kube-prometheus-stack/`](https://github.com/JiwooL0920/flux-infra/tree/develop/apps/base/kube-prometheus-stack/) — Kubernetes manifests
+- [`base/services/kube-prometheus-stack.yaml`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/kube-prometheus-stack.yaml) — Flux Kustomization
+- [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env) — environment variables
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/fleet-infra/blob/develop/service-catalog.json) at commit `2d36e22` · catalog sha `4d088b0b3a67b4c4`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `2d36e22` · catalog sha `4d088b0b3a67b4c4`*

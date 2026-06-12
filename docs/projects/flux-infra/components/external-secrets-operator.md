@@ -21,7 +21,7 @@ ESO supports a wide matrix of backends (AWS Secrets Manager, GCP Secret Manager,
 | **Layer** | Foundation services |
 | **Chart** | [`external-secrets`](https://charts.external-secrets.io) v0.10.7 |
 | **Status** | Enabled |
-| **Source** | [`apps/base/external-secrets-operator/`](https://github.com/JiwooL0920/fleet-infra/tree/develop/apps/base/external-secrets-operator/) |
+| **Source** | [`apps/base/external-secrets-operator/`](https://github.com/JiwooL0920/flux-infra/tree/develop/apps/base/external-secrets-operator/) |
 
 ## Dependencies
 
@@ -109,8 +109,8 @@ sequenceDiagram
 
 ## Configuration
 
-All values sourced from [`base/services/environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/environment.env)
-(base); per-environment overrides in [`clusters/stages/dev/.../environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/clusters/stages/dev/clusters/services-amer/environment.env).
+All values sourced from [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env)
+(base); per-environment overrides in [`clusters/stages/dev/.../environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/clusters/stages/dev/clusters/services-amer/environment.env).
 
 | Parameter | Dev | Prod |
 |---|---|---|
@@ -124,14 +124,81 @@ All values sourced from [`base/services/environment.env`](https://github.com/Jiw
 
 ## Operations
 
-<!-- TODO: Add operations in service-insights/external-secrets-operator.yaml → operations field -->
+### ClusterSecretStore not ready — provider unreachable
+
+**Symptoms:** `kubectl get clustersecretstore localstack-secretstore` shows `SecretStoreNotReady` condition. ExternalSecrets referencing this store show `SecretSyncedError` with message containing `could not get provider client` or `connection refused`.
+
+```bash
+kubectl get clustersecretstore localstack-secretstore -o yaml | grep -A5 conditions
+kubectl -n secrets-manager logs deployment/secrets-manager-external-secrets --tail=50 | grep -i error
+kubectl -n localstack get pods -o wide
+kubectl -n secrets-manager run curl-test --rm -it --image=curlimages/curl -- curl -s http://localstack.localstack.svc.cluster.local:4566/_localstack/health
+kubectl -n secrets-manager get secret localstack-credentials -o jsonpath='{.data}' | base64 -d
+```
+**See also:** docs/adr/005-localstack-external-secrets.md
+---
+
+### HelmRelease stuck in install — CRD ordering race
+
+**Symptoms:** `kubectl -n flux-system get helmrelease secrets-manager` shows `install retries exhausted` or `upgrade retries exhausted`. Helm install logs show webhook connection refused or CRD not found errors during first deployment on a fresh cluster.
+
+```bash
+kubectl -n flux-system get helmrelease secrets-manager -o yaml | grep -A10 'conditions:'
+kubectl -n flux-system describe helmrelease secrets-manager | tail -30
+kubectl get crd | grep external-secrets
+kubectl -n flux-system suspend helmrelease secrets-manager
+kubectl -n flux-system resume helmrelease secrets-manager
+kubectl -n flux-system get helmrelease secrets-manager -w
+```
+---
+
+### Webhook pod failing — TLS certificate not generated
+
+**Symptoms:** ExternalSecret creation fails with `Internal error occurred: failed calling webhook`. Webhook pods are running but returning 503. Events show `x509: certificate signed by unknown authority`.
+
+```bash
+kubectl -n secrets-manager get pods -l app.kubernetes.io/component=webhook
+kubectl -n secrets-manager logs -l app.kubernetes.io/component=webhook --tail=30
+kubectl get validatingwebhookconfigurations | grep external-secrets
+kubectl get validatingwebhookconfiguration externalsecret-validate -o yaml | grep caBundle | head -1
+kubectl -n secrets-manager delete pods -l app.kubernetes.io/component=webhook
+kubectl -n secrets-manager rollout status deployment/secrets-manager-external-secrets-webhook --timeout=120s
+```
+---
+
+### ExternalSecrets not syncing — secret missing in LocalStack
+
+**Symptoms:** Individual `ExternalSecret` resources show `SecretSyncedError` with `ResourceNotFoundException` or `Secrets Manager can't find the specified secret`. The ClusterSecretStore itself shows Ready.
+
+```bash
+kubectl get externalsecret -A | grep -v Synced
+kubectl describe externalsecret <name> -n <namespace> | grep -A5 'Status:'
+kubectl -n secrets-manager run aws-check --rm -it --image=amazon/aws-cli --env=AWS_ACCESS_KEY_ID=test --env=AWS_SECRET_ACCESS_KEY=test --env=AWS_DEFAULT_REGION=us-east-1 -- --endpoint-url=http://localstack.localstack.svc.cluster.local:4566 secretsmanager list-secrets
+kubectl -n localstack logs -l app.kubernetes.io/name=localstack --tail=100 | grep -i 'init\|startup\|script'
+```
+**See also:** docs/adr/005-localstack-external-secrets.md
+---
+
+### Operator pod OOMKilled under high ExternalSecret count
+
+**Symptoms:** Controller pod restarts with `OOMKilled` reason. `kubectl -n secrets-manager top pods` shows memory approaching the configured limit. Large number of ExternalSecrets (50+) triggering concurrent reconciliation.
+
+```bash
+kubectl -n secrets-manager get pods -l app.kubernetes.io/component=controller -o jsonpath='{.items[*].status.containerStatuses[*].lastState}'
+kubectl -n secrets-manager top pods
+kubectl get externalsecret -A --no-headers | wc -l
+kubectl -n secrets-manager describe pod -l app.kubernetes.io/component=controller | grep -A3 'Last State'
+kubectl -n flux-system get configmap cluster-vars -o yaml | grep EXTERNAL_SECRETS_MEMORY
+```
+---
+
 
 ## Related
 
 
-- [`apps/base/external-secrets-operator/`](https://github.com/JiwooL0920/fleet-infra/tree/develop/apps/base/external-secrets-operator/) — Kubernetes manifests
-- [`base/services/external-secrets-operator.yaml`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/external-secrets-operator.yaml) — Flux Kustomization
-- [`base/services/environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/environment.env) — environment variables
+- [`apps/base/external-secrets-operator/`](https://github.com/JiwooL0920/flux-infra/tree/develop/apps/base/external-secrets-operator/) — Kubernetes manifests
+- [`base/services/external-secrets-operator.yaml`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/external-secrets-operator.yaml) — Flux Kustomization
+- [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env) — environment variables
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/fleet-infra/blob/develop/service-catalog.json) at commit `2d36e22` · catalog sha `4d088b0b3a67b4c4`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `2d36e22` · catalog sha `4d088b0b3a67b4c4`*

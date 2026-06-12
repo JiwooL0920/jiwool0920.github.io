@@ -20,7 +20,7 @@ In stacks that also run OpenTelemetry Collector (as this one does), Promtail and
 | **Type** | HelmRelease (chart: `promtail` v6.17.0) |
 | **Layer** | Logging stack services |
 | **Status** | Enabled |
-| **Source** | [`apps/base/promtail/`](https://github.com/JiwooL0920/fleet-infra/tree/develop/apps/base/promtail/) |
+| **Source** | [`apps/base/promtail/`](https://github.com/JiwooL0920/flux-infra/tree/develop/apps/base/promtail/) |
 
 ## Dependencies
 
@@ -102,8 +102,8 @@ sequenceDiagram
 
 ## Configuration
 
-All values sourced from [`base/services/environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/environment.env)
-(base); per-environment overrides in [`clusters/stages/dev/.../environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/clusters/stages/dev/clusters/services-amer/environment.env).
+All values sourced from [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env)
+(base); per-environment overrides in [`clusters/stages/dev/.../environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/clusters/stages/dev/clusters/services-amer/environment.env).
 
 | Parameter | Dev | Prod |
 |---|---|---|
@@ -116,14 +116,90 @@ All values sourced from [`base/services/environment.env`](https://github.com/Jiw
 
 ## Operations
 
-<!-- TODO: Add operations in service-insights/promtail.yaml → operations field -->
+### Promtail cannot reach Loki
+
+**Symptoms:** Promtail logs show repeated `msg="error sending batch" status=503` or connection refused errors. Grafana shows log gaps for all namespaces. Promtail metrics show `promtail_sent_entries_total` stalled while `promtail_targets_active_total` remains normal.
+
+```bash
+kubectl -n monitoring get pods -l app.kubernetes.io/name=promtail -o wide
+kubectl -n monitoring logs ds/promtail --tail=50 | grep -i 'error\|retry\|connection'
+kubectl -n monitoring run curl-test --rm -it --image=curlimages/curl -- curl -s -o /dev/null -w '%{http_code}' http://monitoring-loki:3100/ready
+kubectl -n flux-system get kustomization loki -o jsonpath='{.status.conditions[*].message}'
+kubectl -n monitoring get pods -l app.kubernetes.io/name=loki -o jsonpath='{.items[*].status.phase}'
+```
+---
+
+### Inotify limit exhaustion despite init container
+
+**Symptoms:** Promtail logs show `too many open files` or `inotify_add_watch: no space left on device`. New pod logs are not being collected while existing tails continue working. The init container completed successfully but the node has other inotify consumers.
+
+```bash
+kubectl -n monitoring get pods -l app.kubernetes.io/name=promtail -o wide
+kubectl -n monitoring logs ds/promtail -c init-inotify
+kubectl -n monitoring debug $(kubectl -n monitoring get pod -l app.kubernetes.io/name=promtail --field-selector spec.nodeName=$(kubectl get nodes -o jsonpath='{.items[0].metadata.name}') -o name | head -1) --image=busybox -- cat /proc/sys/fs/inotify/max_user_instances
+kubectl -n monitoring exec ds/promtail -- cat /run/promtail/positions.yaml | wc -l
+```
+---
+
+### Positions file reset causing log re-ingestion
+
+**Symptoms:** Loki shows duplicate log entries after a node drain or pod eviction. `promtail_read_bytes_total` spikes without a corresponding increase in application log output. Positions file shows all entries starting from byte offset 0.
+
+```bash
+kubectl -n monitoring exec ds/promtail -- cat /run/promtail/positions.yaml
+kubectl -n monitoring get pods -l app.kubernetes.io/name=promtail -o jsonpath='{.items[*].status.containerStatuses[*].restartCount}'
+kubectl -n monitoring get events --field-selector involvedObject.kind=DaemonSet,involvedObject.name=promtail --sort-by=.lastTimestamp
+kubectl -n monitoring describe pod -l app.kubernetes.io/name=promtail | grep -A5 'Last State'
+```
+---
+
+### Labels not extracted — logs appear without namespace/pod metadata
+
+**Symptoms:** Loki queries filtering by `{namespace="..."}` return no results, but `{job="pod-logs"}` shows entries. Promtail metrics show `promtail_custom_regex_errors_total` incrementing. Log lines in Loki only have `job` and `__path__` labels.
+
+```bash
+kubectl -n monitoring exec ds/promtail -- cat /run/promtail/positions.yaml | head -20
+kubectl -n monitoring logs ds/promtail --tail=100 | grep -i 'regex\|pipeline\|label'
+kubectl -n monitoring exec ds/promtail -- ls /var/log/pods/ | head -10
+kubectl -n monitoring exec ds/promtail -- promtail --dry-run --config.file=/etc/promtail/promtail.yaml 2>&1 | head -30
+```
+---
+
+### DaemonSet not scheduled on new node
+
+**Symptoms:** A newly joined node has no Promtail pod. `kubectl get ds promtail -n monitoring` shows DESIRED count lower than total node count, or a pod stuck in Pending.
+
+```bash
+kubectl -n monitoring get ds promtail -o wide
+kubectl get nodes -o custom-columns=NAME:.metadata.name,TAINTS:.spec.taints
+kubectl -n monitoring describe ds promtail | grep -A10 'Tolerations'
+kubectl -n monitoring get pods -l app.kubernetes.io/name=promtail -o wide --sort-by=.spec.nodeName
+kubectl -n monitoring describe pod $(kubectl -n monitoring get pods -l app.kubernetes.io/name=promtail --field-selector status.phase!=Running -o name 2>/dev/null | head -1) 2>/dev/null | grep -A5 Events
+```
+---
+
+### High memory usage causing OOMKill
+
+**Symptoms:** Promtail pods restarting with `OOMKilled` exit reason. `kubectl top pod` shows memory approaching the configured limit. Node has high pod count or pods producing extremely verbose logs.
+
+```bash
+kubectl -n monitoring top pods -l app.kubernetes.io/name=promtail --sort-by=memory
+kubectl -n monitoring get pods -l app.kubernetes.io/name=promtail -o jsonpath='{range .items[*]}{.metadata.name} restarts={.status.containerStatuses[0].restartCount} reason={.status.containerStatuses[0].lastState.terminated.reason}{"\n"}{end}'
+kubectl -n monitoring exec ds/promtail -- cat /run/promtail/positions.yaml | wc -l
+kubectl -n monitoring port-forward ds/promtail 3101:3101 &
+curl -s localhost:3101/metrics | grep promtail_targets_active_total
+curl -s localhost:3101/metrics | grep process_resident_memory_bytes
+```
+**See also:** docs/adr/010-opentelemetry-collector.md
+---
+
 
 ## Related
 
 
-- [`apps/base/promtail/`](https://github.com/JiwooL0920/fleet-infra/tree/develop/apps/base/promtail/) — Kubernetes manifests
-- [`base/services/promtail.yaml`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/promtail.yaml) — Flux Kustomization
-- [`base/services/environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/environment.env) — environment variables
+- [`apps/base/promtail/`](https://github.com/JiwooL0920/flux-infra/tree/develop/apps/base/promtail/) — Kubernetes manifests
+- [`base/services/promtail.yaml`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/promtail.yaml) — Flux Kustomization
+- [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env) — environment variables
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/fleet-infra/blob/develop/service-catalog.json) at commit `2d36e22` · catalog sha `4d088b0b3a67b4c4`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `2d36e22` · catalog sha `4d088b0b3a67b4c4`*

@@ -20,7 +20,7 @@ Cilium is a CNCF Graduated project, widely adopted in production clusters at sca
 | **Type** | HelmRelease (chart: `cilium` v1.17.2) |
 | **Layer** | Foundation services |
 | **Status** | Enabled |
-| **Source** | [`apps/base/cilium/`](https://github.com/JiwooL0920/fleet-infra/tree/develop/apps/base/cilium/) |
+| **Source** | [`apps/base/cilium/`](https://github.com/JiwooL0920/flux-infra/tree/develop/apps/base/cilium/) |
 
 ## Dependencies
 
@@ -99,8 +99,8 @@ sequenceDiagram
 
 ## Configuration
 
-All values sourced from [`base/services/environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/environment.env)
-(base); per-environment overrides in [`clusters/stages/dev/.../environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/clusters/stages/dev/clusters/services-amer/environment.env).
+All values sourced from [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env)
+(base); per-environment overrides in [`clusters/stages/dev/.../environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/clusters/stages/dev/clusters/services-amer/environment.env).
 
 | Parameter | Dev | Prod |
 |---|---|---|
@@ -180,9 +180,9 @@ flux suspend helmrelease -n flux-system cilium && flux resume helmrelease -n flu
 ## Related
 
 
-- [`apps/base/cilium/`](https://github.com/JiwooL0920/fleet-infra/tree/develop/apps/base/cilium/) — Kubernetes manifests
-- [`base/services/cilium.yaml`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/cilium.yaml) — Flux Kustomization
-- [`base/services/environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/environment.env) — environment variables
+- [`apps/base/cilium/`](https://github.com/JiwooL0920/flux-infra/tree/develop/apps/base/cilium/) — Kubernetes manifests
+- [`base/services/cilium.yaml`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/cilium.yaml) — Flux Kustomization
+- [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env) — environment variables
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/fleet-infra/blob/develop/service-catalog.json) at commit `2d36e22` · catalog sha `4d088b0b3a67b4c4`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `2d36e22` · catalog sha `4d088b0b3a67b4c4`*

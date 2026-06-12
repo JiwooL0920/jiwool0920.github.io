@@ -21,7 +21,7 @@ Traefik also natively supports the emerging Gateway API standard, providing an i
 | **Layer** | Foundation services |
 | **Chart** | [`traefik`](https://helm.traefik.io/traefik) v32.1.1 |
 | **Status** | Enabled |
-| **Source** | [`apps/base/traefik/`](https://github.com/JiwooL0920/fleet-infra/tree/develop/apps/base/traefik/) |
+| **Source** | [`apps/base/traefik/`](https://github.com/JiwooL0920/flux-infra/tree/develop/apps/base/traefik/) |
 
 ## Dependencies
 
@@ -62,8 +62,8 @@ In this platform it operates as a NodePort service bound to fixed ports on the K
 
 ## Configuration
 
-All values sourced from [`base/services/environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/environment.env)
-(base); per-environment overrides in [`clusters/stages/dev/.../environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/clusters/stages/dev/clusters/services-amer/environment.env).
+All values sourced from [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env)
+(base); per-environment overrides in [`clusters/stages/dev/.../environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/clusters/stages/dev/clusters/services-amer/environment.env).
 
 | Parameter | Dev | Prod |
 |---|---|---|
@@ -181,9 +181,9 @@ kubectl get pods -n traefik -l app.kubernetes.io/name=traefik -o yaml | grep -A5
 ## Related
 
 
-- [`apps/base/traefik/`](https://github.com/JiwooL0920/fleet-infra/tree/develop/apps/base/traefik/) — Kubernetes manifests
-- [`base/services/traefik.yaml`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/traefik.yaml) — Flux Kustomization
-- [`base/services/environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/environment.env) — environment variables
+- [`apps/base/traefik/`](https://github.com/JiwooL0920/flux-infra/tree/develop/apps/base/traefik/) — Kubernetes manifests
+- [`base/services/traefik.yaml`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/traefik.yaml) — Flux Kustomization
+- [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env) — environment variables
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/fleet-infra/blob/develop/service-catalog.json) at commit `2d36e22` · catalog sha `4d088b0b3a67b4c4`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `2d36e22` · catalog sha `4d088b0b3a67b4c4`*

@@ -20,7 +20,7 @@ The ScyllaDB Operator manages the full lifecycle of ScyllaCluster custom resourc
 | **Type** | HelmRelease (chart: `scylla` v1.12.0) |
 | **Layer** | Database services |
 | **Status** | Enabled |
-| **Source** | [`apps/base/scylla/`](https://github.com/JiwooL0920/fleet-infra/tree/develop/apps/base/scylla/) |
+| **Source** | [`apps/base/scylla/`](https://github.com/JiwooL0920/flux-infra/tree/develop/apps/base/scylla/) |
 
 ## Dependencies
 
@@ -116,8 +116,8 @@ sequenceDiagram
 
 ## Configuration
 
-All values sourced from [`base/services/environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/environment.env)
-(base); per-environment overrides in [`clusters/stages/dev/.../environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/clusters/stages/dev/clusters/services-amer/environment.env).
+All values sourced from [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env)
+(base); per-environment overrides in [`clusters/stages/dev/.../environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/clusters/stages/dev/clusters/services-amer/environment.env).
 
 | Parameter | Dev | Prod |
 |---|---|---|
@@ -150,9 +150,9 @@ All values sourced from [`base/services/environment.env`](https://github.com/Jiw
 ## Related
 
 
-- [`apps/base/scylla/`](https://github.com/JiwooL0920/fleet-infra/tree/develop/apps/base/scylla/) — Kubernetes manifests
-- [`base/services/scylla-cluster.yaml`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/scylla-cluster.yaml) — Flux Kustomization
-- [`base/services/environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/environment.env) — environment variables
+- [`apps/base/scylla/`](https://github.com/JiwooL0920/flux-infra/tree/develop/apps/base/scylla/) — Kubernetes manifests
+- [`base/services/scylla-cluster.yaml`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/scylla-cluster.yaml) — Flux Kustomization
+- [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env) — environment variables
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/fleet-infra/blob/develop/service-catalog.json) at commit `2d36e22` · catalog sha `4d088b0b3a67b4c4`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `2d36e22` · catalog sha `4d088b0b3a67b4c4`*

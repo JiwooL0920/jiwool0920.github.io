@@ -70,31 +70,58 @@ nav:
   - Home: index.md
   - Projects:
       - projects/index.md
-      - Fleet Infrastructure:
-          - projects/fleet-infra/index.md
-          - Architecture: projects/fleet-infra/architecture.md
-          - Components:
-              - projects/fleet-infra/components/index.md
-              - Traefik: projects/fleet-infra/components/traefik.md
-              - LocalStack: projects/fleet-infra/components/localstack.md
-              - CNPG Operator: projects/fleet-infra/components/cnpg-operator.md
-              - External Secrets: projects/fleet-infra/components/external-secrets.md
-              - Scylla Operator: projects/fleet-infra/components/scylla-operator.md
-              - Metrics Server: projects/fleet-infra/components/metrics-server.md
-              - Kube-Prometheus-Stack: projects/fleet-infra/components/kube-prometheus-stack.md
-              - Weave GitOps: projects/fleet-infra/components/weave-gitops.md
-              - Loki: projects/fleet-infra/components/loki.md
-              - Promtail: projects/fleet-infra/components/promtail.md
-              - Jaeger: projects/fleet-infra/components/jaeger.md
-              - OpenTelemetry: projects/fleet-infra/components/opentelemetry.md
-              - PostgreSQL: projects/fleet-infra/components/postgresql.md
-              - Redis: projects/fleet-infra/components/redis.md
-              - ScyllaDB: projects/fleet-infra/components/scylladb.md
-              - N8N: projects/fleet-infra/components/n8n.md
-              - Temporal: projects/fleet-infra/components/temporal.md
-              - pgAdmin4: projects/fleet-infra/components/pgadmin.md
-              - RedisInsight: projects/fleet-infra/components/redisinsight.md
-          - Runbooks: projects/fleet-infra/runbooks.md
+      - Flux Infrastructure:
+        - Overview: projects/flux-infra/index.md
+        - Architecture: projects/flux-infra/architecture.md
+        - Components:
+          - Index: projects/flux-infra/components/index.md
+          - Foundation services:
+            - CNPG Operator: projects/flux-infra/components/cnpg-operator.md
+            - Cilium: projects/flux-infra/components/cilium.md
+            - External Secrets Config: projects/flux-infra/components/external-secrets-config.md
+            - External Secrets Operator: projects/flux-infra/components/external-secrets-operator.md
+            - Grafana SA Setup: projects/flux-infra/components/grafana-sa-setup.md
+            - Kube Prometheus Stack: projects/flux-infra/components/kube-prometheus-stack.md
+            - LocalStack: projects/flux-infra/components/localstack.md
+            - Metrics Server: projects/flux-infra/components/metrics-server.md
+            - Scylla Operator: projects/flux-infra/components/scylla-operator.md
+            - Traefik: projects/flux-infra/components/traefik.md
+            - Traefik Config: projects/flux-infra/components/traefik-config.md
+            - Weave GitOps: projects/flux-infra/components/weave-gitops.md
+          - Node maintenance:
+            - Node Image GC: projects/flux-infra/components/node-image-gc.md
+          - Event-driven autoscaling:
+            - KEDA: projects/flux-infra/components/keda.md
+          - Logging stack services:
+            - Loki: projects/flux-infra/components/loki.md
+            - Promtail: projects/flux-infra/components/promtail.md
+          - Distributed tracing services:
+            - Jaeger: projects/flux-infra/components/jaeger.md
+            - OpenTelemetry Collector: projects/flux-infra/components/opentelemetry-collector.md
+          - Grafana Operator:
+            - Grafana Config: projects/flux-infra/components/grafana-config.md
+            - Grafana Dashboards: projects/flux-infra/components/grafana-dashboards.md
+            - Grafana Operator: projects/flux-infra/components/grafana-operator.md
+          - Database services:
+            - PostgreSQL Cluster: projects/flux-infra/components/postgresql-cluster.md
+            - Redis Sentinel: projects/flux-infra/components/redis-sentinel.md
+            - ScyllaDB Cluster: projects/flux-infra/components/scylla-cluster.md
+          - Application services:
+            - N8N: projects/flux-infra/components/n8n.md
+            - Temporal: projects/flux-infra/components/temporal.md
+          - AI agent platform:
+            - AgentGateway: projects/flux-infra/components/agentgateway.md
+            - AgentGateway Config: projects/flux-infra/components/agentgateway-config.md
+            - Code Tools: projects/flux-infra/components/code-tools.md
+            - Gateway API CRDs: projects/flux-infra/components/gateway-api-crds.md
+            - Ollama: projects/flux-infra/components/ollama.md
+            - kagent: projects/flux-infra/components/kagent.md
+          - Security and cost observability:
+            - Kubescape: projects/flux-infra/components/kubescape.md
+            - OpenCost: projects/flux-infra/components/opencost.md
+          - Database UI services:
+            - RedisInsight: projects/flux-infra/components/redisinsight.md
+            - pgAdmin4: projects/flux-infra/components/pgadmin4.md
       - Terraform Infrastructure:
           - projects/terraform-infra/index.md
           - Architecture: projects/terraform-infra/architecture.md

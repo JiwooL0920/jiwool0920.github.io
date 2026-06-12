@@ -20,7 +20,7 @@ The cluster runs in `cnpg-system` namespace, managed entirely through Kubernetes
 | **Type** | Kustomization |
 | **Layer** | Database services |
 | **Status** | Enabled |
-| **Source** | [`apps/base/cloudnative-pg/`](https://github.com/JiwooL0920/fleet-infra/tree/develop/apps/base/cloudnative-pg/) |
+| **Source** | [`apps/base/cloudnative-pg/`](https://github.com/JiwooL0920/flux-infra/tree/develop/apps/base/cloudnative-pg/) |
 
 ## Dependencies
 
@@ -132,8 +132,8 @@ graph TD
 
 ## Configuration
 
-All values sourced from [`base/services/environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/environment.env)
-(base); per-environment overrides in [`clusters/stages/dev/.../environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/clusters/stages/dev/clusters/services-amer/environment.env).
+All values sourced from [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env)
+(base); per-environment overrides in [`clusters/stages/dev/.../environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/clusters/stages/dev/clusters/services-amer/environment.env).
 
 | Parameter | Dev | Prod |
 |---|---|---|
@@ -156,9 +156,9 @@ All values sourced from [`base/services/environment.env`](https://github.com/Jiw
 ## Related
 
 
-- [`apps/base/cloudnative-pg/`](https://github.com/JiwooL0920/fleet-infra/tree/develop/apps/base/cloudnative-pg/) — Kubernetes manifests
-- [`base/services/postgresql-cluster.yaml`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/postgresql-cluster.yaml) — Flux Kustomization
-- [`base/services/environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/environment.env) — environment variables
+- [`apps/base/cloudnative-pg/`](https://github.com/JiwooL0920/flux-infra/tree/develop/apps/base/cloudnative-pg/) — Kubernetes manifests
+- [`base/services/postgresql-cluster.yaml`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/postgresql-cluster.yaml) — Flux Kustomization
+- [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env) — environment variables
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/fleet-infra/blob/develop/service-catalog.json) at commit `2d36e22` · catalog sha `4d088b0b3a67b4c4`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `2d36e22` · catalog sha `4d088b0b3a67b4c4`*

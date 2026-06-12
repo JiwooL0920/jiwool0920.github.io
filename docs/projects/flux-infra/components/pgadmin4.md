@@ -19,7 +19,7 @@ pgAdmin4 operates as a stateful web application. It maintains its own SQLite met
 | **Layer** | Database UI services |
 | **Chart** | [`pgadmin4`](https://helm.runix.net) v1.30.0 |
 | **Status** | Enabled |
-| **Source** | [`apps/base/pgadmin4/`](https://github.com/JiwooL0920/fleet-infra/tree/develop/apps/base/pgadmin4/) |
+| **Source** | [`apps/base/pgadmin4/`](https://github.com/JiwooL0920/flux-infra/tree/develop/apps/base/pgadmin4/) |
 
 ## Dependencies
 
@@ -94,8 +94,8 @@ graph TD
 
 ## Configuration
 
-All values sourced from [`base/services/environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/environment.env)
-(base); per-environment overrides in [`clusters/stages/dev/.../environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/clusters/stages/dev/clusters/services-amer/environment.env).
+All values sourced from [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env)
+(base); per-environment overrides in [`clusters/stages/dev/.../environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/clusters/stages/dev/clusters/services-amer/environment.env).
 
 | Parameter | Dev | Prod |
 |---|---|---|
@@ -114,9 +114,9 @@ All values sourced from [`base/services/environment.env`](https://github.com/Jiw
 ## Related
 
 
-- [`apps/base/pgadmin4/`](https://github.com/JiwooL0920/fleet-infra/tree/develop/apps/base/pgadmin4/) — Kubernetes manifests
-- [`base/services/pgadmin4.yaml`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/pgadmin4.yaml) — Flux Kustomization
-- [`base/services/environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/environment.env) — environment variables
+- [`apps/base/pgadmin4/`](https://github.com/JiwooL0920/flux-infra/tree/develop/apps/base/pgadmin4/) — Kubernetes manifests
+- [`base/services/pgadmin4.yaml`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/pgadmin4.yaml) — Flux Kustomization
+- [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env) — environment variables
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/fleet-infra/blob/develop/service-catalog.json) at commit `2d36e22` · catalog sha `4d088b0b3a67b4c4`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `2d36e22` · catalog sha `4d088b0b3a67b4c4`*

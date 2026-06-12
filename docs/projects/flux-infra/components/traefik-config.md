@@ -18,7 +18,7 @@ This pattern of splitting operator installation from its configuration is a deli
 | **Type** | Kustomization |
 | **Layer** | Foundation services |
 | **Status** | Enabled |
-| **Source** | [`apps/base/traefik-config/`](https://github.com/JiwooL0920/fleet-infra/tree/develop/apps/base/traefik-config/) |
+| **Source** | [`apps/base/traefik-config/`](https://github.com/JiwooL0920/flux-infra/tree/develop/apps/base/traefik-config/) |
 
 ## Dependencies
 
@@ -111,22 +111,86 @@ sequenceDiagram
 
 ## Configuration
 
-All values sourced from [`base/services/environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/environment.env)
-(base); per-environment overrides in [`clusters/stages/dev/.../environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/clusters/stages/dev/clusters/services-amer/environment.env).
+All values sourced from [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env)
+(base); per-environment overrides in [`clusters/stages/dev/.../environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/clusters/stages/dev/clusters/services-amer/environment.env).
 
 _No environment-specific configuration variables for this service._
 
 
 ## Operations
 
-<!-- TODO: Add operations in service-insights/traefik-config.yaml → operations field -->
+### Dashboard returns 401 despite correct credentials
+
+**Symptoms:** Accessing `traefik.local` returns HTTP 401. Credentials known to be correct. The Secret may be empty or contain stale htpasswd data.
+
+```bash
+kubectl get externalsecret traefik-dashboard-credentials -n traefik -o jsonpath='{.status.conditions[*].message}'
+kubectl get secret traefik-dashboard-credentials -n traefik -o jsonpath='{.data.users}' | base64 -d
+kubectl get clustersecretstore localstack-secretstore -o jsonpath='{.status.conditions[*].message}'
+kubectl annotate externalsecret traefik-dashboard-credentials -n traefik force-sync=$(date +%s) --overwrite
+kubectl get externalsecret traefik-dashboard-credentials -n traefik -w
+```
+---
+
+### ExternalSecret stuck in SecretSyncedError
+
+**Symptoms:** `kubectl get externalsecret -n traefik` shows `SecretSyncedError` status. Downstream services (jaeger, scylla-cluster) may be blocked waiting for traefik-config readiness.
+
+```bash
+kubectl get externalsecret traefik-dashboard-credentials -n traefik -o yaml | grep -A5 'conditions'
+kubectl get clustersecretstore localstack-secretstore -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}'
+kubectl logs -n external-secrets -l app.kubernetes.io/name=external-secrets --tail=50 | grep traefik
+kubectl get pods -n localstack -o wide
+kubectl exec -n localstack deploy/localstack -- awslocal secretsmanager get-secret-value --secret-id traefik/dashboard/credentials/htpasswd
+```
+---
+
+### IngressRoute not matching requests
+
+**Symptoms:** Requests to `traefik.local` return 404 instead of reaching the dashboard. Traefik access logs show no match for the Host header.
+
+```bash
+kubectl get ingressroute traefik-dashboard -n traefik -o yaml
+kubectl get middleware dashboard-auth -n traefik -o yaml
+kubectl port-forward -n traefik svc/traefik 9000:9000
+curl -s http://localhost:9000/api/http/routers | jq '.[] | select(.name | contains("dashboard"))'
+curl -v -H 'Host: traefik.local' http://localhost:80/
+```
+---
+
+### Flux Kustomization traefik-config stuck not ready
+
+**Symptoms:** `flux get kustomization traefik-config` shows `dependency 'flux-system/traefik' is not ready` or `dependency 'flux-system/external-secrets-config' is not ready`. Downstream services blocked.
+
+```bash
+flux get kustomization traefik-config
+flux get kustomization traefik
+flux get kustomization external-secrets-config
+kubectl get helmrelease -A | grep -E 'traefik|external-secrets'
+flux reconcile kustomization traefik-config --with-source
+```
+---
+
+### Middleware not applied to IngressRoute
+
+**Symptoms:** Dashboard accessible without authentication. Traefik logs show the route is active but middleware chain is empty or errored.
+
+```bash
+curl -s http://localhost:9000/api/http/routers | jq '.[] | select(.name | contains("dashboard")) | .middlewares'
+kubectl get middleware dashboard-auth -n traefik -o jsonpath='{.spec}'
+kubectl get secret traefik-dashboard-credentials -n traefik
+kubectl logs -n traefik -l app.kubernetes.io/name=traefik --tail=30 | grep -i 'middleware\|error\|dashboard'
+kubectl describe ingressroute traefik-dashboard -n traefik
+```
+---
+
 
 ## Related
 
 
-- [`apps/base/traefik-config/`](https://github.com/JiwooL0920/fleet-infra/tree/develop/apps/base/traefik-config/) — Kubernetes manifests
-- [`base/services/traefik-config.yaml`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/traefik-config.yaml) — Flux Kustomization
-- [`base/services/environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/environment.env) — environment variables
+- [`apps/base/traefik-config/`](https://github.com/JiwooL0920/flux-infra/tree/develop/apps/base/traefik-config/) — Kubernetes manifests
+- [`base/services/traefik-config.yaml`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/traefik-config.yaml) — Flux Kustomization
+- [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env) — environment variables
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/fleet-infra/blob/develop/service-catalog.json) at commit `2d36e22` · catalog sha `4d088b0b3a67b4c4`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `2d36e22` · catalog sha `4d088b0b3a67b4c4`*

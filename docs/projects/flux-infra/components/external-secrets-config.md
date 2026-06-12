@@ -20,7 +20,7 @@ This `external-secrets-config` service is not the operator itself — it is the 
 | **Type** | Kustomization |
 | **Layer** | Foundation services |
 | **Status** | Enabled |
-| **Source** | [`apps/base/external-secrets-config/`](https://github.com/JiwooL0920/fleet-infra/tree/develop/apps/base/external-secrets-config/) |
+| **Source** | [`apps/base/external-secrets-config/`](https://github.com/JiwooL0920/flux-infra/tree/develop/apps/base/external-secrets-config/) |
 
 ## Dependencies
 
@@ -106,22 +106,84 @@ graph TD
 
 ## Configuration
 
-All values sourced from [`base/services/environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/environment.env)
-(base); per-environment overrides in [`clusters/stages/dev/.../environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/clusters/stages/dev/clusters/services-amer/environment.env).
+All values sourced from [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env)
+(base); per-environment overrides in [`clusters/stages/dev/.../environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/clusters/stages/dev/clusters/services-amer/environment.env).
 
 _No environment-specific configuration variables for this service._
 
 
 ## Operations
 
-<!-- TODO: Add operations in service-insights/external-secrets-config.yaml → operations field -->
+### ClusterSecretStore stuck in NotReady
+
+**Symptoms:** `kubectl get clustersecretstore localstack-secretstore` shows `Ready: False`. Downstream Kustomizations remain suspended with `dependency 'flux-system/external-secrets-config' is not ready`. Flux health check fails with timeout after 5m.
+
+```bash
+kubectl get clustersecretstore localstack-secretstore -o yaml | grep -A 10 'status:'
+kubectl logs -n external-secrets -l app.kubernetes.io/name=external-secrets --tail=50 | grep -i 'secretstore\|error\|localstack'
+kubectl get pods -n localstack -o wide
+kubectl exec -n localstack deploy/localstack -- awslocal secretsmanager list-secrets --region us-east-1
+kubectl get configmap cluster-vars -n flux-system -o yaml | grep -i endpoint
+```
+---
+
+### Flux Kustomization timeout during bootstrap
+
+**Symptoms:** `flux get kustomization external-secrets-config` shows `reconciliation failed: timeout waiting for condition`. Typically occurs on fresh cluster bootstrap when LocalStack init hooks take longer than expected.
+
+```bash
+flux get kustomization external-secrets-config
+flux get kustomization localstack
+kubectl get pods -n localstack -o wide --show-labels
+kubectl logs -n localstack deploy/localstack --tail=100 | grep -i 'ready\|init\|secret'
+flux reconcile kustomization external-secrets-config --with-source
+```
+---
+
+### PostBuild substitution failure
+
+**Symptoms:** `flux get kustomization external-secrets-config` reports `SubstitutionFailed` or the rendered manifest contains literal `${VARIABLE}` placeholders. ClusterSecretStore may point to an incorrect or empty endpoint.
+
+```bash
+flux get kustomization external-secrets-config -o yaml | grep -A 5 'status:'
+kubectl get configmap cluster-vars -n flux-system -o yaml
+flux logs --kind=Kustomization --name=external-secrets-config --namespace=flux-system --tail=30
+```
+---
+
+### Downstream ExternalSecrets failing after store is Ready
+
+**Symptoms:** ClusterSecretStore shows `Ready: True` but `ExternalSecret` resources in downstream namespaces show `SecretSyncedError` or `ProviderError`. Specific secrets referenced by downstream services do not exist in LocalStack.
+
+```bash
+kubectl get externalsecrets --all-namespaces -o wide | grep -v 'SecretSynced'
+kubectl describe externalsecret -n <failing-namespace> <failing-name> | grep -A 5 'Conditions:'
+kubectl exec -n localstack deploy/localstack -- awslocal secretsmanager list-secrets --region us-east-1 --output table
+kubectl logs -n external-secrets -l app.kubernetes.io/name=external-secrets --tail=100 | grep -i 'error\|not found'
+```
+---
+
+### CRD not available when Kustomization reconciles
+
+**Symptoms:** Flux reports `no matches for kind "ClusterSecretStore" in version "external-secrets.io/v1beta1"`. Occurs if operator Kustomization was suspended or failed while config attempts to reconcile.
+
+```bash
+kubectl get crd clustersecretstores.external-secrets.io
+flux get kustomization external-secrets-operator
+kubectl get pods -n external-secrets
+flux reconcile kustomization external-secrets-operator --with-source
+flux reconcile kustomization external-secrets-config
+```
+**See also:** docs/adr/001-fine-grained-service-dependencies.md
+---
+
 
 ## Related
 
 
-- [`apps/base/external-secrets-config/`](https://github.com/JiwooL0920/fleet-infra/tree/develop/apps/base/external-secrets-config/) — Kubernetes manifests
-- [`base/services/external-secrets-config.yaml`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/external-secrets-config.yaml) — Flux Kustomization
-- [`base/services/environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/environment.env) — environment variables
+- [`apps/base/external-secrets-config/`](https://github.com/JiwooL0920/flux-infra/tree/develop/apps/base/external-secrets-config/) — Kubernetes manifests
+- [`base/services/external-secrets-config.yaml`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/external-secrets-config.yaml) — Flux Kustomization
+- [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env) — environment variables
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/fleet-infra/blob/develop/service-catalog.json) at commit `2d36e22` · catalog sha `4d088b0b3a67b4c4`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `2d36e22` · catalog sha `4d088b0b3a67b4c4`*

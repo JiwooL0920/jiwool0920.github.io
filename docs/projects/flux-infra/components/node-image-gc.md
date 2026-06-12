@@ -18,7 +18,7 @@ This service implements a scheduled, multi-step cleanup directly against the nod
 | **Type** | CronJob |
 | **Layer** | Node maintenance |
 | **Status** | Enabled |
-| **Source** | [`apps/base/node-image-gc/`](https://github.com/JiwooL0920/fleet-infra/tree/develop/apps/base/node-image-gc/) |
+| **Source** | [`apps/base/node-image-gc/`](https://github.com/JiwooL0920/flux-infra/tree/develop/apps/base/node-image-gc/) |
 
 ## Dependencies
 
@@ -80,22 +80,96 @@ graph TD
 
 ## Configuration
 
-All values sourced from [`base/services/environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/environment.env)
-(base); per-environment overrides in [`clusters/stages/dev/.../environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/clusters/stages/dev/clusters/services-amer/environment.env).
+All values sourced from [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env)
+(base); per-environment overrides in [`clusters/stages/dev/.../environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/clusters/stages/dev/clusters/services-amer/environment.env).
 
 _No environment-specific configuration variables for this service._
 
 
 ## Operations
 
-<!-- TODO: Add operations in service-insights/node-image-gc.yaml → operations field -->
+### Job pods failing with nsenter permission denied
+
+**Symptoms:** Job pods show `Completed` with exit code 1. Pod logs contain `nsenter: failed to execute /bin/sh: Permission denied` or `operation not permitted`. The CronJob's `failedJobsHistoryLimit` fills up with failed runs.
+
+```bash
+kubectl -n node-maintenance get jobs --sort-by=.status.startTime | tail -5
+kubectl -n node-maintenance logs job/$(kubectl -n node-maintenance get jobs --sort-by=.status.startTime -o jsonpath='{.items[-1].metadata.name}')
+kubectl -n node-maintenance get cronjob node-image-gc -o jsonpath='{.spec.jobTemplate.spec.template.spec.containers[0].securityContext}'
+kubectl get nodes -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.metadata.labels.kubernetes\.io/os}{"\n"}{end}'
+# Verify PodSecurityAdmission is not blocking privileged pods in node-maintenance namespace:
+kubectl get ns node-maintenance -o jsonpath='{.metadata.labels}' | grep -i pod-security
+```
+---
+
+### CronJob not scheduling new jobs
+
+**Symptoms:** `kubectl -n node-maintenance get cronjob node-image-gc` shows LAST SCHEDULE increasingly stale. No new Job objects created. Disk usage on nodes climbing without intervention.
+
+```bash
+kubectl -n node-maintenance get cronjob node-image-gc -o yaml | grep -A2 'suspend\|concurrencyPolicy\|lastScheduleTime'
+# Check if a previous job is still running (Forbid policy blocks new runs):
+kubectl -n node-maintenance get jobs -l job-name --field-selector status.successful=0,status.failed=0
+# Check for stuck pods from previous runs:
+kubectl -n node-maintenance get pods --field-selector=status.phase!=Succeeded,status.phase!=Failed
+# If a job is stuck, delete it to unblock scheduling:
+kubectl -n node-maintenance delete job $(kubectl -n node-maintenance get jobs --field-selector status.successful=0,status.failed=0 -o jsonpath='{.items[0].metadata.name}')
+```
+---
+
+### Cleanup runs but disk space not reclaimed
+
+**Symptoms:** Job completes successfully (exit 0), logs show "Cleanup Complete" but "Disk before" and "Disk after" values are nearly identical. Node disk pressure alerts continue firing.
+
+```bash
+kubectl -n node-maintenance logs job/$(kubectl -n node-maintenance get jobs --sort-by=.status.startTime -o jsonpath='{.items[-1].metadata.name}') | grep -E 'Disk|Images remaining|Removing'
+# SSH or exec into a debug pod to check what's consuming space:
+kubectl debug node/$(kubectl get nodes -o jsonpath='{.items[0].metadata.name}') -it --image=alpine:3.19 -- df -h /
+# Check if large images are still referenced by running pods:
+kubectl debug node/$(kubectl get nodes -o jsonpath='{.items[0].metadata.name}') -it --image=alpine:3.19 -- nsenter -t 1 -m -u -i -n -p -- crictl images --sort-by size | head -20
+# Disk pressure may be from logs or emptyDir volumes, not images:
+kubectl debug node/$(kubectl get nodes -o jsonpath='{.items[0].metadata.name}') -it --image=alpine:3.19 -- nsenter -t 1 -m -u -i -n -p -- du -sh /var/log/pods/* | sort -rh | head -10
+```
+---
+
+### crictl commands failing with runtime not found
+
+**Symptoms:** Pod logs show `crictl: command not found` or `FATA[0000] connect: connect endpoint ... context deadline exceeded`. The alpine container cannot reach the host's container runtime.
+
+```bash
+kubectl -n node-maintenance logs job/$(kubectl -n node-maintenance get jobs --sort-by=.status.startTime -o jsonpath='{.items[-1].metadata.name}')
+# Verify hostPID is enabled on the pod spec:
+kubectl -n node-maintenance get cronjob node-image-gc -o jsonpath='{.spec.jobTemplate.spec.template.spec.hostPID}'
+# Check if the node uses a non-standard runtime socket path:
+kubectl get nodes -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.status.nodeInfo.containerRuntimeVersion}{"\n"}{end}'
+# Test nsenter manually from a debug pod on the affected node:
+kubectl debug node/$(kubectl get nodes -o jsonpath='{.items[0].metadata.name}') -it --image=alpine:3.19 -- nsenter -t 1 -m -u -i -n -p -- which crictl
+```
+---
+
+### Job pods pending due to resource constraints or scheduling
+
+**Symptoms:** Job pods stuck in `Pending` state. `kubectl describe pod` shows `Insufficient cpu`, `Insufficient memory`, or node affinity mismatch events. Jobs accumulate without completion.
+
+```bash
+kubectl -n node-maintenance get pods --field-selector=status.phase=Pending
+kubectl -n node-maintenance describe pod $(kubectl -n node-maintenance get pods --field-selector=status.phase=Pending -o jsonpath='{.items[0].metadata.name}') | grep -A5 Events
+# Check if nodes have linux OS label (required by affinity rule):
+kubectl get nodes -l kubernetes.io/os=linux
+# Check available resources on nodes:
+kubectl top nodes
+# Verify the ServiceAccount exists:
+kubectl -n node-maintenance get serviceaccount node-image-gc
+```
+---
+
 
 ## Related
 
 
-- [`apps/base/node-image-gc/`](https://github.com/JiwooL0920/fleet-infra/tree/develop/apps/base/node-image-gc/) — Kubernetes manifests
-- [`base/services/node-image-gc.yaml`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/node-image-gc.yaml) — Flux Kustomization
-- [`base/services/environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/environment.env) — environment variables
+- [`apps/base/node-image-gc/`](https://github.com/JiwooL0920/flux-infra/tree/develop/apps/base/node-image-gc/) — Kubernetes manifests
+- [`base/services/node-image-gc.yaml`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/node-image-gc.yaml) — Flux Kustomization
+- [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env) — environment variables
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/fleet-infra/blob/develop/service-catalog.json) at commit `2d36e22` · catalog sha `4d088b0b3a67b4c4`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `2d36e22` · catalog sha `4d088b0b3a67b4c4`*
