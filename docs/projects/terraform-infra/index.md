@@ -4,7 +4,7 @@ Infrastructure as Code platform provisioning **multi-node Kubernetes clusters** 
 
 ## Overview
 
-Terraform Infrastructure provides a modular, automated approach to provisioning KIND (Kubernetes in Docker) clusters for the homelab platform. It serves as the foundation layer that creates the Kubernetes cluster which [fleet-infra](../fleet-infra/index.md) then deploys services onto via GitOps.
+Terraform Infrastructure provides a modular, automated approach to provisioning KIND (Kubernetes in Docker) clusters for the homelab platform. It serves as the foundation layer that creates the Kubernetes cluster which [flux-infra](../flux-infra/index.md) then deploys services onto via GitOps.
 
 ### Key Features
 
