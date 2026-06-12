@@ -146,8 +146,90 @@ All values sourced from [`base/services/environment.env`](https://github.com/Jiw
 
 ## Operations
 
+### StatefulSet stuck in Pending — PVC not binding
 
+**Symptoms:** `kubectl get pods -n monitoring -l app.kubernetes.io/name=loki` shows pod in Pending state. Events show `FailedScheduling` or `waiting for a volume to be created`. Flux health check on StatefulSet times out after 10m.
 
+```bash
+kubectl get pvc -n monitoring -l app.kubernetes.io/name=loki
+kubectl describe pvc -n monitoring -l app.kubernetes.io/name=loki | grep -A5 Events
+kubectl get storageclass standard -o yaml
+kubectl get events -n monitoring --sort-by=.lastTimestamp | grep -i pvc
+# If StorageClass missing or misconfigured, verify Kind provisioner is running:
+kubectl get pods -n local-path-storage
+```
+---
+
+### Log ingestion rejected — rate limit exceeded
+
+**Symptoms:** Promtail or OTel Collector logs show HTTP 429 responses from Loki. Grafana Explore returns gaps in log streams. Loki metrics show `loki_discarded_samples_total` increasing. Alert: `LokiRequestErrors` or `LokiIngestionRateLimitHit`.
+
+```bash
+kubectl logs -n monitoring statefulset/loki --tail=100 | grep -i 'rate limit\|429\|discard'
+kubectl exec -n monitoring statefulset/loki -- wget -qO- http://localhost:3100/metrics | grep loki_discarded_samples_total
+kubectl exec -n monitoring statefulset/loki -- wget -qO- http://localhost:3100/metrics | grep loki_ingester_streams_created_total
+# Check if a single stream is flooding — identify high-cardinality labels:
+kubectl exec -n monitoring statefulset/loki -- wget -qO- 'http://localhost:3100/loki/api/v1/label' | python3 -m json.tool
+```
+---
+
+### Loki OOMKilled — query or compaction memory spike
+
+**Symptoms:** Pod restarts with reason `OOMKilled` in `kubectl describe pod`. Loki logs show incomplete compaction cycles or large query responses before termination. `loki_panic_total` may increment.
+
+```bash
+kubectl get pods -n monitoring -l app.kubernetes.io/name=loki -o jsonpath='{.items[*].status.containerStatuses[*].lastState.terminated.reason}'
+kubectl describe pod -n monitoring -l app.kubernetes.io/name=loki | grep -A3 'Last State'
+kubectl top pod -n monitoring -l app.kubernetes.io/name=loki
+# Check if compaction is processing oversized index files:
+kubectl exec -n monitoring statefulset/loki -- ls -lhS /var/loki/tsdb-shipper-active/
+kubectl exec -n monitoring statefulset/loki -- wget -qO- http://localhost:3100/metrics | grep loki_compactor
+```
+---
+
+### Gateway returning 502 — backend SingleBinary not ready
+
+**Symptoms:** Promtail logs show `502 Bad Gateway` from Loki push endpoint. Grafana Explore queries fail with connection errors. Gateway pod is Running but Loki SingleBinary pod is in CrashLoopBackOff or not yet ready.
+
+```bash
+kubectl get pods -n monitoring -l app.kubernetes.io/component=gateway
+kubectl get pods -n monitoring -l app.kubernetes.io/component=single-binary
+kubectl logs -n monitoring -l app.kubernetes.io/component=gateway --tail=50
+kubectl logs -n monitoring statefulset/loki --tail=100 --previous
+# Check if loki binary is failing on startup config validation:
+kubectl exec -n monitoring statefulset/loki -- cat /etc/loki/config/config.yaml | head -50
+```
+---
+
+### ExternalSecret not syncing Redis password
+
+**Symptoms:** `kubectl get externalsecret redis-password -n monitoring` shows `SecretSyncedError` or `Ready=False`. If Redis cache is later enabled, Loki will fail to authenticate to Redis master.
+
+```bash
+kubectl get externalsecret redis-password -n monitoring -o yaml | grep -A10 status
+kubectl get clustersecretstore localstack-secretstore -o yaml | grep -A5 status
+kubectl get secret redis-password -n monitoring -o jsonpath='{.data.password}' | base64 -d
+# Verify LocalStack has the secret path:
+kubectl exec -n localstack deploy/localstack -- awslocal secretsmanager get-secret-value --secret-id redis/credentials/password
+```
+**See also:** docs/adr/002-loki-redis-direct-connection.md
+---
+
+### Filesystem storage full — ingestion halted
+
+**Symptoms:** Loki logs show `no space left on device` or `write: disk quota exceeded`. New log pushes return 500 errors. PVC usage at 100%. Alert: `KubePersistentVolumeFillingUp`.
+
+```bash
+kubectl exec -n monitoring statefulset/loki -- df -h /var/loki
+kubectl exec -n monitoring statefulset/loki -- du -sh /var/loki/chunks /var/loki/tsdb-shipper-active
+# Check retention is actually deleting old data:
+kubectl exec -n monitoring statefulset/loki -- wget -qO- http://localhost:3100/metrics | grep loki_compactor_deleted
+# If retention is not reclaiming space, trigger manual compaction:
+kubectl exec -n monitoring statefulset/loki -- wget -qO- -post-data '' http://localhost:3100/compactor/ring
+# As last resort, expand PVC if StorageClass supports it:
+kubectl patch pvc -n monitoring -l app.kubernetes.io/name=loki -p '{"spec":{"resources":{"requests":{"storage":"10Gi"}}}}'
+```
+---
 
 
 ## Related

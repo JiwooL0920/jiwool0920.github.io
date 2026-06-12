@@ -77,7 +77,106 @@ All values sourced from [`base/services/environment.env`](https://github.com/Jiw
 
 ## Operations
 
-<!-- TODO: Add operations in service-insights/traefik.yaml → operations field -->
+### Pod stuck Pending due to anti-affinity conflict
+
+**Symptoms:** Traefik pod remains in `Pending` state. `kubectl describe pod` shows: `0/N nodes are available: N node(s) didn't match pod anti-affinity rules` This occurs when replica count exceeds available nodes (common in single-node Kind).
+
+```bash
+kubectl get pods -n traefik -l app.kubernetes.io/name=traefik
+kubectl describe pod -n traefik -l app.kubernetes.io/name=traefik | grep -A5 Events
+kubectl get nodes -o wide
+# If single-node cluster: reduce replica count in cluster-vars ConfigMap or temporarily patch anti-affinity
+kubectl get configmap cluster-vars -n flux-system -o yaml | grep TRAEFIK_REPLICA_COUNT
+# For Kind (single node), set TRAEFIK_REPLICA_COUNT=1 in cluster-vars and reconcile
+flux reconcile kustomization traefik --with-source -n flux-system
+```
+---
+
+### HelmRelease reconciliation failed
+
+**Symptoms:** `flux get helmreleases -n flux-system` shows traefik with `Ready=False`. Typical messages: `Helm upgrade failed: ...`, `values don't meet the specifications`, or chart version not found in repository.
+
+```bash
+flux get helmreleases -n flux-system | grep traefik
+kubectl describe helmrelease traefik -n flux-system | tail -30
+kubectl get helmrepository traefik -n flux-system -o yaml | grep -A5 status
+# Verify chart version exists in upstream repo
+helm repo add traefik-upstream https://helm.traefik.io/traefik && helm search repo traefik-upstream/traefik --versions | head -10
+# Check variable substitution resolved correctly
+kubectl get configmap cluster-vars -n flux-system -o yaml | grep TRAEFIK
+# Force reconciliation after fixing
+flux reconcile helmrelease traefik -n flux-system
+```
+---
+
+### IngressRoutes not routing traffic (cross-namespace)
+
+**Symptoms:** HTTP requests return 404 despite IngressRoute existing. `kubectl get ingressroute -A` shows the route is created but Traefik dashboard shows no corresponding router entry.
+
+```bash
+kubectl get ingressroute -A
+# Verify Traefik is watching the target namespace (CRD provider)
+kubectl logs -n traefik -l app.kubernetes.io/name=traefik --tail=50 | grep -i 'error\|warn\|skip'
+# Check if IngressRoute references a service in another namespace correctly
+kubectl get ingressroute <route-name> -n <route-namespace> -o yaml | grep -A3 services
+# Verify the backend service and port exist
+kubectl get svc -A | grep <backend-service>
+# Check Traefik RBAC can read IngressRoutes across namespaces
+kubectl get clusterrole -l app.kubernetes.io/name=traefik -o yaml | grep -A5 ingressroute
+```
+**See also:** docs/adr/009-traefik-ingress.md
+---
+
+### NodePort unreachable from host on Kind
+
+**Symptoms:** `curl localhost:30080` returns connection refused despite Traefik pods running and ready. Service shows correct NodePort allocation in `kubectl get svc -n traefik`.
+
+```bash
+kubectl get svc -n traefik -o wide
+kubectl get pods -n traefik -o wide
+# Verify Kind cluster has port mappings configured (kind-config extraPortMappings)
+docker ps --format '{{.Names}} {{.Ports}}' | grep kind
+# Check if container port matches NodePort expectations
+docker port $(docker ps -q --filter name=kind-control-plane) | grep 30080
+# If no port mapping exists, the Kind config needs extraPortMappings for 30080 and 30443
+# Test connectivity from inside the cluster
+kubectl run curl-test --rm -i --restart=Never --image=curlimages/curl -- curl -s http://traefik.traefik.svc:8000
+```
+---
+
+### Traefik CrashLoopBackOff on startup
+
+**Symptoms:** Pod repeatedly crashes with `CrashLoopBackOff`. Logs show entrypoint binding errors like `listen tcp :8000: bind: address already in use` or invalid flag errors after chart upgrade.
+
+```bash
+kubectl logs -n traefik -l app.kubernetes.io/name=traefik --previous --tail=100
+# Check for duplicate entrypoint definitions (additionalArguments conflicting with ports config)
+kubectl get helmrelease traefik -n flux-system -o jsonpath='{.spec.values.additionalArguments}'
+kubectl get helmrelease traefik -n flux-system -o jsonpath='{.spec.values.ports}'
+# Look for port conflicts with other pods on the same node
+kubectl get pods -A -o wide | grep $(kubectl get pod -n traefik -l app.kubernetes.io/name=traefik -o jsonpath='{.items[0].spec.nodeName}')
+# If flag errors after chart upgrade, check chart changelog for removed/renamed arguments
+helm show values traefik/traefik --version $(kubectl get helmrelease traefik -n flux-system -o jsonpath='{.spec.chart.spec.version}') | head -50
+```
+---
+
+### Flux health check timeout for Traefik Kustomization
+
+**Symptoms:** `flux get kustomizations -n flux-system` shows traefik with `Ready=False` and message `Health check failed after 3m0s: Deployment/traefik/traefik not ready`.
+
+```bash
+flux get kustomizations -n flux-system | grep traefik
+kubectl get deployment traefik -n traefik -o wide
+kubectl rollout status deployment/traefik -n traefik --timeout=30s
+kubectl get events -n traefik --sort-by=.lastTimestamp | tail -20
+# Check if HelmRelease is stuck (Kustomization waits for deployment, which waits for HelmRelease)
+flux get helmreleases -n flux-system | grep traefik
+# If deployment exists but replicas not ready, check pod-level issues
+kubectl describe deployment traefik -n traefik | grep -A10 Conditions
+kubectl get pods -n traefik -l app.kubernetes.io/name=traefik -o yaml | grep -A5 containerStatuses
+```
+---
+
 
 ## Related
 

@@ -109,7 +109,73 @@ All values sourced from [`base/services/environment.env`](https://github.com/Jiw
 
 ## Operations
 
-<!-- TODO: Add operations in service-insights/cilium.yaml → operations field -->
+### Cilium agent CrashLoopBackOff due to cgroup mount failure
+
+**Symptoms:** Cilium agent pods in kube-system show CrashLoopBackOff. Logs contain: `level=fatal msg="failed to mount cgroup2 filesystem"` or `level=fatal msg="Unable to attach BPF program to cgroup"`. All pod networking is broken — new pods stay in ContainerCreating.
+
+```bash
+kubectl -n kube-system logs -l app.kubernetes.io/name=cilium --tail=50 | grep -i cgroup
+kubectl -n kube-system get ds cilium -o jsonpath='{.spec.template.spec.containers[0].args}' | grep cgroup
+docker exec dev-services-amer-control-plane ls -la /sys/fs/cgroup
+docker exec dev-services-amer-control-plane mount | grep cgroup
+kubectl -n flux-system get helmrelease cilium -o jsonpath='{.spec.values.cgroup}'
+```
+**See also:** docs/adr/008-cilium-cni.md
+---
+
+### kube-proxy replacement fails — services unreachable
+
+**Symptoms:** Pods are running but cannot reach ClusterIP services. `curl <service-ip>:<port>` times out. Cilium agent logs show `level=warning msg="Unable to reach kube-apiserver"` or `level=error msg="k8s service handler failed"`. CoreDNS pods may also be unreachable.
+
+```bash
+kubectl -n kube-system logs -l app.kubernetes.io/name=cilium --tail=100 | grep -i "apiserver\|k8sService"
+kubectl -n kube-system exec ds/cilium -- cilium status --brief
+kubectl -n kube-system exec ds/cilium -- cilium service list
+docker exec dev-services-amer-control-plane ss -tlnp | grep 6443
+kubectl -n flux-system get helmrelease cilium -o jsonpath='{.spec.values.k8sServiceHost}'
+```
+**See also:** docs/adr/008-cilium-cni.md
+---
+
+### Hubble relay unable to connect to agents
+
+**Symptoms:** `hubble observe` returns `Failed to connect to Hubble relay` or shows zero flows. Hubble UI loads but displays empty service map. Relay pod logs show `level=warning msg="Failed to create peer client"` with connection refused errors.
+
+```bash
+kubectl -n kube-system get pods -l app.kubernetes.io/name=hubble-relay
+kubectl -n kube-system logs -l app.kubernetes.io/name=hubble-relay --tail=50
+kubectl -n kube-system exec ds/cilium -- cilium status | grep Hubble
+kubectl -n kube-system exec ds/cilium -- hubble observe --last 5
+kubectl -n kube-system get svc hubble-relay -o jsonpath='{.spec.ports}'
+```
+---
+
+### Cilium operator not reconciling — CiliumIdentity or CiliumEndpoint stale
+
+**Symptoms:** `kubectl get ciliumidentities` shows stale entries for deleted pods. Cilium operator logs show `level=error msg="Failed to update CiliumIdentity"` or the operator pod is in CrashLoopBackOff. Network policies may not apply to new pods.
+
+```bash
+kubectl -n kube-system get pods -l app.kubernetes.io/name=cilium-operator
+kubectl -n kube-system logs -l app.kubernetes.io/name=cilium-operator --tail=100
+kubectl get ciliumidentities --no-headers | wc -l
+kubectl get ciliumendpoints -A --no-headers | wc -l
+kubectl -n kube-system exec ds/cilium -- cilium endpoint list | grep -c "ready"
+```
+---
+
+### HelmRelease stuck in upgrade — Cilium DaemonSet rollout blocked
+
+**Symptoms:** `kubectl -n flux-system get helmrelease cilium` shows `upgrade retries exhausted` or `Helm upgrade failed: timed out waiting for condition`. DaemonSet shows unavailable pods. Flux reconciliation is blocked for all services depending on networking.
+
+```bash
+kubectl -n flux-system describe helmrelease cilium | tail -30
+kubectl -n kube-system rollout status ds/cilium --timeout=10s
+kubectl -n kube-system get pods -l app.kubernetes.io/name=cilium -o wide | grep -v Running
+kubectl -n kube-system describe pod $(kubectl -n kube-system get pods -l app.kubernetes.io/name=cilium --field-selector=status.phase!=Running -o name | head -1)
+flux suspend helmrelease -n flux-system cilium && flux resume helmrelease -n flux-system cilium
+```
+---
+
 
 ## Related
 
