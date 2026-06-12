@@ -1,0 +1,129 @@
+---
+catalog_sha: 4d088b0b3a67b4c4
+fleet_infra_commit: 09eeed6
+generated_at: 2026-06-12
+---
+
+# Promtail
+
+[Promtail](https://grafana.com/docs/loki/latest/send-data/promtail/) ([GitHub](https://github.com/grafana/loki/tree/main/clients/pkg/promtail)) is the log collection agent purpose-built for Grafana Loki. Unlike general-purpose log shippers (Fluentd, Filebeat, Vector) that serialize logs into structured formats and speak multiple output protocols, Promtail is laser-focused on one job: tailing log files on a node, attaching Kubernetes metadata labels, and pushing them to Loki's HTTP ingest API in its native format. This tight coupling to Loki's label-indexed storage model means Promtail produces exactly the label set Loki expects — no intermediate transformation layer, no schema negotiation.
+
+What distinguishes Promtail from other agents in a Loki-centric stack: it understands the CRI log format natively, can parse the kubelet's pod log directory structure to extract namespace/pod/container without relying on the Kubernetes API, and maintains a positions file to survive restarts without re-reading entire log files. It operates as a pull-based file tailer rather than requiring applications to push logs — meaning it captures output from any container regardless of whether that container is instrumented.
+
+In stacks that also run OpenTelemetry Collector (as this one does), Promtail and OTel Collector are complementary rather than redundant: OTel Collector receives application-emitted OTLP log signals, while Promtail handles the node-level filesystem scrape of stdout/stderr that the kubelet writes to disk.
+
+## Overview
+
+| Property | Value |
+|---|---|
+| **Namespace** | `monitoring` |
+| **Type** | HelmRelease (chart: `promtail` v6.17.0) |
+| **Layer** | Logging stack services |
+| **Status** | Enabled |
+| **Source** | [`apps/base/promtail/`](https://github.com/JiwooL0920/fleet-infra/tree/develop/apps/base/promtail/) |
+
+## Dependencies
+
+### Upstream — required before Promtail starts
+
+| Service | Reason | Status |
+|---|---|---|
+| `loki` | Flux `dependsOn` | Active |
+
+### Downstream — services that depend on Promtail
+
+_No known downstream Flux dependencies._
+
+## Purpose
+
+Promtail is the node-level log scraper that ensures every container's stdout/stderr reaches Loki without requiring application-side instrumentation. It runs as a DaemonSet on all nodes — including control-plane — tailing the kubelet's pod log directory and enriching each line with namespace, pod, and container labels extracted directly from the filesystem path. This provides baseline log visibility for every workload in the cluster, independent of whether that workload emits structured OTLP telemetry.
+
+**Why Promtail over Fluent Bit or Vector:** Promtail's native understanding of Loki's label model eliminates the impedance mismatch that general-purpose shippers introduce. Fluent Bit or Vector would require explicit output plugin configuration, label mapping rules, and tenant header injection — all of which Promtail handles implicitly. The trade-off is single-backend lock-in (Promtail only speaks Loki), but since this platform already commits to the Grafana observability stack and uses OTel Collector for multi-backend routing of application telemetry, Promtail's simplicity for the node-scrape use case outweighs flexibility concerns.
+
+**Why not rely solely on OTel Collector for logs:** OTel Collector's filelog receiver could replace Promtail in theory, but it requires explicit file path configuration, manual label extraction rules, and doesn't understand Loki's push API natively (it exports via `otlphttp/loki`). Promtail's single-purpose design means fewer configuration failure modes for the critical path of "every pod's logs reach Loki."
+
+
+## Features
+
+| Feature | Detail |
+|---|---|
+| **DaemonSet on all nodes including control-plane** | Tolerates `node-role.kubernetes.io/control-plane:NoSchedule`, ensuring control-plane component logs (etcd, kube-apiserver, scheduler) are collected alongside workload logs. |
+| **CRI log parsing with filesystem-based label extraction** | Uses the `cri` pipeline stage to parse containerd's log format, then applies a regex against the resolved filename path (`/var/log/pods/<namespace>_<pod>_<uid>/<container>/<n>.log`) to extract `namespace`, `pod`, and `container` labels without querying the Kubernetes API. |
+| **Inotify limit tuning via privileged init container** | An init container runs `sysctl -w fs.inotify.max_user_instances=8192` before Promtail starts, preventing "too many open files" errors on nodes with high pod density where each log file requires an inotify watch. |
+| **Position tracking for crash-resilient log tailing** | Maintains a positions file at `/run/promtail/positions.yaml` (on an emptyDir volume) to track read offsets per log file, allowing Promtail to resume from where it left off after pod restarts without re-shipping already-ingested lines. |
+| **Hardened container security context** | Runs with `readOnlyRootFilesystem: true`, `allowPrivilegeEscalation: false`, and drops all Linux capabilities. Log directories are mounted read-only; only the positions emptyDir is writable. |
+| **ServiceMonitor for self-monitoring** | Exposes metrics on port 3101 with a ServiceMonitor (30s interval, `prometheus: kube-prometheus` label selector), enabling Prometheus to scrape Promtail's own operational metrics (bytes read, lines processed, push failures). |
+| **Single-tenant Loki push** | Configured with `tenant_id: fake` for single-tenant mode, pushing to `http://monitoring-loki:3100/loki/api/v1/push`. This matches Loki's `auth_enabled: false` configuration where all logs share a single tenant namespace. |
+
+## Architecture
+
+### Promtail DaemonSet Topology
+
+```mermaid
+graph TD
+    subgraph "Every Node"
+        INIT["init-inotify<br/>(busybox — sysctl)"]
+        PT["Promtail<br/>:3101 metrics"]
+        LOGS["/var/log/pods<br/>(hostPath, readOnly)"]
+        POS["/run/promtail<br/>(emptyDir)"]
+    end
+
+    subgraph "monitoring namespace"
+        LOKI["monitoring-loki<br/>:3100"]
+        PROM["Prometheus"]
+    end
+
+    INIT -->|"sysctl fs.inotify.max_user_instances=8192"| PT
+    LOGS -->|"read log files"| PT
+    PT -->|"write positions.yaml"| POS
+    PT -->|"HTTP POST /loki/api/v1/push :3100"| LOKI
+    PROM -->|"scrape /metrics :3101<br/>every 30s"| PT
+```
+
+### Log Collection Flow
+
+```mermaid
+sequenceDiagram
+    participant App as Application Pod
+    participant CRI as containerd (CRI)
+    participant FS as /var/log/pods
+    participant PT as Promtail
+    participant Loki as monitoring-loki:3100
+
+    App->>CRI: stdout/stderr
+    CRI->>FS: Write CRI-format log file
+    PT->>FS: Tail log files (inotify)
+    PT->>PT: Parse CRI format
+    PT->>PT: Extract namespace/pod/container from path
+    PT->>Loki: POST /loki/api/v1/push (tenant_id: fake)
+    PT->>PT: Update positions.yaml
+```
+
+
+## Configuration
+
+All values sourced from [`base/services/environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/environment.env)
+(base); per-environment overrides in [`clusters/stages/dev/.../environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/clusters/stages/dev/clusters/services-amer/environment.env).
+
+| Parameter | Dev | Prod |
+|---|---|---|
+| `PROMTAIL_CHART_VERSION` | `6.17.0` | `6.17.0` |
+| `PROMTAIL_CPU_LIMIT` | `100m` | `500m` |
+| `PROMTAIL_CPU_REQUEST` | `100m` | `100m` |
+| `PROMTAIL_MEMORY_LIMIT` | `128Mi` | `512Mi` |
+| `PROMTAIL_MEMORY_REQUEST` | `128Mi` | `256Mi` |
+
+
+## Operations
+
+<!-- TODO: Add operations in service-insights/promtail.yaml → operations field -->
+
+## Related
+
+
+- [`apps/base/promtail/`](https://github.com/JiwooL0920/fleet-infra/tree/develop/apps/base/promtail/) — Kubernetes manifests
+- [`base/services/promtail.yaml`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/promtail.yaml) — Flux Kustomization
+- [`base/services/environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/environment.env) — environment variables
+
+---
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/fleet-infra/blob/develop/service-catalog.json) at commit `09eeed6` · catalog sha `4d088b0b3a67b4c4`*
