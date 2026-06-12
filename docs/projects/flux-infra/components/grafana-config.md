@@ -18,7 +18,7 @@ The `Grafana` CRD is the operator's entry point: it registers a Grafana instance
 | **Type** | Kustomization |
 | **Layer** | Grafana Operator |
 | **Status** | Enabled |
-| **Source** | [`apps/base/grafana-config/`](https://github.com/JiwooL0920/fleet-infra/tree/develop/apps/base/grafana-config/) |
+| **Source** | [`apps/base/grafana-config/`](https://github.com/JiwooL0920/flux-infra/tree/develop/apps/base/grafana-config/) |
 
 ## Dependencies
 
@@ -85,8 +85,8 @@ graph TD
 
 ## Configuration
 
-All values sourced from [`base/services/environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/environment.env)
-(base); per-environment overrides in [`clusters/stages/dev/.../environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/clusters/stages/dev/clusters/services-amer/environment.env).
+All values sourced from [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env)
+(base); per-environment overrides in [`clusters/stages/dev/.../environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/clusters/stages/dev/clusters/services-amer/environment.env).
 
 _No environment-specific configuration variables for this service._
 
@@ -98,9 +98,9 @@ _No environment-specific configuration variables for this service._
 ## Related
 
 
-- [`apps/base/grafana-config/`](https://github.com/JiwooL0920/fleet-infra/tree/develop/apps/base/grafana-config/) — Kubernetes manifests
-- [`base/services/grafana-config.yaml`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/grafana-config.yaml) — Flux Kustomization
-- [`base/services/environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/environment.env) — environment variables
+- [`apps/base/grafana-config/`](https://github.com/JiwooL0920/flux-infra/tree/develop/apps/base/grafana-config/) — Kubernetes manifests
+- [`base/services/grafana-config.yaml`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/grafana-config.yaml) — Flux Kustomization
+- [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env) — environment variables
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/fleet-infra/blob/develop/service-catalog.json) at commit `2d36e22` · catalog sha `4d088b0b3a67b4c4`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `2d36e22` · catalog sha `4d088b0b3a67b4c4`*

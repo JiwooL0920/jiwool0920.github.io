@@ -22,7 +22,7 @@ kagent supports the A2A (Agent-to-Agent) protocol for inter-agent delegation and
 | **Type** | Kustomization |
 | **Layer** | AI agent platform |
 | **Status** | Enabled |
-| **Source** | [`apps/base/kagent/`](https://github.com/JiwooL0920/fleet-infra/tree/develop/apps/base/kagent/) |
+| **Source** | [`apps/base/kagent/`](https://github.com/JiwooL0920/flux-infra/tree/develop/apps/base/kagent/) |
 
 ## Dependencies
 
@@ -166,8 +166,8 @@ sequenceDiagram
 
 ## Configuration
 
-All values sourced from [`base/services/environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/environment.env)
-(base); per-environment overrides in [`clusters/stages/dev/.../environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/clusters/stages/dev/clusters/services-amer/environment.env).
+All values sourced from [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env)
+(base); per-environment overrides in [`clusters/stages/dev/.../environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/clusters/stages/dev/clusters/services-amer/environment.env).
 
 | Parameter | Dev | Prod |
 |---|---|---|
@@ -191,9 +191,9 @@ All values sourced from [`base/services/environment.env`](https://github.com/Jiw
 ## Related
 
 
-- [`apps/base/kagent/`](https://github.com/JiwooL0920/fleet-infra/tree/develop/apps/base/kagent/) — Kubernetes manifests
-- [`base/services/kagent.yaml`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/kagent.yaml) — Flux Kustomization
-- [`base/services/environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/environment.env) — environment variables
+- [`apps/base/kagent/`](https://github.com/JiwooL0920/flux-infra/tree/develop/apps/base/kagent/) — Kubernetes manifests
+- [`base/services/kagent.yaml`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/kagent.yaml) — Flux Kustomization
+- [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env) — environment variables
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/fleet-infra/blob/develop/service-catalog.json) at commit `2d36e22` · catalog sha `4d088b0b3a67b4c4`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `2d36e22` · catalog sha `4d088b0b3a67b4c4`*

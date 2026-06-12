@@ -19,7 +19,7 @@ The UI operates in read-only mode against the cluster, surfacing Flux reconcilia
 | **Layer** | Foundation services |
 | **Chart** | [`weave-gitops`](oci://ghcr.io/weaveworks/charts) v4.0.36 |
 | **Status** | Enabled |
-| **Source** | [`apps/base/weave-gitops/`](https://github.com/JiwooL0920/fleet-infra/tree/develop/apps/base/weave-gitops/) |
+| **Source** | [`apps/base/weave-gitops/`](https://github.com/JiwooL0920/flux-infra/tree/develop/apps/base/weave-gitops/) |
 
 ## Dependencies
 
@@ -82,8 +82,8 @@ graph TD
 
 ## Configuration
 
-All values sourced from [`base/services/environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/environment.env)
-(base); per-environment overrides in [`clusters/stages/dev/.../environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/clusters/stages/dev/clusters/services-amer/environment.env).
+All values sourced from [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env)
+(base); per-environment overrides in [`clusters/stages/dev/.../environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/clusters/stages/dev/clusters/services-amer/environment.env).
 
 | Parameter | Dev | Prod |
 |---|---|---|
@@ -96,14 +96,79 @@ All values sourced from [`base/services/environment.env`](https://github.com/Jiw
 
 ## Operations
 
-<!-- TODO: Add operations in service-insights/weave-gitops.yaml → operations field -->
+### HelmRelease stuck in upgrade — chart pull failure
+
+**Symptoms:** `kubectl get helmrelease weave-gitops -n flux-system` shows `upgrade retries exhausted`. Events show `failed to pull chart: oci://ghcr.io/weaveworks/charts/weave-gitops` with authentication or network errors. Dashboard remains on previous version.
+
+```bash
+kubectl describe helmrelease weave-gitops -n flux-system | grep -A5 'Status:'
+kubectl get helmrepository weave-gitops -n flux-system -o yaml | grep -A10 'status:'
+kubectl logs -n flux-system deploy/helm-controller --since=10m | grep weave-gitops
+flux reconcile source helm weave-gitops
+flux reconcile helmrelease weave-gitops
+```
+---
+
+### Dashboard unreachable via IngressRoute
+
+**Symptoms:** Browser shows 404 or connection refused when accessing `http://weave.local`. Other IngressRoutes (e.g. other services) work normally.
+
+```bash
+kubectl get ingressroute weave-gitops -n weave-gitops -o yaml
+kubectl get svc -n weave-gitops
+kubectl get endpoints -n weave-gitops
+kubectl port-forward -n weave-gitops svc/weave-gitops 9001:9001
+curl -s http://localhost:9001 | head -20
+kubectl logs -n traefik deploy/traefik --since=5m | grep weave
+```
+---
+
+### Pod CrashLoopBackOff — RBAC or permission denied
+
+**Symptoms:** `kubectl get pods -n weave-gitops` shows CrashLoopBackOff. Pod logs contain `cannot impersonate resource` or `forbidden: User "system:serviceaccount:weave-gitops:..." cannot create resource "subjectaccessreviews"`.
+
+```bash
+kubectl logs -n weave-gitops deploy/ww-gitops-weave-gitops --previous
+kubectl get clusterrolebinding | grep weave
+kubectl get clusterrole | grep weave
+kubectl auth can-i impersonate users --as=system:serviceaccount:weave-gitops:ww-gitops-weave-gitops
+kubectl describe clusterrole ww-gitops-weave-gitops | grep -A5 impersonate
+```
+---
+
+### Authentication failure — admin login rejected
+
+**Symptoms:** Dashboard loads but login with `admin` / expected password returns "Invalid credentials". No pod crashes — purely an application-level auth rejection.
+
+```bash
+kubectl get secret -n flux-system cluster-vars -o yaml | grep WEAVE
+kubectl get helmrelease weave-gitops -n flux-system -o jsonpath='{.spec.values.adminUser}'
+kubectl exec -n weave-gitops deploy/ww-gitops-weave-gitops -- env | grep -i admin
+htpasswd -nbBC 5 admin 'your-password' | cut -d: -f2
+```
+---
+
+### Kustomization health check timeout
+
+**Symptoms:** `flux get kustomizations weave-gitops` shows `Health check failed after 3m0s` despite the HelmRelease reporting as ready. The Deployment `ww-gitops-weave-gitops` exists but readiness probe is failing.
+
+```bash
+kubectl get deploy ww-gitops-weave-gitops -n weave-gitops -o yaml | grep -A10 readinessProbe
+kubectl describe deploy ww-gitops-weave-gitops -n weave-gitops | grep -A5 Conditions
+kubectl get events -n weave-gitops --sort-by=.lastTimestamp | tail -20
+kubectl top pod -n weave-gitops
+flux reconcile kustomization weave-gitops
+```
+**See also:** docs/adr/001-fine-grained-service-dependencies.md
+---
+
 
 ## Related
 
 
-- [`apps/base/weave-gitops/`](https://github.com/JiwooL0920/fleet-infra/tree/develop/apps/base/weave-gitops/) — Kubernetes manifests
-- [`base/services/weave-gitops.yaml`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/weave-gitops.yaml) — Flux Kustomization
-- [`base/services/environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/environment.env) — environment variables
+- [`apps/base/weave-gitops/`](https://github.com/JiwooL0920/flux-infra/tree/develop/apps/base/weave-gitops/) — Kubernetes manifests
+- [`base/services/weave-gitops.yaml`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/weave-gitops.yaml) — Flux Kustomization
+- [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env) — environment variables
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/fleet-infra/blob/develop/service-catalog.json) at commit `2d36e22` · catalog sha `4d088b0b3a67b4c4`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `2d36e22` · catalog sha `4d088b0b3a67b4c4`*

@@ -19,7 +19,7 @@ Jaeger's all-in-one deployment mode bundles the collector, query frontend, and i
 | **Layer** | Distributed tracing services |
 | **Chart** | [`jaeger`](https://jaegertracing.github.io/helm-charts) v3.3.1 |
 | **Status** | Enabled |
-| **Source** | [`apps/base/jaeger/`](https://github.com/JiwooL0920/fleet-infra/tree/develop/apps/base/jaeger/) |
+| **Source** | [`apps/base/jaeger/`](https://github.com/JiwooL0920/flux-infra/tree/develop/apps/base/jaeger/) |
 
 ## Dependencies
 
@@ -89,8 +89,8 @@ graph TD
 
 ## Configuration
 
-All values sourced from [`base/services/environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/environment.env)
-(base); per-environment overrides in [`clusters/stages/dev/.../environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/clusters/stages/dev/clusters/services-amer/environment.env).
+All values sourced from [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env)
+(base); per-environment overrides in [`clusters/stages/dev/.../environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/clusters/stages/dev/clusters/services-amer/environment.env).
 
 | Parameter | Dev | Prod |
 |---|---|---|
@@ -103,14 +103,81 @@ All values sourced from [`base/services/environment.env`](https://github.com/Jiw
 
 ## Operations
 
-<!-- TODO: Add operations in service-insights/jaeger.yaml → operations field -->
+### Traces not appearing in Jaeger UI
+
+**Symptoms:** Applications are instrumented and sending to OTel Collector, but Jaeger UI shows no services or traces. OTel Collector logs may show `connection refused` or `context deadline exceeded` when exporting to Jaeger.
+
+```bash
+kubectl get deployment jaeger -n jaeger -o wide
+kubectl logs deployment/jaeger -n jaeger --tail=50 | grep -i 'otlp\|listen\|error'
+kubectl get svc -n jaeger -o wide
+kubectl exec -n opentelemetry-collector deploy/opentelemetry-collector -- wget -qO- --spider http://jaeger.jaeger.svc.cluster.local:4318/v1/traces || echo 'OTLP HTTP unreachable'
+kubectl port-forward -n jaeger svc/jaeger-query 16686:16686 & curl -s http://localhost:16686/api/services | jq .
+kubectl get kustomization jaeger -n flux-system -o jsonpath='{.status.conditions[*].message}'
+```
+**See also:** docs/adr/010-opentelemetry-collector.md
+---
+
+### Jaeger pod OOMKilled
+
+**Symptoms:** Pod restarts with reason `OOMKilled`. `kubectl describe pod` shows last termination due to memory limit exceeded. All stored traces are lost after restart.
+
+```bash
+kubectl get pod -n jaeger -l app.kubernetes.io/name=jaeger -o jsonpath='{.items[*].status.containerStatuses[*].lastState.terminated.reason}'
+kubectl top pod -n jaeger
+kubectl logs deployment/jaeger -n jaeger --previous --tail=100 | grep -i 'memory\|oom\|alloc'
+kubectl get helmrelease jaeger -n flux-system -o jsonpath='{.spec.values.allInOne.resources}' | jq .
+kubectl get configmap cluster-vars -n flux-system -o jsonpath='{.data.JAEGER_MEMORY_LIMIT}'
+```
+---
+
+### IngressRoute not routing to Jaeger UI
+
+**Symptoms:** Browsing `http://jaeger.local` returns 404 or connection refused. Traefik dashboard shows no route for `jaeger.local` or the route is marked as unhealthy.
+
+```bash
+kubectl get ingressroute jaeger-ui -n jaeger -o yaml
+kubectl get svc jaeger-query -n jaeger -o jsonpath='{.spec.ports[*]}'
+kubectl get endpoints jaeger-query -n jaeger
+kubectl logs -n traefik deploy/traefik --tail=50 | grep -i 'jaeger\|error\|no endpoint'
+kubectl get kustomization traefik-config -n flux-system -o jsonpath='{.status.conditions[*].message}'
+```
+---
+
+### Flux Kustomization stuck waiting on health check
+
+**Symptoms:** `kubectl get kustomization jaeger -n flux-system` shows `Health check failed` or `HealthCheckFailed`. Downstream kustomization `opentelemetry-collector` is blocked in `dependency not ready` state.
+
+```bash
+kubectl get kustomization jaeger -n flux-system -o jsonpath='{.status.conditions[?(@.type=="Ready")]}' | jq .
+kubectl get deployment jaeger -n jaeger -o jsonpath='{.status.conditions[*]}' | jq .
+kubectl get pods -n jaeger -l app.kubernetes.io/name=jaeger -o wide
+kubectl describe deployment jaeger -n jaeger | grep -A5 'Conditions\|Events'
+kubectl get kustomization opentelemetry-collector -n flux-system -o jsonpath='{.status.conditions[?(@.type=="Ready")].message}'
+```
+**See also:** docs/adr/010-opentelemetry-collector.md
+---
+
+### HelmRelease upgrade failure
+
+**Symptoms:** `kubectl get helmrelease jaeger -n flux-system` shows `upgrade retries exhausted` or `install retries exhausted`. Flux events show Helm operation timeout after 10m.
+
+```bash
+kubectl get helmrelease jaeger -n flux-system -o jsonpath='{.status.conditions[*]}' | jq .
+kubectl get events -n flux-system --field-selector involvedObject.name=jaeger --sort-by='.lastTimestamp' | tail -20
+kubectl logs -n flux-system deploy/helm-controller --tail=100 | grep 'jaeger'
+kubectl get helmrepository jaegertracing -n flux-system -o jsonpath='{.status.conditions[*]}' | jq .
+flux suspend helmrelease jaeger -n flux-system && flux resume helmrelease jaeger -n flux-system
+```
+---
+
 
 ## Related
 
 
-- [`apps/base/jaeger/`](https://github.com/JiwooL0920/fleet-infra/tree/develop/apps/base/jaeger/) — Kubernetes manifests
-- [`base/services/jaeger.yaml`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/jaeger.yaml) — Flux Kustomization
-- [`base/services/environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/environment.env) — environment variables
+- [`apps/base/jaeger/`](https://github.com/JiwooL0920/flux-infra/tree/develop/apps/base/jaeger/) — Kubernetes manifests
+- [`base/services/jaeger.yaml`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/jaeger.yaml) — Flux Kustomization
+- [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env) — environment variables
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/fleet-infra/blob/develop/service-catalog.json) at commit `2d36e22` · catalog sha `4d088b0b3a67b4c4`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `2d36e22` · catalog sha `4d088b0b3a67b4c4`*

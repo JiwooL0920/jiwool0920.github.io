@@ -21,7 +21,7 @@ Metrics Server is a CNCF-maintained project originally extracted from Heapster, 
 | **Layer** | Foundation services |
 | **Chart** | [`metrics-server`](https://kubernetes-sigs.github.io/metrics-server/) v3.12.2 |
 | **Status** | Enabled |
-| **Source** | [`apps/base/metrics-server/`](https://github.com/JiwooL0920/fleet-infra/tree/develop/apps/base/metrics-server/) |
+| **Source** | [`apps/base/metrics-server/`](https://github.com/JiwooL0920/flux-infra/tree/develop/apps/base/metrics-server/) |
 
 ## Dependencies
 
@@ -82,8 +82,8 @@ graph TD
 
 ## Configuration
 
-All values sourced from [`base/services/environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/environment.env)
-(base); per-environment overrides in [`clusters/stages/dev/.../environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/clusters/stages/dev/clusters/services-amer/environment.env).
+All values sourced from [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env)
+(base); per-environment overrides in [`clusters/stages/dev/.../environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/clusters/stages/dev/clusters/services-amer/environment.env).
 
 | Parameter | Dev | Prod |
 |---|---|---|
@@ -96,14 +96,80 @@ All values sourced from [`base/services/environment.env`](https://github.com/Jiw
 
 ## Operations
 
-<!-- TODO: Add operations in service-insights/metrics-server.yaml → operations field -->
+### Metrics API returns NotFound or ServiceUnavailable
+
+**Symptoms:** `kubectl top nodes` returns `error: Metrics API not available` or `the server is currently unable to handle the request`. HPA conditions show `ScalingActive: False` with message `failed to get cpu utilization: unable to get metrics`.
+
+```bash
+kubectl get apiservice v1beta1.metrics.k8s.io -o yaml | grep -A5 conditions
+kubectl get deployment metrics-server -n kube-system -o wide
+kubectl get endpoints metrics-server -n kube-system
+kubectl logs -n kube-system deployment/metrics-server --tail=50
+kubectl get helmrelease metrics-server -n flux-system -o yaml | grep -A3 conditions
+```
+---
+
+### Metrics Server CrashLoopBackOff due to TLS errors
+
+**Symptoms:** Pod restarts repeatedly. Logs show `x509: cannot validate certificate` or `tls: failed to verify certificate` when scraping kubelets. `kubectl get pods -n kube-system -l app.kubernetes.io/name=metrics-server` shows CrashLoopBackOff.
+
+```bash
+kubectl logs -n kube-system deployment/metrics-server --previous --tail=30
+kubectl get helmrelease metrics-server -n flux-system -o jsonpath='{.spec.values.args}'
+kubectl get deployment metrics-server -n kube-system -o jsonpath='{.spec.template.spec.containers[0].args}' | tr ',' '\n'
+# Verify --kubelet-insecure-tls is present in the rendered args
+kubectl get helmrelease metrics-server -n flux-system -o yaml | grep kubelet-insecure-tls
+```
+---
+
+### Partial node metrics — some nodes return empty
+
+**Symptoms:** `kubectl top nodes` shows metrics for some nodes but `<unknown>` for others. Metrics Server logs show `Failed to scrape node` with connection timeouts for specific node IPs.
+
+```bash
+kubectl logs -n kube-system deployment/metrics-server | grep 'Failed to scrape'
+kubectl get nodes -o wide  # compare InternalIP against failed scrape targets
+kubectl exec -n kube-system deployment/metrics-server -- wget -qO- --no-check-certificate https://<node-internal-ip>:10250/metrics/resource 2>&1 | head -5
+# Check if kubelet is listening on the expected port
+kubectl get nodes -o jsonpath='{range .items[*]}{.metadata.name} {.status.addresses[?(@.type=="InternalIP")].address}{"\n"}{end}'
+```
+---
+
+### HPA not scaling — metrics delayed or stale
+
+**Symptoms:** HPA shows `AbleToScale: True` but `ScalingActive: False` with message `missing request for cpu/memory`. `kubectl top pods` returns data but HPA events show `unable to get metrics for resource cpu`.
+
+```bash
+kubectl get hpa -A -o wide  # check TARGETS column for <unknown>
+kubectl describe hpa <name> -n <ns> | grep -A10 Conditions
+kubectl get --raw /apis/metrics.k8s.io/v1beta1/pods | jq '.items | length'
+kubectl get --raw /apis/metrics.k8s.io/v1beta1/namespaces/kube-system/pods | jq '.items[0].containers[0].usage'
+# Verify metric-resolution timing vs HPA sync period
+kubectl logs -n kube-system deployment/metrics-server | grep -c 'successfully scraped'
+```
+**See also:** docs/adr/011-keda-autoscaling.md
+---
+
+### Metrics Server OOMKilled on large cluster
+
+**Symptoms:** Pod terminated with reason `OOMKilled`. `kubectl describe pod -n kube-system -l app.kubernetes.io/name=metrics-server` shows last state terminated with exit code 137. Metrics API becomes unavailable after pod restart cycle.
+
+```bash
+kubectl get pod -n kube-system -l app.kubernetes.io/name=metrics-server -o jsonpath='{.items[0].status.containerStatuses[0].lastState}'
+kubectl top pod -n kube-system -l app.kubernetes.io/name=metrics-server  # check current usage vs limit
+kubectl get nodes --no-headers | wc -l  # memory scales with node+pod count
+kubectl get configmap cluster-vars -n flux-system -o yaml | grep METRICS_SERVER_MEMORY
+# If limit is too low for cluster size, update METRICS_SERVER_MEMORY_LIMIT in cluster-vars
+```
+---
+
 
 ## Related
 
 
-- [`apps/base/metrics-server/`](https://github.com/JiwooL0920/fleet-infra/tree/develop/apps/base/metrics-server/) — Kubernetes manifests
-- [`base/services/metrics-server.yaml`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/metrics-server.yaml) — Flux Kustomization
-- [`base/services/environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/environment.env) — environment variables
+- [`apps/base/metrics-server/`](https://github.com/JiwooL0920/flux-infra/tree/develop/apps/base/metrics-server/) — Kubernetes manifests
+- [`base/services/metrics-server.yaml`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/metrics-server.yaml) — Flux Kustomization
+- [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env) — environment variables
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/fleet-infra/blob/develop/service-catalog.json) at commit `2d36e22` · catalog sha `4d088b0b3a67b4c4`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `2d36e22` · catalog sha `4d088b0b3a67b4c4`*

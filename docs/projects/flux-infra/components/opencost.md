@@ -19,7 +19,7 @@ What distinguishes OpenCost from commercial alternatives (Kubecost Enterprise, C
 | **Layer** | Security and cost observability |
 | **Chart** | [`opencost`](https://opencost.github.io/opencost-helm-chart) v2.5.12 |
 | **Status** | Enabled |
-| **Source** | [`apps/base/opencost/`](https://github.com/JiwooL0920/fleet-infra/tree/develop/apps/base/opencost/) |
+| **Source** | [`apps/base/opencost/`](https://github.com/JiwooL0920/flux-infra/tree/develop/apps/base/opencost/) |
 
 ## Dependencies
 
@@ -79,8 +79,8 @@ graph TD
 
 ## Configuration
 
-All values sourced from [`base/services/environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/environment.env)
-(base); per-environment overrides in [`clusters/stages/dev/.../environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/clusters/stages/dev/clusters/services-amer/environment.env).
+All values sourced from [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env)
+(base); per-environment overrides in [`clusters/stages/dev/.../environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/clusters/stages/dev/clusters/services-amer/environment.env).
 
 | Parameter | Dev | Prod |
 |---|---|---|
@@ -98,9 +98,9 @@ All values sourced from [`base/services/environment.env`](https://github.com/Jiw
 ## Related
 
 
-- [`apps/base/opencost/`](https://github.com/JiwooL0920/fleet-infra/tree/develop/apps/base/opencost/) — Kubernetes manifests
-- [`base/services/opencost.yaml`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/opencost.yaml) — Flux Kustomization
-- [`base/services/environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/environment.env) — environment variables
+- [`apps/base/opencost/`](https://github.com/JiwooL0920/flux-infra/tree/develop/apps/base/opencost/) — Kubernetes manifests
+- [`base/services/opencost.yaml`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/opencost.yaml) — Flux Kustomization
+- [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env) — environment variables
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/fleet-infra/blob/develop/service-catalog.json) at commit `2d36e22` · catalog sha `4d088b0b3a67b4c4`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `2d36e22` · catalog sha `4d088b0b3a67b4c4`*

@@ -20,7 +20,7 @@ However, Grafana's service account database is internal and ephemeral in default
 | **Type** | Job |
 | **Layer** | Foundation services |
 | **Status** | Enabled |
-| **Source** | [`apps/base/grafana-sa-setup/`](https://github.com/JiwooL0920/fleet-infra/tree/develop/apps/base/grafana-sa-setup/) |
+| **Source** | [`apps/base/grafana-sa-setup/`](https://github.com/JiwooL0920/flux-infra/tree/develop/apps/base/grafana-sa-setup/) |
 
 ## Dependencies
 
@@ -126,22 +126,85 @@ sequenceDiagram
 
 ## Configuration
 
-All values sourced from [`base/services/environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/environment.env)
-(base); per-environment overrides in [`clusters/stages/dev/.../environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/clusters/stages/dev/clusters/services-amer/environment.env).
+All values sourced from [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env)
+(base); per-environment overrides in [`clusters/stages/dev/.../environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/clusters/stages/dev/clusters/services-amer/environment.env).
 
 _No environment-specific configuration variables for this service._
 
 
 ## Operations
 
-<!-- TODO: Add operations in service-insights/grafana-sa-setup.yaml → operations field -->
+### Job fails because Grafana is not yet healthy
+
+**Symptoms:** Job pod in `Init:Error` or `Init:CrashLoopBackOff`. Init container logs show `curl: (7) Failed to connect to kube-prometheus-stack-grafana.monitoring.svc.cluster.local port 80` or HTTP 503 responses. Flux Kustomization `grafana-sa-setup` shows `Health check failed`.
+
+```bash
+kubectl get pods -n monitoring -l app.kubernetes.io/name=grafana
+kubectl logs -n monitoring job/create-grafana-sa-token -c create-token --previous
+kubectl get kustomization kube-prometheus-stack -n flux-system -o jsonpath='{.status.conditions[*].message}'
+kubectl rollout status deployment/kube-prometheus-stack-grafana -n monitoring --timeout=120s
+kubectl delete job create-grafana-sa-token -n monitoring && flux reconcile kustomization grafana-sa-setup
+```
+---
+
+### Token created but LocalStack PutSecretValue fails
+
+**Symptoms:** Init container exits 0 but main container (`store-secret`) fails with AWS CLI errors such as `Could not connect to the endpoint URL` or `An error occurred (ResourceNotFoundException)`. Job shows 1/1 init containers completed but pod status is `Error`.
+
+```bash
+kubectl logs -n monitoring job/create-grafana-sa-token -c store-secret
+kubectl get pods -n localstack -l app.kubernetes.io/name=localstack
+kubectl exec -n localstack deploy/localstack -- awslocal secretsmanager describe-secret --secret-id kagent/grafana/api-key --region us-east-1
+kubectl exec -n localstack deploy/localstack -- awslocal secretsmanager create-secret --name kagent/grafana/api-key --secret-string placeholder-run-grafana-sa-setup --region us-east-1
+kubectl delete job create-grafana-sa-token -n monitoring && flux reconcile kustomization grafana-sa-setup
+```
+---
+
+### grafana-admin-credentials Secret missing
+
+**Symptoms:** Pod stuck in `Pending` or `ContainerCreating` with event `MountVolume.SetUp failed for volume "grafana-admin-creds"`. The Secret `grafana-admin-credentials` does not exist in the `monitoring` namespace.
+
+```bash
+kubectl get secret grafana-admin-credentials -n monitoring
+kubectl get helmrelease kube-prometheus-stack -n flux-system -o jsonpath='{.status.conditions[*].message}'
+kubectl get pods -n monitoring -l app.kubernetes.io/instance=kube-prometheus-stack
+flux reconcile helmrelease kube-prometheus-stack -n flux-system
+```
+---
+
+### Job completed but kagent still cannot authenticate to Grafana
+
+**Symptoms:** kagent logs show `401 Unauthorized` when calling Grafana API. The Job shows `Completed` status. ExternalSecret in kagent's namespace may be out of sync or holding a stale token.
+
+```bash
+kubectl get externalsecret -A | grep grafana
+kubectl exec -n localstack deploy/localstack -- awslocal secretsmanager get-secret-value --secret-id kagent/grafana/api-key --region us-east-1 --query SecretString --output text
+curl -sf -H "Authorization: Bearer $(kubectl exec -n localstack deploy/localstack -- awslocal secretsmanager get-secret-value --secret-id kagent/grafana/api-key --region us-east-1 --query SecretString --output text)" http://localhost:$(kubectl get svc kube-prometheus-stack-grafana -n monitoring -o jsonpath='{.spec.ports[0].port}')/api/org
+kubectl delete job create-grafana-sa-token -n monitoring && flux reconcile kustomization grafana-sa-setup
+kubectl annotate externalsecret -n flux-system kagent-grafana-sa-token force-sync=$(date +%s) --overwrite
+```
+---
+
+### Job exceeds backoffLimit with intermittent Grafana API errors
+
+**Symptoms:** Job status shows `Failed` with reason `BackoffLimitExceeded`. Multiple pod attempts visible with `kubectl get pods -n monitoring -l job-name=create-grafana-sa-token`. Logs show mixed success/failure on Grafana API calls (HTTP 500, connection resets).
+
+```bash
+kubectl get pods -n monitoring -l job-name=create-grafana-sa-token --sort-by=.metadata.creationTimestamp
+kubectl logs -n monitoring -l job-name=create-grafana-sa-token -c create-token --tail=50
+kubectl get events -n monitoring --field-selector involvedObject.name=create-grafana-sa-token --sort-by=.lastTimestamp
+kubectl top pods -n monitoring -l app.kubernetes.io/name=grafana
+kubectl delete job create-grafana-sa-token -n monitoring && flux reconcile kustomization grafana-sa-setup
+```
+---
+
 
 ## Related
 
 
-- [`apps/base/grafana-sa-setup/`](https://github.com/JiwooL0920/fleet-infra/tree/develop/apps/base/grafana-sa-setup/) — Kubernetes manifests
-- [`base/services/grafana-sa-setup.yaml`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/grafana-sa-setup.yaml) — Flux Kustomization
-- [`base/services/environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/environment.env) — environment variables
+- [`apps/base/grafana-sa-setup/`](https://github.com/JiwooL0920/flux-infra/tree/develop/apps/base/grafana-sa-setup/) — Kubernetes manifests
+- [`base/services/grafana-sa-setup.yaml`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/grafana-sa-setup.yaml) — Flux Kustomization
+- [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env) — environment variables
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/fleet-infra/blob/develop/service-catalog.json) at commit `2d36e22` · catalog sha `4d088b0b3a67b4c4`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `2d36e22` · catalog sha `4d088b0b3a67b4c4`*

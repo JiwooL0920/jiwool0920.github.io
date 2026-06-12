@@ -20,7 +20,7 @@ KEDA is a CNCF Graduated project with broad production adoption. Its "scale to z
 | **Type** | HelmRelease (chart: `keda` v2.16.1) |
 | **Layer** | Event-driven autoscaling |
 | **Status** | Enabled |
-| **Source** | [`apps/base/keda/`](https://github.com/JiwooL0920/fleet-infra/tree/develop/apps/base/keda/) |
+| **Source** | [`apps/base/keda/`](https://github.com/JiwooL0920/flux-infra/tree/develop/apps/base/keda/) |
 
 ## Dependencies
 
@@ -107,8 +107,8 @@ sequenceDiagram
 
 ## Configuration
 
-All values sourced from [`base/services/environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/environment.env)
-(base); per-environment overrides in [`clusters/stages/dev/.../environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/clusters/stages/dev/clusters/services-amer/environment.env).
+All values sourced from [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env)
+(base); per-environment overrides in [`clusters/stages/dev/.../environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/clusters/stages/dev/clusters/services-amer/environment.env).
 
 | Parameter | Dev | Prod |
 |---|---|---|
@@ -117,14 +117,83 @@ All values sourced from [`base/services/environment.env`](https://github.com/Jiw
 
 ## Operations
 
-<!-- TODO: Add operations in service-insights/keda.yaml → operations field -->
+### Metrics server not registering with API aggregation
+
+**Symptoms:** `kubectl get --raw /apis/custom.metrics.k8s.io/v1beta1` returns 404 or connection refused. HPA events show `unable to fetch metrics from custom metrics API`. ScaledObjects report `READY: False` with message `MSI registration failed`.
+
+```bash
+kubectl get apiservice v1beta1.custom.metrics.k8s.io -o yaml
+kubectl get pods -n keda -l app=keda-metrics-apiserver -o wide
+kubectl logs -n keda -l app=keda-metrics-apiserver --tail=100
+kubectl get endpoints -n keda keda-metrics-apiserver
+kubectl describe apiservice v1beta1.external.metrics.k8s.io | grep -A5 Conditions
+kubectl rollout restart deployment -n keda keda-metrics-apiserver
+```
+---
+
+### Operator CrashLoopBackOff after upgrade
+
+**Symptoms:** `kubectl get pods -n keda` shows operator pod in CrashLoopBackOff. Logs contain `failed to initialize manager` or `conversion webhook` errors. Flux HelmRelease shows `upgrade retries exhausted`.
+
+```bash
+kubectl logs -n keda -l app=keda-operator --previous --tail=200
+kubectl get crd scaledobjects.keda.sh -o jsonpath='{.status.conditions}' | jq .
+kubectl get validatingwebhookconfigurations | grep keda
+kubectl get secret -n keda | grep keda-admission
+kubectl delete validatingwebhookconfiguration keda-admission 2>/dev/null; kubectl delete mutatingwebhookconfiguration keda-admission 2>/dev/null
+flux reconcile helmrelease keda -n flux-system --force
+```
+---
+
+### ScaledObject stuck at minReplicaCount despite trigger threshold exceeded
+
+**Symptoms:** `kubectl get scaledobject -A` shows ACTIVE=True but replica count unchanged. `kubectl get hpa -A` shows the managed HPA with current metric value exceeding target but REPLICAS stuck at minimum.
+
+```bash
+kubectl describe hpa -n <workload-namespace> keda-hpa-<scaledobject-name>
+kubectl get scaledobject <name> -n <workload-namespace> -o yaml | grep -A20 status
+kubectl logs -n keda -l app=keda-operator --tail=200 | grep <scaledobject-name>
+kubectl get deployment <target-deployment> -n <workload-namespace> -o jsonpath='{.spec.replicas}'
+kubectl get events -n <workload-namespace> --sort-by=.lastTimestamp | grep -i scale
+```
+---
+
+### KEDA and existing metrics-server conflict on custom metrics API
+
+**Symptoms:** After KEDA deployment, `kubectl top pods` fails or returns stale data. API service `v1beta1.metrics.k8s.io` shows condition `Available: False`. Multiple apiservices claiming the same group/version.
+
+```bash
+kubectl get apiservice | grep metrics
+kubectl get apiservice v1beta1.metrics.k8s.io -o yaml
+kubectl get apiservice v1beta1.custom.metrics.k8s.io -o yaml
+kubectl get apiservice v1beta1.external.metrics.k8s.io -o yaml
+kubectl logs -n keda -l app=keda-metrics-apiserver --tail=100 | grep -i conflict
+kubectl get pods -n kube-system -l k8s-app=metrics-server
+```
+**See also:** docs/adr/011-keda-autoscaling.md
+---
+
+### Flux Kustomization fails to reconcile KEDA CRDs
+
+**Symptoms:** `flux get kustomization keda` shows `False` with health check timeout. Events show `Health check failed after 10m0s` or `CRD install timed out`. New ScaledObject manifests rejected with `no matches for kind "ScaledObject"`.
+
+```bash
+flux get kustomization keda -n flux-system
+kubectl get crd | grep keda
+flux reconcile source git flux-system
+kubectl get helmrelease keda -n flux-system -o yaml | grep -A10 status
+flux suspend helmrelease keda -n flux-system && flux resume helmrelease keda -n flux-system
+kubectl get events -n flux-system --sort-by=.lastTimestamp | grep keda
+```
+---
+
 
 ## Related
 
 
-- [`apps/base/keda/`](https://github.com/JiwooL0920/fleet-infra/tree/develop/apps/base/keda/) — Kubernetes manifests
-- [`base/services/keda.yaml`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/keda.yaml) — Flux Kustomization
-- [`base/services/environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/environment.env) — environment variables
+- [`apps/base/keda/`](https://github.com/JiwooL0920/flux-infra/tree/develop/apps/base/keda/) — Kubernetes manifests
+- [`base/services/keda.yaml`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/keda.yaml) — Flux Kustomization
+- [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env) — environment variables
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/fleet-infra/blob/develop/service-catalog.json) at commit `2d36e22` · catalog sha `4d088b0b3a67b4c4`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `2d36e22` · catalog sha `4d088b0b3a67b4c4`*

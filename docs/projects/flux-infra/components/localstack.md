@@ -19,7 +19,7 @@ What distinguishes LocalStack from alternatives like [moto](https://github.com/g
 | **Layer** | Foundation services |
 | **Chart** | [`localstack`](https://localstack.github.io/helm-charts) v0.6.15 |
 | **Status** | Enabled |
-| **Source** | [`apps/base/localstack/`](https://github.com/JiwooL0920/fleet-infra/tree/develop/apps/base/localstack/) |
+| **Source** | [`apps/base/localstack/`](https://github.com/JiwooL0920/flux-infra/tree/develop/apps/base/localstack/) |
 
 ## Dependencies
 
@@ -118,8 +118,8 @@ sequenceDiagram
 
 ## Configuration
 
-All values sourced from [`base/services/environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/environment.env)
-(base); per-environment overrides in [`clusters/stages/dev/.../environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/clusters/stages/dev/clusters/services-amer/environment.env).
+All values sourced from [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env)
+(base); per-environment overrides in [`clusters/stages/dev/.../environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/clusters/stages/dev/clusters/services-amer/environment.env).
 
 | Parameter | Dev | Prod |
 |---|---|---|
@@ -133,14 +133,89 @@ All values sourced from [`base/services/environment.env`](https://github.com/Jiw
 
 ## Operations
 
-<!-- TODO: Add operations in service-insights/localstack.yaml → operations field -->
+### Pod CrashLoopBackOff due to startup script failure
+
+**Symptoms:** Pod enters CrashLoopBackOff state. `kubectl logs` shows `set -euo pipefail` exiting on a failed `awslocal` command. Common when LocalStack services are not yet healthy when startup scripts execute.
+
+```bash
+kubectl -n localstack logs deployment/localstack --previous | grep -A5 'CREATE\|ERROR'
+kubectl -n localstack describe pod -l app.kubernetes.io/name=localstack | grep -A10 'Events:'
+kubectl -n localstack get events --sort-by='.lastTimestamp' | grep -i localstack
+kubectl -n localstack exec deployment/localstack -- awslocal secretsmanager list-secrets --region us-east-1
+# If OOMKilled, check resource limits in cluster-vars ConfigMap vs actual usage:
+kubectl -n localstack top pod
+```
+---
+
+### ExternalSecrets stuck in SecretSyncedError
+
+**Symptoms:** ExternalSecret resources show `SecretSyncedError` status. Services depending on secrets (Redis, Grafana, etc.) fail to start because their Kubernetes Secrets are empty or missing. ClusterSecretStore health check fails.
+
+```bash
+kubectl get clustersecretstore -A
+kubectl get externalsecret -A -o wide | grep -v Synced
+kubectl -n localstack get svc localstack -o jsonpath='{.spec.clusterIP}'
+kubectl -n localstack exec deployment/localstack -- curl -s http://localhost:4566/_localstack/health | python3 -m json.tool
+kubectl -n localstack exec deployment/localstack -- awslocal secretsmanager list-secrets --region us-east-1 --output table
+# Verify connectivity from ESO namespace:
+kubectl -n external-secrets run debug --rm -it --image=curlimages/curl -- curl -s http://localstack.localstack.svc:4566/_localstack/health
+```
+**See also:** docs/adr/005-localstack-external-secrets.md
+---
+
+### Secrets lost after pod restart despite persistence
+
+**Symptoms:** After pod restart, `awslocal secretsmanager list-secrets` returns empty. ExternalSecrets go into error state. Services that were previously healthy begin failing credential checks.
+
+```bash
+kubectl -n localstack get pvc | grep localstack
+kubectl -n localstack describe pvc -l app.kubernetes.io/name=localstack
+kubectl -n localstack exec deployment/localstack -- ls -la /var/lib/localstack/state/
+kubectl -n localstack exec deployment/localstack -- printenv PERSISTENCE
+# If PVC was recreated (lost data), trigger secret re-initialization:
+kubectl -n localstack rollout restart deployment/localstack
+kubectl -n localstack rollout status deployment/localstack --timeout=120s
+kubectl -n localstack exec deployment/localstack -- awslocal secretsmanager list-secrets --region us-east-1
+```
+---
+
+### GitHub PAT not propagating to Secrets Manager
+
+**Symptoms:** `github/mcp/token` secret missing from LocalStack. gitops-agent pods fail to authenticate with GitHub. Startup logs show `[SKIP] github/mcp/token — GITHUB_PAT env var not set`.
+
+```bash
+kubectl -n localstack exec deployment/localstack -- printenv GITHUB_PAT
+kubectl -n localstack get secret github-pat-bootstrap -o jsonpath='{.data.token}' | base64 -d
+# If secret doesn't exist, create it:
+# make setup-github-secret
+# Then restart LocalStack to re-run startup scripts:
+kubectl -n localstack rollout restart deployment/localstack
+kubectl -n localstack exec deployment/localstack -- awslocal secretsmanager get-secret-value --secret-id github/mcp/token --region us-east-1
+```
+---
+
+### Readiness probe failing — services not healthy
+
+**Symptoms:** Pod stays in `0/1 Running` state. Readiness probe returns non-200 from `/_localstack/health`. Downstream Flux Kustomizations time out waiting for LocalStack health check.
+
+```bash
+kubectl -n localstack get pods -l app.kubernetes.io/name=localstack -o wide
+kubectl -n localstack exec deployment/localstack -- curl -s http://localhost:4566/_localstack/health
+kubectl -n localstack exec deployment/localstack -- curl -s http://localhost:4566/_localstack/health | python3 -c "import sys,json; h=json.load(sys.stdin); [print(f'{k}: {v}') for k,v in h.get('services',{}).items()]"
+kubectl -n localstack logs deployment/localstack | grep -i 'error\|exception\|traceback' | tail -20
+# Check if port 4566 is actually listening:
+kubectl -n localstack exec deployment/localstack -- ss -tlnp | grep 4566
+```
+**See also:** docs/adr/001-fine-grained-service-dependencies.md
+---
+
 
 ## Related
 
 
-- [`apps/base/localstack/`](https://github.com/JiwooL0920/fleet-infra/tree/develop/apps/base/localstack/) — Kubernetes manifests
-- [`base/services/localstack.yaml`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/localstack.yaml) — Flux Kustomization
-- [`base/services/environment.env`](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/environment.env) — environment variables
+- [`apps/base/localstack/`](https://github.com/JiwooL0920/flux-infra/tree/develop/apps/base/localstack/) — Kubernetes manifests
+- [`base/services/localstack.yaml`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/localstack.yaml) — Flux Kustomization
+- [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env) — environment variables
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/fleet-infra/blob/develop/service-catalog.json) at commit `2d36e22` · catalog sha `4d088b0b3a67b4c4`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `2d36e22` · catalog sha `4d088b0b3a67b4c4`*
