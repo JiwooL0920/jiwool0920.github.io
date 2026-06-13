@@ -277,10 +277,16 @@
   padding: 1rem;
   text-align: center;
   transition: box-shadow 0.2s, transform 0.15s;
+  /* reset anchor styles */
+  display: block;
+  text-decoration: none;
+  color: inherit;
 }
 .cert-card:hover {
   box-shadow: 0 4px 16px rgba(0,0,0,0.18);
   transform: translateY(-2px);
+  text-decoration: none;
+  color: inherit;
 }
 
 /* Badge image */
@@ -305,4 +311,11 @@
   font-size: 0.85rem;
   color: var(--md-default-fg-color);
   margin-bottom: 0.25rem;
+}
+.cert-card span {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--md-default-fg-color--light);
+  line-height: 1.4;
+  margin-top: 0.15rem;
 }

@@ -23,71 +23,56 @@ I'm shaping my career as an ML Infrastructure / AI Platform engineer, building t
 
 <div class="job" markdown>
 
-### AI Platform Engineer II — Software and DevOps Engineering
-**[Sanofi](https://www.sanofi.com)** · Mar 2025 – Present · Toronto, ON
+### DevOps Engineer II — AI Platform
+**[Sanofi](https://www.sanofi.com)** · Mar 2025 – Present · 1 yr 4 mos
 
-Build a scalable AI/ML platform on AWS EKS, reducing model development-to-deployment time for 200+ internal digital data projects.
+AI Foundry team operates a central AI/ML platform to accelerate the development and deployment of 950+ internal projects across AWS EKS and Tencent Cloud.
 
-- Extend and refine 20+ microservices with modular service design leveraging Python FastAPI and Temporal workflow orchestration
-- Build scalable multi-region infrastructure in EMEA/AMER/APAC (AWS) and China (Tencent) regions using FluxCD and Crossplane, following GitOps best practices
-- Optimize performance and compute resource utilization for project namespaces using Karpenter, and monitor performance to provide seamless user experience on the platform
-- Support incident response for platform and project namespace failures by troubleshooting root causes and implementing fixes to restore services
-- Refine comprehensive real-time observability stack with Prometheus, Grafana, AlertManager, Loki, OpenTelemetry and KubeCost
-- Consulted cross-functional teams on MLOps infrastructure, deployment, and CI/CD optimizations — supported Data Platform team in delivering an LLM RAG-powered Cortex AI chatbot on OpenShift for natural-language search and Q&A over Snowflake Data Mart
+**Platform Engineering:**
+
+- Proposed and leading 0→1 development of an agentic system enablement on Kubernetes Platform infrastructure with Kagents and AgentGateway, defining the next-generation interaction layer for platform operations (natural-language AIOps, automated incident response)
+- Owned platform-wide Redis Sentinel caching with automatic failover, improving backend API response times by 98.3% and reducing observability query latency by 55%
+- Led Bottlerocket OS migration across EKS clusters, reducing node startup time by 87% while improving security and reducing AMI/GPU driver overhead
+
+**Cross-functional:**
+
+- Contributing on the enterprise Agents Hub that enables cross-team agent registration, invocation, observability, and governance; matured data assets integration and delivered terraform modules for AWS Bedrock/AgentCore memory, guardrail, MCP, and multi-agent orchestration
+- Acted as a dedicated devops partner — Openshift deployment and reduced CI/CD pipeline time by 40% for Sanofi's Data Platform chatbot
 
 </div>
 
 <div class="job" markdown>
 
-### Software Engineer I
-**[Sanofi](https://www.sanofi.com)** · May 2023 – Mar 2025 · Toronto, ON
+### Software Engineer I — Rotational Development Program
+**[Sanofi](https://www.sanofi.com)** · May 2023 – Mar 2025 · 1 yr 11 mos
 
-Rotational new-grad program across frontend, backend, and DevOps engineering at Sanofi's Data and AI Centre of Excellence.
+Built engineering foundation on core AI/ML lifecycle across AI Platform and ML product teams.
 
 **[Rotation 1] AI Platform**
 
-- Developed FastAPI endpoints for distributed AI platform services, leveraging complex workflow orchestrations
-- Troubleshot production user issues by monitoring ArgoCD failures, analyzing pod crash loops and application logs to identify and fix root causes
+- Improved startup time and cost efficiency of user Jupyter notebook pods by designing Temporal workflow scheduling
+- Enabled AWS infrastructure provisioning via Crossplane-based IaC on the deployment microservice
+- Refactored a core deployment service end-to-end, improving scalability and reliability
 
-**[Rotation 2] Drug Discovery R&D**
+**[Rotation 2]: R&D — Early stage drug discovery**
 
-- Led feature development initiative using EMR Serverless to optimize Spark jobs for data pipeline services
-- Authored automated CI/CD improvements and infrastructure-as-code implementations, enabling rapid development-to-deployment environments and accelerating research iterations
+- Implemented EMR Serverless features including scheduling Spark jobs
 
-**[Rotation 3] Immunology RAG Chatbot**
+**[Rotation 3]: R&D — RAG LLM chatbot answering scientific queries**
 
-- Built a RAG-based LLM chatbot specializing in immunology-related scientific queries
-- Extended similarity search features and user feedback mechanisms
-- Optimized application performance via ELK stack integration
-- Led migration from Streamlit prototype to scalable React/Redux frontend with modularized FastAPI backend, improving performance and enabling multi-user concurrent sessions
+- Extended similarity search features and optimized RAG retrieval on ELK stack
+- Architected migration from Streamlit prototype to React/FastAPI; enabled multi-user concurrent sessions and persistent chat history
 
 </div>
 
 <div class="job" markdown>
 
 ### Software Engineer Intern
-**[Evertz](https://www.evertz.com)** · May 2021 – Aug 2022 · Burlington, ON
+**[Evertz](https://www.evertz.com)** · May 2021 – Aug 2022 · 1 yr 4 mos · Burlington, ON (Remote)
 
-Full-stack development on the NUCLEUS Platform — an AV routing application for video distribution over IP.
-
-- Full-Stack Web Development (JavaScript, PHP, MySQL) — maintained and extended the NUCLEUS central session manager controlling video/audio transmissions and device configurations
-- Desktop/Mobile App Development (Electron JS, Apache Cordova) — extended the Nucleus Control Panel for real-time device routing control
-- Embedded Device Programming (C++) — maintained firmware upgrade and web server communication layer
-- Python Automation — extended the Commissioning Tool using Python + Selenium to automate device configuration workflows
-- Test Automation — extended the NUCLEUS/NCP test suite using Python, Selenium, Playwright, Jenkins, and REST API
-
-</div>
-
-<div class="job" markdown>
-
-### Research Assistant
-**[McMaster University](https://www.mcmaster.ca)** — Department of Computing and Software · May 2020 – Sep 2020 · Hamilton, ON
-
-*Supervisor: Dr. Christopher Anand*
-
-- Developed, extended, and maintained a 3D web graphics library in Elm for creating interactive web applications and animations — heavily adopted at university summer camps
-- Taught web programming at online summer camps as lead instructor in 3D programming sessions, reaching 100+ students worldwide
-- Assisted a graduate student's research project on a Haskell-embedded API for modelling optimization problems
+- Contributed to development of an enterprise Audio/Video routing and device management platform used in production environments
+- Worked across web, desktop/mobile, embedded, and automation layers in a cross-functional engineering team
+- Built features and test automation supporting device configuration, firmware updates, and system reliability
 
 </div>
 
@@ -111,49 +96,26 @@ Activities: Student mentor and ambassador for the CS program at the McMaster Eng
 ## Certifications
 
 <div class="cert-grid">
-
-<div class="cert-card" markdown>
-[![AWS Certified Machine Learning – Specialty](https://images.credly.com/size/340x340/images/778bde6c-ad1c-4312-ac33-2fa40d50a147/image.png){ .cert-badge }](https://credly.com/badges/3e257c53-e321-4de1-8db9-3b3dffe011f2/public_url)
-
-**AWS Certified Machine Learning – Specialty**  
-Amazon Web Services · Jan 2026 – Jan 2029
-</div>
-
-<div class="cert-card" markdown>
-[![AWS Certified DevOps Engineer – Professional](https://images.credly.com/size/340x340/images/bd31ef42-d460-493e-8503-39592aaf0409/image.png){ .cert-badge }](https://credly.com/badges/d9408363-7c18-4336-b8c6-6a85f50b923c/public_url)
-
-**AWS Certified DevOps Engineer – Professional**  
-Amazon Web Services · Mar 2025 – Mar 2028
-</div>
-
-<div class="cert-card" markdown>
-[![AWS Certified Solutions Architect – Associate](https://images.credly.com/size/340x340/images/0e284c3f-5164-4b21-8660-0d84737941bc/image.png){ .cert-badge }](https://credly.com/badges/90233604-0a21-42ee-8643-e15d32630610/public_url)
-
-**AWS Certified Solutions Architect – Associate**  
-Amazon Web Services · Dec 2024 – Dec 2027
-</div>
-
-<div class="cert-card" markdown>
-[![AWS Cloud Quest: Cloud Practitioner](https://images.credly.com/size/340x340/images/30816e43-2550-4e1c-be22-3f03c5573b57/image.png){ .cert-badge }](https://credly.com/badges/ab687825-5c82-400f-b7a0-7613b8979ca1/public_url)
-
-**AWS Cloud Quest: Cloud Practitioner**  
-Amazon Web Services · Jun 2023
-</div>
-
-<div class="cert-card" markdown>
-[![SnowPro Associate: Platform](https://achieve.snowflake.com/63500245-592a-4f2c-bb57-26f4841c51ed/image.png){ .cert-badge }](https://achieve.snowflake.com/63500245-592a-4f2c-bb57-26f4841c51ed)
-
-**SnowPro Associate: Platform**  
-Snowflake · Apr 2026
-</div>
-
-<div class="cert-card" markdown>
-[![Hands-On Essentials: Data Warehousing Workshop](https://achieve.snowflake.com/ebc5da2f-c4e9-4ef9-96b9-64562ce4fb88/image.png){ .cert-badge }](https://achieve.snowflake.com/ebc5da2f-c4e9-4ef9-96b9-64562ce4fb88)
-
-**Hands-On Essentials: Data Warehousing Workshop**  
-Snowflake · May 2024
-</div>
-
+  <a href="https://credly.com/badges/3e257c53-e321-4de1-8db9-3b3dffe011f2/public_url" class="cert-card" target="_blank" rel="noopener">
+    <img src="https://images.credly.com/size/340x340/images/778bde6c-ad1c-4312-ac33-2fa40d50a147/image.png" class="cert-badge" alt="AWS Certified Machine Learning – Specialty">
+    <strong>AWS Certified Machine Learning – Specialty</strong>
+    <span>Amazon Web Services · Jan 2026 – Jan 2029</span>
+  </a>
+  <a href="https://credly.com/badges/d9408363-7c18-4336-b8c6-6a85f50b923c/public_url" class="cert-card" target="_blank" rel="noopener">
+    <img src="https://images.credly.com/size/340x340/images/bd31ef42-d460-493e-8503-39592aaf0409/image.png" class="cert-badge" alt="AWS Certified DevOps Engineer – Professional">
+    <strong>AWS Certified DevOps Engineer – Professional</strong>
+    <span>Amazon Web Services · Mar 2025 – Mar 2028</span>
+  </a>
+  <a href="https://credly.com/badges/90233604-0a21-42ee-8643-e15d32630610/public_url" class="cert-card" target="_blank" rel="noopener">
+    <img src="https://images.credly.com/size/340x340/images/0e284c3f-5164-4b21-8660-0d84737941bc/image.png" class="cert-badge" alt="AWS Certified Solutions Architect – Associate">
+    <strong>AWS Certified Solutions Architect – Associate</strong>
+    <span>Amazon Web Services · Dec 2024 – Dec 2027</span>
+  </a>
+  <a href="https://achieve.snowflake.com/63500245-592a-4f2c-bb57-26f4841c51ed" class="cert-card" target="_blank" rel="noopener">
+    <img src="https://api.eu.badgr.io/public/assertions/63500245-592a-4f2c-bb57-26f4841c51ed/image" class="cert-badge" alt="SnowPro Associate: Platform" onerror="this.src='https://www.snowflake.com/wp-content/themes/snowflake/assets/img/favicon/favicon-196x196.png'">
+    <strong>SnowPro Associate: Platform</strong>
+    <span>Snowflake · Apr 2026</span>
+  </a>
 </div>
 
 ---
