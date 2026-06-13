@@ -220,3 +220,89 @@
   color: #e65100;  /* Dark orange */
   font-weight: 600;
 }
+
+/* ===== Home / Profile page ===== */
+
+.profile-header {
+  margin: 0.25rem 0 1.5rem;
+  font-size: 1rem;
+  color: var(--md-default-fg-color--light);
+}
+
+.profile-header .md-button {
+  margin: 0.4rem 0.4rem 0 0;
+  font-size: 0.8rem;
+}
+
+/* Experience cards */
+.job {
+  border-left: 3px solid var(--md-accent-fg-color);
+  padding: 0.6rem 0 0.6rem 1.2rem;
+  margin-bottom: 2rem;
+}
+.job h3 {
+  margin-top: 0.2rem;
+  margin-bottom: 0.15rem;
+}
+.job h4 {
+  margin-top: 1rem;
+  margin-bottom: 0.3rem;
+  font-size: 0.9em;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* Education items */
+.education-item {
+  border-left: 3px solid var(--md-primary-fg-color);
+  padding: 0.5rem 0 0.5rem 1.2rem;
+  margin-bottom: 1.5rem;
+}
+.education-item h3 {
+  margin-top: 0.2rem;
+}
+
+/* Certification grid */
+.cert-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1.25rem;
+  margin: 1rem 0 2rem;
+}
+
+.cert-card {
+  background: var(--md-code-bg-color);
+  border: 1px solid rgba(128,128,128,0.15);
+  border-radius: 8px;
+  padding: 1rem;
+  text-align: center;
+  transition: box-shadow 0.2s, transform 0.15s;
+}
+.cert-card:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+  transform: translateY(-2px);
+}
+
+/* Badge image */
+.cert-badge {
+  width: 100px;
+  height: 100px;
+  object-fit: contain;
+  margin-bottom: 0.6rem;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.cert-card p {
+  font-size: 0.8rem;
+  margin: 0;
+  color: var(--md-default-fg-color--light);
+  line-height: 1.4;
+}
+.cert-card strong {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--md-default-fg-color);
+  margin-bottom: 0.25rem;
+}
