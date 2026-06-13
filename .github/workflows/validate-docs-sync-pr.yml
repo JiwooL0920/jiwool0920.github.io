@@ -1,0 +1,28 @@
+name: validate-docs-sync-pr
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'docs/projects/flux-infra/**'
+      - 'mkdocs.yml'
+
+jobs:
+  validate:
+    name: Validate flux-infra docs sync
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install MkDocs + deps
+        run: pip install -r requirements.txt
+
+      # Structural checks (headings, ADRs, mermaid) run in flux-infra CI (catalog-drift-check + docs-sync)
+      # before the blog PR is opened. Here we only ensure the full site builds under --strict.
+      - name: MkDocs strict build
+        run: mkdocs build --strict
