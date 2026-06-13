@@ -1,7 +1,7 @@
 ---
 catalog_sha: 4d088b0b3a67b4c4
-flux_infra_commit: fbaac15
-generated_at: 2026-06-12
+flux_infra_commit: 81067be
+generated_at: 2026-06-13
 ---
 
 # Components Index
@@ -59,4 +59,4 @@ All 40 services in flux-infra, including disabled ones.
 | Scylla Manager | Database management services | Commented out in base/services/kustomization.yaml |
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `fbaac15` · catalog sha `4d088b0b3a67b4c4`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `81067be` · catalog sha `4d088b0b3a67b4c4`*
