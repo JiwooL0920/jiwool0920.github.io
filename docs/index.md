@@ -102,7 +102,7 @@ Activities: Student mentor and ambassador for the CS program at the McMaster Eng
     <span>Amazon Web Services · Jan 2026 – Jan 2029</span>
   </a>
   <a href="https://credly.com/badges/d9408363-7c18-4336-b8c6-6a85f50b923c/public_url" class="cert-card" target="_blank" rel="noopener">
-    <img src="https://images.credly.com/size/340x340/images/bd31ef42-d460-493e-8503-39592aaf0409/image.png" class="cert-badge" alt="AWS Certified DevOps Engineer – Professional">
+    <img src="https://images.credly.com/size/340x340/images/bd31ef42-d460-493e-8503-39592aaf0458/image.png" class="cert-badge" alt="AWS Certified DevOps Engineer – Professional">
     <strong>AWS Certified DevOps Engineer – Professional</strong>
     <span>Amazon Web Services · Mar 2025 – Mar 2028</span>
   </a>
