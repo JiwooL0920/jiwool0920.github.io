@@ -1,7 +1,7 @@
 ---
 catalog_sha: 4d088b0b3a67b4c4
 flux_infra_commit: 81067be
-generated_at: 2026-06-13
+generated_at: 2026-06-12
 ---
 
 # Loki
