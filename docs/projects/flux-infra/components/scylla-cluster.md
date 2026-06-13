@@ -1,7 +1,7 @@
 ---
 catalog_sha: 4d088b0b3a67b4c4
-flux_infra_commit: fbaac15
-generated_at: 2026-06-12
+flux_infra_commit: 81067be
+generated_at: 2026-06-13
 ---
 
 # ScyllaDB Cluster
@@ -243,4 +243,4 @@ kubectl logs -n scylla $(kubectl get pod -n scylla -l app.kubernetes.io/name=scy
 - [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env) — environment variables
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `fbaac15` · catalog sha `4d088b0b3a67b4c4`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `81067be` · catalog sha `4d088b0b3a67b4c4`*
