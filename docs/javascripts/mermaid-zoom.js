@@ -73,6 +73,7 @@
     var body = modal.querySelector(".mm-body");
     body.innerHTML = '<p class="mm-loading">Rendering\u2026</p>';
     modal.classList.add("mm-open");
+    console.log("[mmz] mm-open added, classList:", modal.className, "inBody:", document.body.contains(modal));
     document.body.style.overflow = "hidden";
 
     try {
