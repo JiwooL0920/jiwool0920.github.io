@@ -11,6 +11,8 @@
 
 ---
 
+## About
+
 Platform Engineer specializing in Kubernetes-based AI/ML platforms and agentic infrastructure, with experience building and operating multi-region systems at enterprise scale. Proven track record delivering production-grade platform primitives, improving performance, and enabling scalable multi-agent systems.
 
 Having worked across both AI platform and ML product teams, I've seen firsthand how critical strong infrastructure is to enabling teams to move fast. While much of the industry focuses on product development, far fewer engineers understand what it takes to run ML systems reliably in production and at scale. That gap is where I've chosen to focus my career.

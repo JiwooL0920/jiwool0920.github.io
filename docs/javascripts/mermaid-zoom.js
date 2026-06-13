@@ -138,3 +138,20 @@
 
   observe();
 })();
+
+// Make the site title text in the header navigate to home (Material only wraps the logo icon, not the text)
+(function () {
+  function attachTitleLink() {
+    var title = document.querySelector('.md-header__title');
+    if (!title || title.dataset.homeLinked) return;
+    title.dataset.homeLinked = '1';
+    title.style.cursor = 'pointer';
+    title.addEventListener('click', function () {
+      var base = document.querySelector('base')?.href || '/';
+      window.location.href = base;
+    });
+  }
+  document.addEventListener('DOMContentLoaded', attachTitleLink);
+  // Re-attach after MkDocs instant navigation swaps the DOM
+  document.addEventListener('DOMContentSwitch', attachTitleLink);
+})();

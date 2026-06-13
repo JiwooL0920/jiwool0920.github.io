@@ -25,6 +25,7 @@ theme:
     - navigation.tabs
     - navigation.sections
     - navigation.expand
+    - navigation.indexes
     - navigation.top
     - navigation.path
     - search.suggest
@@ -70,7 +71,9 @@ markdown_extensions:
       permalink: true
 
 nav:
-  - Home: index.md
+  - Home:
+    - index.md
+    - About this blog: blog-about.md
   - Projects:
       - projects/index.md
       - Flux Infrastructure:
