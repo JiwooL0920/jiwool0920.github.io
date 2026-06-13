@@ -113,28 +113,28 @@ Activities: Student mentor and ambassador for the CS program at the McMaster Eng
 <div class="cert-grid">
 
 <div class="cert-card" markdown>
-[![AWS Certified Machine Learning – Specialty](https://images.credly.com/badges/3e257c53-e321-4de1-8db9-3b3dffe011f2/image.png){ .cert-badge }](https://credly.com/badges/3e257c53-e321-4de1-8db9-3b3dffe011f2/public_url)
+[![AWS Certified Machine Learning – Specialty](https://images.credly.com/size/340x340/images/778bde6c-ad1c-4312-ac33-2fa40d50a147/image.png){ .cert-badge }](https://credly.com/badges/3e257c53-e321-4de1-8db9-3b3dffe011f2/public_url)
 
 **AWS Certified Machine Learning – Specialty**  
 Amazon Web Services · Jan 2026 – Jan 2029
 </div>
 
 <div class="cert-card" markdown>
-[![AWS Certified DevOps Engineer – Professional](https://images.credly.com/badges/d9408363-7c18-4336-b8c6-6a85f50b923c/image.png){ .cert-badge }](https://credly.com/badges/d9408363-7c18-4336-b8c6-6a85f50b923c/public_url)
+[![AWS Certified DevOps Engineer – Professional](https://images.credly.com/size/340x340/images/bd31ef42-d460-493e-8503-39592aaf0409/image.png){ .cert-badge }](https://credly.com/badges/d9408363-7c18-4336-b8c6-6a85f50b923c/public_url)
 
 **AWS Certified DevOps Engineer – Professional**  
 Amazon Web Services · Mar 2025 – Mar 2028
 </div>
 
 <div class="cert-card" markdown>
-[![AWS Certified Solutions Architect – Associate](https://images.credly.com/badges/90233604-0a21-42ee-8643-e15d32630610/image.png){ .cert-badge }](https://credly.com/badges/90233604-0a21-42ee-8643-e15d32630610/public_url)
+[![AWS Certified Solutions Architect – Associate](https://images.credly.com/size/340x340/images/0e284c3f-5164-4b21-8660-0d84737941bc/image.png){ .cert-badge }](https://credly.com/badges/90233604-0a21-42ee-8643-e15d32630610/public_url)
 
 **AWS Certified Solutions Architect – Associate**  
 Amazon Web Services · Dec 2024 – Dec 2027
 </div>
 
 <div class="cert-card" markdown>
-[![AWS Cloud Quest: Cloud Practitioner](https://images.credly.com/badges/ab687825-5c82-400f-b7a0-7613b8979ca1/image.png){ .cert-badge }](https://credly.com/badges/ab687825-5c82-400f-b7a0-7613b8979ca1/public_url)
+[![AWS Cloud Quest: Cloud Practitioner](https://images.credly.com/size/340x340/images/30816e43-2550-4e1c-be22-3f03c5573b57/image.png){ .cert-badge }](https://credly.com/badges/ab687825-5c82-400f-b7a0-7613b8979ca1/public_url)
 
 **AWS Cloud Quest: Cloud Practitioner**  
 Amazon Web Services · Jun 2023
