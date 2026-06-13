@@ -1,7 +1,7 @@
 ---
 catalog_sha: 4d088b0b3a67b4c4
-fleet_infra_commit: 2d36e22
-generated_at: 2026-06-12
+fleet_infra_commit: 40b9e90
+generated_at: 2026-06-13
 ---
 
 # N8N
@@ -111,7 +111,89 @@ All values sourced from [`base/services/environment.env`](https://github.com/Jiw
 
 ## Operations
 
-<!-- TODO: Add operations in service-insights/n8n.yaml → operations field -->
+### ExternalSecret stuck in SecretSyncedError
+
+**Symptoms:** `kubectl get externalsecret -n n8n` shows `SecretSyncedError` status. n8n pod is in `CreateContainerConfigError` because the `n8n-postgres-credentials` Secret does not exist. Alert: `ExternalSecretNotReady`.
+
+```bash
+kubectl describe externalsecret n8n-postgres-credentials -n n8n
+kubectl get clustersecretstore localstack-secretstore -o yaml | grep -A5 status
+kubectl logs -n external-secrets -l app.kubernetes.io/name=external-secrets --tail=50
+kubectl get secret -n n8n n8n-postgres-credentials -o json | jq '.data | keys'
+aws --endpoint-url=http://localstack.localstack.svc:4566 secretsmanager get-secret-value --secret-id cnpg/postgresql-cluster-app/host
+```
+**See also:** docs/adr/004-single-shared-postgresql-cluster.md
+---
+
+### Pod CrashLoopBackOff — database connection refused
+
+**Symptoms:** n8n pod logs show `ECONNREFUSED 10.x.x.x:5432` or `connection to server at ... failed: Connection refused`. Pod restarts with increasing backoff. Liveness probe fails after 60s initial delay.
+
+```bash
+kubectl logs -n n8n deployment/n8n --previous --tail=30
+kubectl get secret n8n-postgres-credentials -n n8n -o jsonpath='{.data.POSTGRES_HOST}' | base64 -d
+kubectl get cluster -n cnpg-system postgresql-cluster -o jsonpath='{.status.phase}'
+kubectl get pods -n cnpg-system -l cnpg.io/cluster=postgresql-cluster
+kubectl exec -n n8n deployment/n8n -- nc -zv $(kubectl get secret n8n-postgres-credentials -n n8n -o jsonpath='{.data.POSTGRES_HOST}' | base64 -d) 5432
+```
+**See also:** docs/adr/004-single-shared-postgresql-cluster.md
+---
+
+### HelmRelease reconciliation failure — chart fetch error
+
+**Symptoms:** `kubectl get helmrelease n8n -n flux-system` shows `False` ready condition with message containing `failed to fetch chart`. GitRepository `n8n-helm-chart` may show `GitOperationFailed`.
+
+```bash
+kubectl get gitrepository n8n-helm-chart -n flux-system -o yaml | grep -A10 status
+kubectl describe helmrelease n8n -n flux-system | tail -20
+flux reconcile source git n8n-helm-chart
+flux reconcile helmrelease n8n
+kubectl get events -n flux-system --field-selector involvedObject.name=n8n --sort-by=.lastTimestamp
+```
+---
+
+### n8n unreachable via ingress — IngressRoute misconfiguration
+
+**Symptoms:** Browser returns 404 or connection reset when accessing `http://n8n.local`. Pod is running and healthy. `curl -H 'Host: n8n.local' http://localhost` from inside the cluster also fails.
+
+```bash
+kubectl get ingressroute n8n -n n8n -o yaml
+kubectl get svc n8n -n n8n -o wide
+kubectl get endpoints n8n -n n8n
+kubectl exec -n traefik deployment/traefik -- wget -qO- http://localhost:8080/api/http/routers | grep n8n
+kubectl port-forward -n n8n svc/n8n 5678:5678 & curl -s http://localhost:5678/healthz
+```
+---
+
+### n8n readiness probe failing after PostgreSQL failover
+
+**Symptoms:** After a CNPG failover event, n8n pods show `0/1 Ready`. Logs contain `terminating connection due to administrator command` or `could not translate host name`. Readiness probe returns non-200 on `/healthz`.
+
+```bash
+kubectl get cluster -n cnpg-system postgresql-cluster -o jsonpath='{.status.currentPrimary}'
+kubectl get secret n8n-postgres-credentials -n n8n -o jsonpath='{.data.POSTGRES_HOST}' | base64 -d
+kubectl logs -n n8n deployment/n8n --tail=20 | grep -i 'connection\|postgres\|ECONNR'
+kubectl rollout restart deployment/n8n -n n8n
+kubectl get pods -n n8n -w
+```
+**See also:** docs/adr/004-single-shared-postgresql-cluster.md
+---
+
+### Flux Kustomization suspended or dependency not satisfied
+
+**Symptoms:** `flux get kustomization n8n` shows `Suspended` or `dependency 'flux-system/postgresql-cluster' is not ready`. No HelmRelease activity. Other services that depend on n8n are also blocked.
+
+```bash
+flux get kustomization n8n
+flux get kustomization postgresql-cluster
+flux get kustomization external-secrets-config
+kubectl get configmap cluster-vars -n flux-system -o yaml | grep N8N
+flux resume kustomization n8n
+flux reconcile kustomization n8n --with-source
+```
+**See also:** docs/adr/001-fine-grained-service-dependencies.md
+---
+
 
 ## Related
 
@@ -121,4 +203,4 @@ All values sourced from [`base/services/environment.env`](https://github.com/Jiw
 - [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env) — environment variables
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `2d36e22` · catalog sha `4d088b0b3a67b4c4`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `40b9e90` · catalog sha `4d088b0b3a67b4c4`*

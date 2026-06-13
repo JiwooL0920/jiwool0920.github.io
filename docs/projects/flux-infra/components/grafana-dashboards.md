@@ -1,7 +1,7 @@
 ---
 catalog_sha: 4d088b0b3a67b4c4
-fleet_infra_commit: 2d36e22
-generated_at: 2026-06-12
+fleet_infra_commit: 40b9e90
+generated_at: 2026-06-13
 ---
 
 # Grafana Dashboards
@@ -98,7 +98,89 @@ _No environment-specific configuration variables for this service._
 
 ## Operations
 
-<!-- TODO: Add operations in service-insights/grafana-dashboards.yaml → operations field -->
+### GitRepository fetch failure — SSH authentication rejected
+
+**Symptoms:** `flux get source git grafana-dashboards` shows `False` ready status with message `ssh: handshake failed` or `authentication required`. The Kustomization remains at a stale revision while the source fails to pull.
+
+```bash
+flux get source git grafana-dashboards -n flux-system
+kubectl get gitrepository grafana-dashboards -n flux-system -o yaml | grep -A 10 'status:'
+kubectl get secret flux-system -n flux-system -o jsonpath='{.data.identity}' | base64 -d | head -2
+kubectl get events -n flux-system --field-selector involvedObject.name=grafana-dashboards --sort-by=.lastTimestamp
+ssh -T -i /dev/stdin git@github.com <<< "$(kubectl get secret flux-system -n flux-system -o jsonpath='{.data.identity}' | base64 -d)" 2>&1 | head -5
+flux reconcile source git grafana-dashboards -n flux-system
+```
+---
+
+### Kustomization reconciliation timeout — invalid manifests in dashboards repo
+
+**Symptoms:** `flux get kustomization grafana-dashboards` shows `reconciliation failed` with timeout or validation errors like `failed to decode YAML` or `unknown field`. Source revision advances but Kustomization stays at the previous applied revision.
+
+```bash
+flux get kustomization grafana-dashboards -n flux-system
+kubectl get kustomization grafana-dashboards -n flux-system -o jsonpath='{.status.conditions[*].message}'
+flux get source git grafana-dashboards -n flux-system
+kubectl get events -n flux-system --field-selector involvedObject.name=grafana-dashboards,involvedObject.kind=Kustomization --sort-by=.lastTimestamp
+flux reconcile kustomization grafana-dashboards --with-source
+```
+---
+
+### Dashboards not appearing in Grafana despite healthy Kustomization
+
+**Symptoms:** `flux get kustomization grafana-dashboards` shows `Applied revision` at latest commit, but Grafana UI shows no new dashboards. `kubectl get grafanadashboards` shows resources present but operator logs indicate `No matching instances found`.
+
+```bash
+kubectl get grafanadashboards --all-namespaces
+kubectl get grafanadashboards --all-namespaces -o yaml | grep -A 3 instanceSelector
+kubectl get grafana grafana -n monitoring -o jsonpath='{.metadata.labels}'
+kubectl logs -n grafana-operator -l app.kubernetes.io/name=grafana-operator --tail=50 | grep -iE "instance|dashboard|no matching"
+kubectl get grafana grafana -n monitoring -o yaml | grep -A 5 'status:'
+```
+**See also:** docs/adr/012-grafana-operator-dashboard-as-code.md
+---
+
+### Dependency gate blocking — grafana-config not ready
+
+**Symptoms:** `flux get kustomization grafana-dashboards` shows `dependency 'flux-system/grafana-config' is not ready` and reconciliation is suspended. Dashboard source may be fetched successfully but nothing is applied.
+
+```bash
+flux get kustomization grafana-dashboards -n flux-system
+flux get kustomization grafana-config -n flux-system
+flux get kustomization grafana-operator -n flux-system
+kubectl get grafana grafana -n monitoring
+kubectl logs -n grafana-operator -l app.kubernetes.io/name=grafana-operator --tail=30 | grep -i "instance"
+flux reconcile kustomization grafana-config --with-source
+```
+---
+
+### Stale dashboards after repo push — source revision not advancing
+
+**Symptoms:** A commit has been merged to main in the grafana-dashboards repo but `flux get source git grafana-dashboards` still shows the old revision after multiple polling intervals (>10 minutes). Kustomization shows no activity.
+
+```bash
+flux get source git grafana-dashboards -n flux-system
+kubectl get gitrepository grafana-dashboards -n flux-system -o jsonpath='{.status.artifact.revision}'
+kubectl get gitrepository grafana-dashboards -n flux-system -o jsonpath='{.status.conditions[*].message}'
+kubectl get events -n flux-system --field-selector involvedObject.name=grafana-dashboards,involvedObject.kind=GitRepository --sort-by=.lastTimestamp
+flux reconcile source git grafana-dashboards -n flux-system
+flux get source git grafana-dashboards -n flux-system
+```
+---
+
+### Pruned dashboards not removed from Grafana
+
+**Symptoms:** A `GrafanaDashboard` manifest was deleted from the dashboards repo and the Kustomization shows it has been pruned from the cluster, but the dashboard still appears in the Grafana UI. Operator may be failing to delete from the Grafana API.
+
+```bash
+kubectl get grafanadashboards --all-namespaces
+flux get kustomization grafana-dashboards -n flux-system
+kubectl logs -n grafana-operator -l app.kubernetes.io/name=grafana-operator --tail=50 | grep -iE "delete|remove|prune"
+kubectl run curl-test --rm -it --image=curlimages/curl --restart=Never -- curl -s -o /dev/null -w '%{http_code}' http://monitoring-kube-prometheus-stack-grafana.monitoring.svc:80/api/health
+kubectl get grafana grafana -n monitoring -o yaml | grep -A 5 'status:'
+```
+**See also:** docs/adr/012-grafana-operator-dashboard-as-code.md
+---
+
 
 ## Related
 
@@ -108,4 +190,4 @@ _No environment-specific configuration variables for this service._
 - [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env) — environment variables
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `2d36e22` · catalog sha `4d088b0b3a67b4c4`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `40b9e90` · catalog sha `4d088b0b3a67b4c4`*

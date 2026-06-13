@@ -1,7 +1,7 @@
 ---
 catalog_sha: 4d088b0b3a67b4c4
-fleet_infra_commit: 2d36e22
-generated_at: 2026-06-12
+fleet_infra_commit: 40b9e90
+generated_at: 2026-06-13
 ---
 
 # Cilium
@@ -185,4 +185,4 @@ flux suspend helmrelease -n flux-system cilium && flux resume helmrelease -n flu
 - [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env) — environment variables
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `2d36e22` · catalog sha `4d088b0b3a67b4c4`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `40b9e90` · catalog sha `4d088b0b3a67b4c4`*

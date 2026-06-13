@@ -1,7 +1,7 @@
 ---
 catalog_sha: 4d088b0b3a67b4c4
-fleet_infra_commit: 2d36e22
-generated_at: 2026-06-12
+fleet_infra_commit: 40b9e90
+generated_at: 2026-06-13
 ---
 
 # PostgreSQL Cluster
@@ -151,7 +151,87 @@ All values sourced from [`base/services/environment.env`](https://github.com/Jiw
 
 ## Operations
 
-<!-- TODO: Add operations in service-insights/postgresql-cluster.yaml → operations field -->
+### Cluster stuck in initializing state
+
+**Symptoms:** `kubectl get cluster -n cnpg-system` shows `postgresql-cluster` phase as `Setting up primary` or `Creating replica` for more than 15 minutes. Flux Kustomization times out with `health check failed after 15m0s: Cluster cnpg-system/postgresql-cluster not ready`.
+
+```bash
+kubectl get cluster postgresql-cluster -n cnpg-system -o yaml | grep -A5 'status:'
+kubectl get pods -n cnpg-system -l cnpg.io/cluster=postgresql-cluster
+kubectl logs -n cnpg-system -l cnpg.io/cluster=postgresql-cluster --tail=100
+kubectl describe pod -n cnpg-system -l cnpg.io/cluster=postgresql-cluster,cnpg.io/instanceRole=primary
+kubectl get events -n cnpg-system --sort-by='.lastTimestamp' --field-selector reason!=Pulled | tail -20
+```
+**See also:** docs/adr/004-single-shared-postgresql-cluster.md
+---
+
+### PushSecret failing to sync credentials
+
+**Symptoms:** Downstream services fail to start with authentication errors. `kubectl get pushsecret -n cnpg-system` shows `push-cnpg-app-secret` with status `SyncFailed` or `SecretNotFound`. ExternalSecrets in downstream namespaces report missing keys under `cnpg/postgresql-cluster-app/`.
+
+```bash
+kubectl get pushsecret push-cnpg-app-secret -n cnpg-system -o yaml
+kubectl get secret postgresql-cluster-app -n cnpg-system -o jsonpath='{.data}' | jq 'keys'
+kubectl get clustersecretstore localstack-secretstore -o yaml | grep -A10 'status:'
+kubectl logs -n cnpg-system -l app.kubernetes.io/name=external-secrets --tail=50
+kubectl get events -n cnpg-system --field-selector involvedObject.name=push-cnpg-app-secret
+```
+**See also:** docs/adr/005-localstack-external-secrets.md
+---
+
+### Database CR not creating logical database
+
+**Symptoms:** Application reports `FATAL: database "X" does not exist` on connection. `kubectl get databases -n cnpg-system` shows the Database resource but its status conditions indicate failure or pending state.
+
+```bash
+kubectl get databases -n cnpg-system
+kubectl describe database <db-name> -n cnpg-system
+kubectl exec -it postgresql-cluster-1 -n cnpg-system -- psql -U postgres -c '\l'
+kubectl logs -n cnpg-system -l cnpg.io/cluster=postgresql-cluster,cnpg.io/instanceRole=primary | grep -i "database"
+kubectl get cluster postgresql-cluster -n cnpg-system -o jsonpath='{.status.phase}'
+```
+---
+
+### Connection pool exhaustion
+
+**Symptoms:** Applications log `FATAL: too many connections for role "app"` or `remaining connection slots are reserved for non-replication superuser connections`. Pod restarts increase across n8n, Temporal, and other consumers.
+
+```bash
+kubectl exec -it postgresql-cluster-1 -n cnpg-system -- psql -U postgres -c "SELECT datname, count(*) FROM pg_stat_activity GROUP BY datname ORDER BY count DESC;"
+kubectl exec -it postgresql-cluster-1 -n cnpg-system -- psql -U postgres -c "SELECT state, count(*) FROM pg_stat_activity WHERE usename='app' GROUP BY state;"
+kubectl exec -it postgresql-cluster-1 -n cnpg-system -- psql -U postgres -c "SHOW max_connections;"
+kubectl exec -it postgresql-cluster-1 -n cnpg-system -- psql -U postgres -c "SELECT pid, datname, state, query_start, query FROM pg_stat_activity WHERE state='idle in transaction' ORDER BY query_start LIMIT 10;"
+```
+---
+
+### Primary pod OOMKilled
+
+**Symptoms:** `kubectl get pods -n cnpg-system` shows primary pod in `OOMKilled` or `CrashLoopBackOff` state. CNPG operator triggers failover, promoting a replica. Cluster may oscillate if the workload exceeds memory limits on all instances.
+
+```bash
+kubectl get pods -n cnpg-system -l cnpg.io/cluster=postgresql-cluster -o wide
+kubectl describe pod postgresql-cluster-1 -n cnpg-system | grep -A5 'Last State'
+kubectl top pods -n cnpg-system -l cnpg.io/cluster=postgresql-cluster
+kubectl exec -it postgresql-cluster-1 -n cnpg-system -- psql -U postgres -c "SELECT pg_size_pretty(sum(pg_database_size(datname))) as total_size FROM pg_database;"
+kubectl get events -n cnpg-system --field-selector reason=OOMKilling --sort-by='.lastTimestamp'
+kubectl get cluster postgresql-cluster -n cnpg-system -o jsonpath='{.status.currentPrimary}'
+```
+**See also:** docs/adr/004-single-shared-postgresql-cluster.md
+---
+
+### Replication lag or replica not catching up
+
+**Symptoms:** PodMonitor metrics show increasing `cnpg_pg_replication_lag` or `pg_stat_replication` shows replicas falling behind. Read queries (if re-enabled) return stale data. CNPG cluster status shows unhealthy replicas.
+
+```bash
+kubectl get cluster postgresql-cluster -n cnpg-system -o jsonpath='{.status.instances}' | jq .
+kubectl exec -it postgresql-cluster-1 -n cnpg-system -- psql -U postgres -c "SELECT application_name, state, sent_lsn, write_lsn, flush_lsn, replay_lsn, write_lag, flush_lag, replay_lag FROM pg_stat_replication;"
+kubectl exec -it postgresql-cluster-1 -n cnpg-system -- psql -U postgres -c "SELECT slot_name, active, restart_lsn, confirmed_flush_lsn FROM pg_replication_slots;"
+kubectl logs -n cnpg-system postgresql-cluster-2 --tail=50 | grep -i "wal\|replication\|recovery"
+kubectl top pods -n cnpg-system -l cnpg.io/cluster=postgresql-cluster
+```
+---
+
 
 ## Related
 
@@ -161,4 +241,4 @@ All values sourced from [`base/services/environment.env`](https://github.com/Jiw
 - [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env) — environment variables
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `2d36e22` · catalog sha `4d088b0b3a67b4c4`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `40b9e90` · catalog sha `4d088b0b3a67b4c4`*

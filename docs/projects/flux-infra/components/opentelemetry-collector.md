@@ -1,7 +1,7 @@
 ---
 catalog_sha: 4d088b0b3a67b4c4
-fleet_infra_commit: 2d36e22
-generated_at: 2026-06-12
+fleet_infra_commit: 40b9e90
+generated_at: 2026-06-13
 ---
 
 # OpenTelemetry Collector
@@ -154,7 +154,85 @@ All values sourced from [`base/services/environment.env`](https://github.com/Jiw
 
 ## Operations
 
-<!-- TODO: Add operations in service-insights/opentelemetry-collector.yaml → operations field -->
+### Collector OOMKilled under burst traffic
+
+**Symptoms:** Pod restarts with `OOMKilled` reason. `kubectl describe pod` shows last termination reason as OOMKilled. Alert: `KubePodCrashLooping` or `KubeContainerOOMKilled` firing for `opentelemetry-collector` in namespace `opentelemetry`. Collector internal metric `otelcol_processor_refused_spans` or `otelcol_processor_refused_metric_points` spiking before the kill.
+
+```bash
+kubectl -n opentelemetry describe pod -l app.kubernetes.io/name=opentelemetry-collector | grep -A5 'Last State'
+kubectl -n opentelemetry top pod -l app.kubernetes.io/name=opentelemetry-collector
+kubectl -n opentelemetry logs -l app.kubernetes.io/name=opentelemetry-collector --previous | grep -i 'memory_limiter'
+kubectl -n flux-system get helmrelease opentelemetry-collector -o jsonpath='{.spec.values.config.processors.memory_limiter}'
+kubectl -n opentelemetry port-forward svc/opentelemetry-collector 55679:55679 & sleep 2 && curl -s http://localhost:55679/debug/tracez | head -50
+```
+---
+
+### Traces not reaching Jaeger — exporter queue saturation
+
+**Symptoms:** No new traces visible in Jaeger UI. Collector logs show `sending queue is full` or `context deadline exceeded` for the `otlp/jaeger` exporter. Metric `otelcol_exporter_queue_size{exporter="otlp/jaeger"}` at 1000 (queue capacity). Metric `otelcol_exporter_send_failed_spans{exporter="otlp/jaeger"}` incrementing.
+
+```bash
+kubectl -n opentelemetry logs -l app.kubernetes.io/name=opentelemetry-collector --tail=100 | grep -E 'otlp/jaeger|queue|deadline'
+kubectl -n jaeger get pods -l app.kubernetes.io/component=collector -o wide
+kubectl -n opentelemetry exec -it deploy/opentelemetry-collector -- wget -qO- http://localhost:8888/metrics | grep 'otelcol_exporter.*jaeger'
+kubectl -n opentelemetry exec -it deploy/opentelemetry-collector -- wget -qO- --spider http://jaeger-collector.jaeger.svc.cluster.local:4317 2>&1 | head -5
+kubectl -n jaeger logs -l app.kubernetes.io/component=collector --tail=50 | grep -i error
+```
+---
+
+### Logs not reaching Loki — OTLP HTTP export failures
+
+**Symptoms:** No new logs in Grafana/Loki. Collector logs show connection refused or 5xx errors for the `otlphttp/loki` exporter. Metric `otelcol_exporter_send_failed_log_records{exporter="otlphttp/loki"}` incrementing.
+
+```bash
+kubectl -n opentelemetry logs -l app.kubernetes.io/name=opentelemetry-collector --tail=100 | grep -E 'otlphttp/loki|loki|3100'
+kubectl -n monitoring get pods -l app.kubernetes.io/name=loki -o wide
+kubectl -n opentelemetry exec -it deploy/opentelemetry-collector -- wget -qO- --spider http://monitoring-loki.monitoring.svc.cluster.local:3100/ready 2>&1
+kubectl -n monitoring logs -l app.kubernetes.io/name=loki --tail=50 | grep -iE 'otlp|error|reject'
+kubectl -n opentelemetry exec -it deploy/opentelemetry-collector -- wget -qO- http://localhost:8888/metrics | grep 'otelcol_exporter.*loki'
+```
+---
+
+### Collector pod CrashLoopBackOff after config change
+
+**Symptoms:** Pod enters CrashLoopBackOff immediately after HelmRelease reconciliation. Logs show `cannot unmarshal` or `failed to resolve config` errors during startup. `kubectl -n flux-system get helmrelease opentelemetry-collector` shows `upgrade remediation exhausted`.
+
+```bash
+kubectl -n opentelemetry logs -l app.kubernetes.io/name=opentelemetry-collector --tail=30
+kubectl -n flux-system get helmrelease opentelemetry-collector -o jsonpath='{.status.conditions[*].message}'
+kubectl -n flux-system get kustomization opentelemetry-collector -o jsonpath='{.status.conditions[*].message}'
+kubectl -n opentelemetry get events --sort-by='.lastTimestamp' | tail -20
+kubectl -n flux-system get configmap cluster-vars -o yaml | grep OTEL_COLLECTOR
+```
+**See also:** docs/adr/010-opentelemetry-collector.md
+---
+
+### ServiceMonitor not scraping — metrics missing from Prometheus
+
+**Symptoms:** No `otelcol_*` metrics in Prometheus. ServiceMonitor exists but Prometheus targets page shows the collector endpoint as down or missing entirely.
+
+```bash
+kubectl -n opentelemetry get servicemonitor -l app.kubernetes.io/name=opentelemetry-collector -o yaml
+kubectl -n opentelemetry get endpoints -l app.kubernetes.io/name=opentelemetry-collector -o yaml | grep -A5 'ports'
+kubectl -n opentelemetry exec -it deploy/opentelemetry-collector -- wget -qO- http://localhost:8889/metrics | head -20
+kubectl -n monitoring exec -it deploy/kube-prometheus-stack-prometheus -- promtool query instant http://localhost:9090 'up{job=~".*opentelemetry.*"}'
+kubectl -n monitoring logs -l app.kubernetes.io/name=prometheus --tail=50 | grep -i 'opentelemetry\|scrape.*error'
+```
+---
+
+### k8sattributes processor failing — missing Kubernetes metadata on signals
+
+**Symptoms:** Traces/metrics/logs arrive at backends but lack `k8s.namespace.name`, `k8s.pod.name`, and other Kubernetes resource attributes. Collector logs may show `kube API` errors or RBAC denied messages.
+
+```bash
+kubectl -n opentelemetry logs -l app.kubernetes.io/name=opentelemetry-collector | grep -iE 'k8sattributes|kube.*api|forbidden|unauthorized'
+kubectl -n opentelemetry get serviceaccount -l app.kubernetes.io/name=opentelemetry-collector -o name
+kubectl get clusterrolebinding -l app.kubernetes.io/name=opentelemetry-collector -o yaml | grep -A10 'roleRef'
+kubectl auth can-i list pods --as=system:serviceaccount:opentelemetry:opentelemetry-collector --all-namespaces
+kubectl auth can-i get nodes --as=system:serviceaccount:opentelemetry:opentelemetry-collector
+```
+---
+
 
 ## Related
 
@@ -164,4 +242,4 @@ All values sourced from [`base/services/environment.env`](https://github.com/Jiw
 - [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env) — environment variables
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `2d36e22` · catalog sha `4d088b0b3a67b4c4`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `40b9e90` · catalog sha `4d088b0b3a67b4c4`*
