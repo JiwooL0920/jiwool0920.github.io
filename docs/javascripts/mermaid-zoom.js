@@ -2,15 +2,12 @@
  * mermaid-zoom.js
  *
  * Click-to-expand for Mermaid diagrams rendered by Material for MkDocs.
- * Opens a full-screen modal with pan & zoom via the browser's built-in
- * SVG viewport — no external dependencies.
- *
- * Usage: add to extra_javascript in mkdocs.yml.
+ * Opens a full-screen modal — no external dependencies.
  */
 (function () {
   "use strict";
 
-  /* ── helpers ──────────────────────────────────────────────────── */
+  /* ── modal helpers ─────────────────────────────────────────────── */
 
   function getModal() {
     var existing = document.getElementById("mermaid-modal");
@@ -33,36 +30,23 @@
       "</div>";
 
     document.body.appendChild(modal);
-
-    /* close on backdrop click */
     modal.querySelector(".mm-backdrop").addEventListener("click", closeModal);
-    /* close on × button */
     modal.querySelector(".mm-close").addEventListener("click", closeModal);
-    /* close on Escape */
     document.addEventListener("keydown", function (e) {
       if (e.key === "Escape") closeModal();
     });
-
     return modal;
   }
 
   function openModal(svgEl) {
     var modal = getModal();
     var body = modal.querySelector(".mm-body");
-
-    /* clone SVG so we don't disturb the inline one */
     var clone = svgEl.cloneNode(true);
-
-    /* make SVG fill the modal frame while respecting aspect ratio */
     clone.removeAttribute("width");
     clone.removeAttribute("height");
-    clone.style.width = "100%";
-    clone.style.height = "100%";
-    clone.style.display = "block";
-
+    clone.style.cssText = "width:100%;height:100%;display:block;";
     body.innerHTML = "";
     body.appendChild(clone);
-
     modal.classList.add("mm-open");
     document.body.style.overflow = "hidden";
   }
@@ -75,23 +59,26 @@
     }
   }
 
-  /* ── wire up click handlers ────────────────────────────────────── */
+  /* ── attach zoom to a single wrapper ───────────────────────────── */
 
   function attachZoom(wrapper) {
+    /* Don't re-init already wired wrappers */
     if (wrapper.dataset.mmInit) return;
-    wrapper.dataset.mmInit = "1";
 
+    /* SVG may not be rendered yet — don't mark as init until we find it */
     var svgEl = wrapper.querySelector("svg");
     if (!svgEl) return;
 
+    /* Mark AFTER successful find */
+    wrapper.dataset.mmInit = "1";
+
     wrapper.setAttribute("title", "Click to expand");
     wrapper.style.cursor = "zoom-in";
+    wrapper.style.position = "relative";
 
-    /* zoom-in hint badge */
     var badge = document.createElement("span");
     badge.className = "mm-hint";
     badge.textContent = "click to expand";
-    wrapper.style.position = "relative";
     wrapper.appendChild(badge);
 
     wrapper.addEventListener("click", function () {
@@ -99,59 +86,84 @@
     });
   }
 
-  function initAll() {
-    /* Material renders mermaid inside .mermaid divs after JS runs */
+  /* ── scan all .mermaid wrappers on the current page ────────────── */
+
+  function scanAll() {
     document.querySelectorAll(".mermaid").forEach(attachZoom);
   }
 
-  /* ── observe late-rendered diagrams (SPA navigation) ──────────── */
-
+  /* ── observe DOM mutations ─────────────────────────────────────── */
+  /*
+   * Mermaid renders by INSERTING an <svg> inside an already-present
+   * .mermaid div, not by adding a new .mermaid div.  We therefore
+   * also catch SVG nodes whose closest ancestor is .mermaid.
+   */
   function observe() {
     var mo = new MutationObserver(function (mutations) {
       mutations.forEach(function (m) {
         m.addedNodes.forEach(function (node) {
           if (node.nodeType !== 1) return;
+
+          /* Case 1: a new .mermaid container was added */
           if (node.classList && node.classList.contains("mermaid")) {
             attachZoom(node);
           }
-          node.querySelectorAll && node.querySelectorAll(".mermaid").forEach(attachZoom);
+
+          /* Case 2: an <svg> was injected inside a .mermaid parent */
+          if (node.nodeName.toLowerCase() === "svg") {
+            var parent = node.closest ? node.closest(".mermaid") : null;
+            if (!parent && node.parentElement &&
+                node.parentElement.classList &&
+                node.parentElement.classList.contains("mermaid")) {
+              parent = node.parentElement;
+            }
+            if (parent) attachZoom(parent);
+          }
+
+          /* Case 3: subtree scan (covers nested structures) */
+          if (node.querySelectorAll) {
+            node.querySelectorAll(".mermaid").forEach(attachZoom);
+          }
         });
       });
     });
+
     mo.observe(document.body, { childList: true, subtree: true });
   }
 
   /* ── boot ──────────────────────────────────────────────────────── */
 
-  /* Material for MkDocs exposes document$ (RxJS observable).
-     We hook into it so the handler re-runs on every page navigation. */
+  function boot() {
+    /* Scan immediately, then retry progressively to catch slow renders */
+    scanAll();
+    setTimeout(scanAll, 300);
+    setTimeout(scanAll, 800);
+    setTimeout(scanAll, 2000);
+    setTimeout(scanAll, 4000);
+  }
+
+  /* Material exposes document$ (RxJS); hook into it for SPA navigation */
   if (typeof document$ !== "undefined") {
-    document$.subscribe(function () {
-      /* small delay to let mermaid finish rendering */
-      setTimeout(initAll, 200);
-    });
+    document$.subscribe(boot);
   } else {
-    document.addEventListener("DOMContentLoaded", function () {
-      setTimeout(initAll, 200);
-    });
+    document.addEventListener("DOMContentLoaded", boot);
   }
 
   observe();
 })();
 
-// Make the site title text in the header navigate to home (Material only wraps the logo icon, not the text)
+/* ── Make site title text clickable (Material only wraps the logo icon) ── */
 (function () {
   function attachTitleLink() {
-    var title = document.querySelector('.md-header__title');
+    var title = document.querySelector(".md-header__title");
     if (!title || title.dataset.homeLinked) return;
-    title.dataset.homeLinked = '1';
-    title.style.cursor = 'pointer';
-    title.addEventListener('click', function () {
-      var base = document.querySelector('base')?.href || '/';
+    title.dataset.homeLinked = "1";
+    title.style.cursor = "pointer";
+    title.addEventListener("click", function () {
+      var base = document.querySelector("base") ? document.querySelector("base").href : "/";
       window.location.href = base;
     });
   }
-  document.addEventListener('DOMContentLoaded', attachTitleLink);
-  // Re-attach after MkDocs instant navigation swaps the DOM
-  document.addEventListener('DOMContentSwitch', attachTitleLink);
+  document.addEventListener("DOMContentLoaded", attachTitleLink);
+  document.addEventListener("DOMContentSwitch", attachTitleLink);
 })();
