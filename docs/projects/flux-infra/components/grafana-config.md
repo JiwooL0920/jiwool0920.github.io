@@ -1,7 +1,7 @@
 ---
 catalog_sha: 4d088b0b3a67b4c4
-fleet_infra_commit: 2d36e22
-generated_at: 2026-06-12
+fleet_infra_commit: 40b9e90
+generated_at: 2026-06-13
 ---
 
 # Grafana Config
@@ -93,7 +93,56 @@ _No environment-specific configuration variables for this service._
 
 ## Operations
 
-<!-- TODO: Add operations in service-insights/grafana-config.yaml → operations field -->
+### Grafana CR stuck in failing state — operator cannot reach external instance
+
+**Symptoms:** `kubectl get grafana grafana -n monitoring` shows status with error message like `Could not connect to Grafana instance` or `401 Unauthorized`. Operator logs show repeated reconciliation failures.
+
+```bash
+kubectl get grafana grafana -n monitoring -o yaml | grep -A 20 status
+kubectl logs -n grafana-operator -l app.kubernetes.io/name=grafana-operator --tail=50
+kubectl get svc monitoring-kube-prometheus-stack-grafana -n monitoring
+kubectl run curl-test --rm -it --image=curlimages/curl --restart=Never -- curl -s -o /dev/null -w '%{http_code}' http://monitoring-kube-prometheus-stack-grafana.monitoring.svc:80/api/health
+kubectl get secret grafana-admin-credentials -n monitoring -o jsonpath='{.data.admin-user}' | base64 -d
+kubectl get secret grafana-admin-credentials -n monitoring -o jsonpath='{.data.admin-password}' | base64 -d
+```
+---
+
+### Admin credentials secret missing or malformed
+
+**Symptoms:** Grafana Operator logs report `secret "grafana-admin-credentials" not found` or `key "admin-password" not found in secret`. GrafanaDashboard CRs downstream remain in pending state.
+
+```bash
+kubectl get secret grafana-admin-credentials -n monitoring
+kubectl get secret grafana-admin-credentials -n monitoring -o jsonpath='{.data}' | jq 'keys'
+kubectl get externalsecrets -n monitoring -l app=grafana-config
+kubectl logs -n external-secrets -l app.kubernetes.io/name=external-secrets --tail=30 | grep grafana
+```
+---
+
+### Flux Kustomization not reconciling after git push
+
+**Symptoms:** `flux get kustomization grafana-config` shows `Applied revision` stuck at an old commit hash, or status shows `dependency 'flux-system/grafana-operator' is not ready`.
+
+```bash
+flux get kustomization grafana-config
+flux get kustomization grafana-operator
+kubectl get kustomization grafana-config -n flux-system -o jsonpath='{.status.conditions[*].message}'
+flux reconcile kustomization grafana-config --with-source
+```
+---
+
+### Downstream dashboards not provisioning despite healthy Grafana CR
+
+**Symptoms:** `kubectl get grafanadashboards -n monitoring` shows dashboards with `No matching instances found` or empty `instanceSelector` resolution. The Grafana UI shows no new dashboards appearing.
+
+```bash
+kubectl get grafana grafana -n monitoring -o jsonpath='{.metadata.labels}'
+kubectl get grafanadashboards -n monitoring -o yaml | grep -A 3 instanceSelector
+kubectl logs -n grafana-operator -l app.kubernetes.io/name=grafana-operator --tail=50 | grep -i "instance"
+kubectl get grafana -n monitoring --show-labels
+```
+---
+
 
 ## Related
 
@@ -103,4 +152,4 @@ _No environment-specific configuration variables for this service._
 - [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env) — environment variables
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `2d36e22` · catalog sha `4d088b0b3a67b4c4`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `40b9e90` · catalog sha `4d088b0b3a67b4c4`*

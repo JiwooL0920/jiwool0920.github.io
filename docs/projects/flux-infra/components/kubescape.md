@@ -1,7 +1,7 @@
 ---
 catalog_sha: 4d088b0b3a67b4c4
-fleet_infra_commit: 2d36e22
-generated_at: 2026-06-12
+fleet_infra_commit: 40b9e90
+generated_at: 2026-06-13
 ---
 
 # Kubescape
@@ -137,7 +137,84 @@ All values sourced from [`base/services/environment.env`](https://github.com/Jiw
 
 ## Operations
 
-<!-- TODO: Add operations in service-insights/kubescape.yaml → operations field -->
+### kubevuln OOMKilled during large image scan
+
+**Symptoms:** `kubectl get pods -n kubescape` shows kubevuln pod in CrashLoopBackOff with reason OOMKilled. `VulnerabilityManifest` CRDs stop updating for newly deployed images. Prometheus alert `KubePodCrashLooping` fires for kubevuln.
+
+```bash
+kubectl describe pod -n kubescape -l app.kubernetes.io/component=kubevuln | grep -A5 'Last State'
+kubectl top pod -n kubescape -l app.kubernetes.io/component=kubevuln
+kubectl get vulnerabilitymanifests -A --sort-by=.metadata.creationTimestamp | tail -5
+kubectl logs -n kubescape -l app.kubernetes.io/component=kubevuln --previous --tail=100 | grep -i 'memory\|oom\|killed'
+# If OOM on specific large images, check which image triggered it:
+kubectl get vulnerabilitymanifestsummaries -A -o json | jq '.items[] | select(.spec.vulnerabilitiesRef.all.status=="incomplete") | .metadata.name'
+```
+---
+
+### Continuous scan not triggering on resource changes
+
+**Symptoms:** New deployments or image updates do not produce updated `WorkloadConfigurationScan` CRDs. `kubectl get workloadconfigurationscans -A` shows stale timestamps. No errors visible in operator logs.
+
+```bash
+kubectl get pods -n kubescape -l app.kubernetes.io/component=operator -o wide
+kubectl logs -n kubescape -l app.kubernetes.io/component=operator --tail=200 | grep -i 'watch\|trigger\|scan'
+# Verify the operator has RBAC to watch resources across namespaces:
+kubectl auth can-i watch deployments --as=system:serviceaccount:kubescape:kubescape-operator -A
+# Check if scan is queued but storage is backlogged:
+kubectl logs -n kubescape -l app.kubernetes.io/component=storage --tail=100 | grep -i 'error\|full\|queue'
+# Force a manual rescan to test the pipeline:
+kubectl annotate workloadconfigurationscan -n default --all kubescape.io/rescan=$(date +%s) --overwrite
+```
+---
+
+### HelmRelease reconciliation failing
+
+**Symptoms:** `kubectl get helmrelease kubescape -n flux-system` shows status `False` with message about chart fetch or install timeout. Flux kustomization `kubescape` shows `Ready: False`.
+
+```bash
+kubectl get helmrelease kubescape -n flux-system -o yaml | grep -A10 'status:'
+kubectl get helmrepository kubescape -n flux-system -o yaml | grep -A5 'status:'
+# Check if chart registry is reachable from the cluster:
+kubectl run curl-test --rm -it --image=curlimages/curl --restart=Never -- curl -s https://kubescape.github.io/helm-charts/index.yaml | head -20
+# Check if dependsOn services are ready:
+kubectl get kustomization metrics-server kube-prometheus-stack -n flux-system -o custom-columns=NAME:.metadata.name,READY:.status.conditions[0].status
+# Force reconciliation:
+flux reconcile kustomization kubescape --with-source
+```
+**See also:** docs/adr/001-fine-grained-service-dependencies.md
+---
+
+### Configuration scan results missing for specific namespaces
+
+**Symptoms:** `kubectl get workloadconfigurationscans -n <target-namespace>` returns no resources, but scans exist in other namespaces. No errors in scanner logs.
+
+```bash
+# Check if namespace is excluded from scanning:
+kubectl get configmap -n kubescape -l app.kubernetes.io/component=kubescape -o yaml | grep -A20 'excludeNamespaces\|includeNamespaces'
+# Verify scanner RBAC covers the target namespace:
+kubectl auth can-i list pods --as=system:serviceaccount:kubescape:kubescape-scanner --namespace=default
+# Check scanner logs for skip reasons:
+kubectl logs -n kubescape -l app.kubernetes.io/component=kubescape --tail=200 | grep -i 'skip\|exclude\|namespace'
+# List all scanned namespaces to identify the gap:
+kubectl get workloadconfigurationscans -A --no-headers | awk '{print $1}' | sort -u
+```
+---
+
+### Storage component disk pressure or CRD accumulation
+
+**Symptoms:** Storage pod shows high memory usage or restarts. Older `VulnerabilityManifest` CRDs accumulate without garbage collection. `kubectl get vulnerabilitymanifests -A | wc -l` shows thousands of stale entries.
+
+```bash
+kubectl top pod -n kubescape -l app.kubernetes.io/component=storage
+kubectl get vulnerabilitymanifests -A --no-headers | wc -l
+kubectl get workloadconfigurationscans -A --no-headers | wc -l
+# Check for orphaned CRDs (workload no longer exists):
+kubectl get vulnerabilitymanifests -A -o json | jq '[.items[] | select(.metadata.ownerReferences == null)] | length'
+# Check storage pod logs for pressure signals:
+kubectl logs -n kubescape -l app.kubernetes.io/component=storage --tail=100 | grep -i 'pressure\|evict\|memory\|full'
+```
+---
+
 
 ## Related
 
@@ -147,4 +224,4 @@ All values sourced from [`base/services/environment.env`](https://github.com/Jiw
 - [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env) — environment variables
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `2d36e22` · catalog sha `4d088b0b3a67b4c4`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `40b9e90` · catalog sha `4d088b0b3a67b4c4`*

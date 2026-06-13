@@ -1,7 +1,7 @@
 ---
 catalog_sha: 4d088b0b3a67b4c4
-fleet_infra_commit: 2d36e22
-generated_at: 2026-06-12
+fleet_infra_commit: 40b9e90
+generated_at: 2026-06-13
 ---
 
 # Ollama
@@ -122,7 +122,72 @@ All values sourced from [`base/services/environment.env`](https://github.com/Jiw
 
 ## Operations
 
-<!-- TODO: Add operations in service-insights/ollama.yaml → operations field -->
+### Model pull stalls during pod startup
+
+**Symptoms:** Pod stays in `Init` or `Running` but never becomes Ready. Container logs show repeated `pulling manifest` or `downloading` lines with no progress. HelmRelease shows install timeout after 10 minutes, retries exhausting.
+
+```bash
+kubectl logs -n ollama deploy/ollama --follow | grep -i "pull\|download\|error"
+kubectl describe pod -n ollama -l app.kubernetes.io/name=ollama | grep -A5 "Events"
+kubectl exec -n ollama deploy/ollama -- wget -q --spider https://registry.ollama.ai && echo "Registry reachable" || echo "Registry blocked"
+kubectl get events -n ollama --sort-by='.lastTimestamp' | tail -20
+kubectl get pvc -n ollama -o wide
+kubectl describe helmrelease ollama -n flux-system | grep -A10 "Status"
+```
+---
+
+### OOMKilled during model loading
+
+**Symptoms:** Pod restarts with `OOMKilled` reason. `kubectl describe pod` shows last termination reason as OOMKilled. Model partially loads then process is killed by the kernel OOM killer. Repeated CrashLoopBackOff with increasing backoff intervals.
+
+```bash
+kubectl get pod -n ollama -l app.kubernetes.io/name=ollama -o jsonpath='{.items[0].status.containerStatuses[0].lastState.terminated.reason}'
+kubectl top pod -n ollama
+kubectl describe pod -n ollama -l app.kubernetes.io/name=ollama | grep -A3 "Last State"
+kubectl logs -n ollama deploy/ollama --previous | tail -50
+kubectl get configmap cluster-vars -n flux-system -o yaml | grep -i "OLLAMA_MEMORY"
+```
+---
+
+### PersistentVolumeClaim stuck in Pending
+
+**Symptoms:** Pod cannot schedule — stuck in `Pending` state. Events show `waiting for a volume to be created` or `no persistent volumes available`. New deployment or cluster rebuild triggers this when the storage provisioner is not yet ready.
+
+```bash
+kubectl get pvc -n ollama
+kubectl describe pvc -n ollama
+kubectl get storageclass
+kubectl get events -n ollama --field-selector reason=ProvisioningFailed
+kubectl get pod -n ollama -o wide
+```
+---
+
+### Inference requests timing out through Agent Gateway
+
+**Symptoms:** kagent agents report timeout errors or empty responses. Direct curl to ollama service succeeds but requests through `agentgateway-proxy.agentgateway-system.svc.cluster.local:9080` fail. Agent Gateway logs show upstream timeout or connection refused.
+
+```bash
+kubectl exec -n ollama deploy/ollama -- curl -s http://localhost:11434/api/tags
+kubectl run curl-test --rm -i --restart=Never --image=curlimages/curl -- curl -s -m 10 http://ollama.ollama.svc.cluster.local:11434/api/tags
+kubectl run curl-test2 --rm -i --restart=Never --image=curlimages/curl -- curl -s -m 10 http://agentgateway-proxy.agentgateway-system.svc.cluster.local:9080/api/tags
+kubectl logs -n agentgateway-system deploy/agentgateway-proxy --tail=50 | grep -i "ollama\|timeout\|error"
+kubectl get endpoints ollama -n ollama
+```
+---
+
+### Model not available after pod reschedule
+
+**Symptoms:** Pod restarts successfully but inference requests return `model not found` errors. The model pull did not trigger on restart, or the PVC data is corrupted/empty. Ollama API returns empty model list from `/api/tags`.
+
+```bash
+kubectl exec -n ollama deploy/ollama -- curl -s http://localhost:11434/api/tags
+kubectl exec -n ollama deploy/ollama -- ls -la /root/.ollama/models/
+kubectl get pvc -n ollama -o jsonpath='{.items[0].status.phase}'
+kubectl logs -n ollama deploy/ollama | grep -i "pull\|model\|error"
+kubectl rollout restart deployment/ollama -n ollama
+```
+---
+
 
 ## Related
 
@@ -132,4 +197,4 @@ All values sourced from [`base/services/environment.env`](https://github.com/Jiw
 - [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env) — environment variables
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `2d36e22` · catalog sha `4d088b0b3a67b4c4`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `40b9e90` · catalog sha `4d088b0b3a67b4c4`*

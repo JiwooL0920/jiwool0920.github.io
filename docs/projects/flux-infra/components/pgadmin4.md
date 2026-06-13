@@ -1,7 +1,7 @@
 ---
 catalog_sha: 4d088b0b3a67b4c4
-fleet_infra_commit: 2d36e22
-generated_at: 2026-06-12
+fleet_infra_commit: 40b9e90
+generated_at: 2026-06-13
 ---
 
 # pgAdmin4
@@ -109,7 +109,72 @@ All values sourced from [`base/services/environment.env`](https://github.com/Jiw
 
 ## Operations
 
-<!-- TODO: Add operations in service-insights/pgadmin4.yaml → operations field -->
+### Pod CrashLoopBackOff due to PV permission denied
+
+**Symptoms:** Pod logs show `Permission denied: '/var/lib/pgadmin'` or `[Errno 13]`. `kubectl get pods -n pgadmin4` shows CrashLoopBackOff with short restart intervals. Occurs after PV migration or node scheduling change.
+
+```bash
+kubectl logs deployment/pgadmin4 -n pgadmin4 --previous | grep -i permission
+kubectl get pvc -n pgadmin4 -o yaml | grep -A5 'spec:'
+kubectl exec -it deployment/pgadmin4 -n pgadmin4 -- id  # Should show uid=5050 gid=5050
+kubectl get deployment pgadmin4 -n pgadmin4 -o jsonpath='{.spec.template.spec.securityContext}'
+kubectl delete pod -n pgadmin4 -l app.kubernetes.io/name=pgadmin4  # Force reschedule with correct fsGroup
+```
+---
+
+### ExternalSecret stuck in SecretSyncedError
+
+**Symptoms:** `kubectl get externalsecret pgadmin4-credentials -n pgadmin4` shows status `SecretSyncedError`. Pod fails to start with `secret pgadmin4-credentials not found` in events. Usually occurs before LocalStack is fully initialized or ClusterSecretStore is unhealthy.
+
+```bash
+kubectl get externalsecret pgadmin4-credentials -n pgadmin4 -o yaml | grep -A10 'status:'
+kubectl get clustersecretstore localstack-secretstore -o jsonpath='{.status.conditions[*].message}'
+kubectl get pods -n external-secrets -l app.kubernetes.io/name=external-secrets
+kubectl logs -n external-secrets -l app.kubernetes.io/name=external-secrets --tail=50 | grep pgadmin4
+kubectl annotate externalsecret pgadmin4-credentials -n pgadmin4 force-sync=$(date +%s) --overwrite
+```
+**See also:** docs/adr/001-fine-grained-service-dependencies.md
+---
+
+### pgAdmin4 unable to connect to PostgreSQL cluster
+
+**Symptoms:** pgAdmin4 UI shows "Unable to connect to server" or "connection refused" when attempting to browse the registered PostgreSQL server. Pod itself is Running and healthy.
+
+```bash
+kubectl get cluster postgresql-cluster -n cnpg-system -o jsonpath='{.status.phase}'
+kubectl get pods -n cnpg-system -l cnpg.io/cluster=postgresql-cluster
+kubectl exec -n pgadmin4 deployment/pgadmin4 -- python -c "import socket; socket.create_connection(('postgresql-cluster-rw.cnpg-system.svc', 5432), timeout=5)" 2>&1
+kubectl get networkpolicies -n cnpg-system -o wide
+kubectl get endpoints postgresql-cluster-rw -n cnpg-system
+```
+---
+
+### IngressRoute not routing traffic to pgAdmin4
+
+**Symptoms:** Browser returns 404 or connection refused when accessing `pgadmin.local`. `kubectl get ingressroute pgadmin4 -n pgadmin4` exists but Traefik dashboard shows no matching route.
+
+```bash
+kubectl get ingressroute pgadmin4 -n pgadmin4 -o yaml
+kubectl get svc pgadmin4 -n pgadmin4 -o jsonpath='{.spec.ports[*]}'
+kubectl get endpoints pgadmin4 -n pgadmin4
+kubectl logs -n traefik -l app.kubernetes.io/name=traefik --tail=30 | grep pgadmin
+kubectl port-forward svc/pgadmin4 -n pgadmin4 8080:80  # Bypass ingress to confirm service works
+```
+---
+
+### pgAdmin4 login fails with valid credentials
+
+**Symptoms:** Login page loads correctly but returns "Incorrect username or password" despite using the email from the HelmRelease values and the password from the secret. Often occurs after secret rotation or initial deployment race condition.
+
+```bash
+kubectl get secret pgadmin4-credentials -n pgadmin4 -o jsonpath='{.data.password}' | base64 -d
+kubectl get secret pgadmin4-credentials -n pgadmin4 -o jsonpath='{.data.email}' | base64 -d
+kubectl exec -n pgadmin4 deployment/pgadmin4 -- cat /pgadmin4/config_local.py 2>/dev/null || echo 'no config_local'
+kubectl delete pod -n pgadmin4 -l app.kubernetes.io/name=pgadmin4  # Force re-read of secret mount
+kubectl logs deployment/pgadmin4 -n pgadmin4 | grep -i 'authentication\|login\|email'
+```
+---
+
 
 ## Related
 
@@ -119,4 +184,4 @@ All values sourced from [`base/services/environment.env`](https://github.com/Jiw
 - [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env) — environment variables
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `2d36e22` · catalog sha `4d088b0b3a67b4c4`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `40b9e90` · catalog sha `4d088b0b3a67b4c4`*

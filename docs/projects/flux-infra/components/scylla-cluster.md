@@ -1,7 +1,7 @@
 ---
 catalog_sha: 4d088b0b3a67b4c4
-fleet_infra_commit: 2d36e22
-generated_at: 2026-06-12
+fleet_infra_commit: 40b9e90
+generated_at: 2026-06-13
 ---
 
 # ScyllaDB Cluster
@@ -145,7 +145,90 @@ All values sourced from [`base/services/environment.env`](https://github.com/Jiw
 
 ## Operations
 
-<!-- TODO: Add operations in service-insights/scylla-cluster.yaml → operations field -->
+### ScyllaCluster pods stuck in Pending — PVC not binding
+
+**Symptoms:** Pod remains in `Pending` state. `kubectl describe pod` shows `unbound immediate PersistentVolumeClaims`. Flux Kustomization `scylla-cluster` reports `health check failed` on `Service/scylla-client`.
+
+```bash
+kubectl get pvc -n scylla
+kubectl describe pvc -n scylla -l app.kubernetes.io/name=scylla
+kubectl get storageclass
+kubectl get pv | grep scylla
+# On Kind clusters, verify local-path-provisioner is running:
+kubectl get pods -n local-path-storage
+# If provisioner is healthy but PVC stuck, delete the PVC and let operator recreate:
+kubectl delete pvc -n scylla -l app.kubernetes.io/name=scylla
+```
+---
+
+### ScyllaCluster CRD not found — operator dependency race
+
+**Symptoms:** HelmRelease `scylla` shows `install retries exhausted`. Flux logs contain `no matches for kind "ScyllaCluster" in version "scylla.scylladb.com/v1"`. The `scylla-operator` Kustomization may have failed silently.
+
+```bash
+kubectl get kustomization scylla-operator -n flux-system
+kubectl get crd scyllaclusters.scylla.scylladb.com
+# If CRD missing, force reconcile the operator first:
+flux reconcile kustomization scylla-operator --with-source
+# Wait for CRD registration, then retry cluster:
+kubectl wait --for=condition=Established crd/scyllaclusters.scylla.scylladb.com --timeout=120s
+flux reconcile kustomization scylla-cluster
+```
+**See also:** docs/adr/001-fine-grained-service-dependencies.md
+---
+
+### Alternator not responding on port 8000
+
+**Symptoms:** Applications receive connection refused or timeout when calling `scylla.local:8000`. `curl -v http://scylla.local/` through Traefik returns 502 or 504. IngressRoute exists but service has no ready endpoints.
+
+```bash
+kubectl get endpoints scylla-client -n scylla
+kubectl get pods -n scylla -l app.kubernetes.io/name=scylla -o wide
+# Verify Alternator is listening inside the pod:
+kubectl exec -n scylla -it $(kubectl get pod -n scylla -l app.kubernetes.io/name=scylla -o jsonpath='{.items[0].metadata.name}') -- nodetool status
+kubectl exec -n scylla -it $(kubectl get pod -n scylla -l app.kubernetes.io/name=scylla -o jsonpath='{.items[0].metadata.name}') -- curl -s http://localhost:8000/
+# Check IngressRoute is correctly targeting the service:
+kubectl get ingressroute scylla-alternator -n scylla -o yaml
+# Verify Traefik sees the route:
+kubectl logs -n traefik -l app.kubernetes.io/name=traefik --tail=50 | grep scylla
+```
+---
+
+### Pod OOMKilled during startup or under load
+
+**Symptoms:** Pod restarts with `reason: OOMKilled` in `kubectl describe pod`. Events show container `scylla` exceeded memory limit. Node `kubectl top node` may show memory pressure.
+
+```bash
+kubectl get pods -n scylla -o wide
+kubectl describe pod -n scylla -l app.kubernetes.io/name=scylla | grep -A5 'Last State'
+kubectl top pod -n scylla
+# Check if developer mode is active (reduces memory requirements):
+kubectl get helmrelease scylla -n flux-system -o jsonpath='{.spec.values.developerMode}'
+# Inspect cluster-vars for memory settings:
+kubectl get configmap cluster-vars -n flux-system -o jsonpath='{.data.SCYLLA_MEMORY_LIMIT}'
+# If OOM persists in developer mode, check node available memory:
+kubectl describe node | grep -A5 'Allocated resources'
+```
+---
+
+### Flux health check timeout — scylla-client service never becomes ready
+
+**Symptoms:** `flux get kustomization scylla-cluster` shows `Health check failed after 15m0s timeout`. The `scylla-client` service exists but has zero ready endpoints. ScyllaDB pods may be running but not joining the cluster ring.
+
+```bash
+flux get kustomization scylla-cluster
+kubectl get svc scylla-client -n scylla
+kubectl get endpoints scylla-client -n scylla
+kubectl get scyllacluster -n scylla -o yaml
+# Check operator logs for reconciliation errors:
+kubectl logs -n scylla-operator -l app.kubernetes.io/name=scylla-operator --tail=100
+# Check if ScyllaDB node has joined the ring:
+kubectl exec -n scylla -it $(kubectl get pod -n scylla -l app.kubernetes.io/name=scylla -o jsonpath='{.items[0].metadata.name}') -- nodetool status
+# If node shows DN (Down/Normal), check scylla logs:
+kubectl logs -n scylla $(kubectl get pod -n scylla -l app.kubernetes.io/name=scylla -o jsonpath='{.items[0].metadata.name}') -c scylla --tail=200
+```
+---
+
 
 ## Related
 
@@ -155,4 +238,4 @@ All values sourced from [`base/services/environment.env`](https://github.com/Jiw
 - [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env) — environment variables
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `2d36e22` · catalog sha `4d088b0b3a67b4c4`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `40b9e90` · catalog sha `4d088b0b3a67b4c4`*

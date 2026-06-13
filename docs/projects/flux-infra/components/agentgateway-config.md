@@ -1,7 +1,7 @@
 ---
 catalog_sha: 4d088b0b3a67b4c4
-fleet_infra_commit: 2d36e22
-generated_at: 2026-06-12
+fleet_infra_commit: 40b9e90
+generated_at: 2026-06-13
 ---
 
 # AgentGateway Config
@@ -125,7 +125,71 @@ _No environment-specific configuration variables for this service._
 
 ## Operations
 
-<!-- TODO: Add operations in service-insights/agentgateway-config.yaml → operations field -->
+### Gateway stuck in NotAccepted state after Kustomization applies
+
+**Symptoms:** Flux reports the Kustomization as healthy (YAML applied), but `kubectl get gateway agentgateway-proxy -n agentgateway-system` shows no `Accepted` or `Programmed` conditions, or conditions show `False`. The `agentgateway` controller pod may not be running or may not recognize the Gateway resource.
+
+```bash
+kubectl get gateway agentgateway-proxy -n agentgateway-system -o yaml | grep -A 20 'status:'
+kubectl get pods -n agentgateway-system -l app.kubernetes.io/name=agentgateway
+kubectl logs -n agentgateway-system -l app.kubernetes.io/name=agentgateway --tail=50
+kubectl get gatewayclass agentgateway -o yaml | grep -A 10 'status:'
+kubectl get crd agentgatewayparameters.agentgateway.dev -o jsonpath='{.metadata.creationTimestamp}'
+```
+---
+
+### Kustomization fails with "no matches for kind AgentgatewayParameters"
+
+**Symptoms:** Flux Kustomization `agentgateway-config` shows `ReconciliationFailed` with error containing `no matches for kind "AgentgatewayParameters" in version "agentgateway.dev/v1alpha1"`. The `dependsOn` ordering should prevent this, but may occur if the upstream `agentgateway` HelmRelease failed silently.
+
+```bash
+kubectl get kustomization agentgateway -n flux-system -o jsonpath='{.status.conditions[*].message}'
+kubectl get helmrelease -n agentgateway-system -o wide
+kubectl get crd | grep agentgateway
+flux reconcile kustomization agentgateway --with-source -n flux-system
+kubectl get kustomization agentgateway-config -n flux-system -o jsonpath='{.status.conditions[*].message}'
+```
+---
+
+### Tracing policy not producing spans in Jaeger
+
+**Symptoms:** Agent traffic flows correctly through the gateway but no traces appear in Jaeger for `agentgateway-proxy` service. The `otel-tracing` AgentgatewayPolicy may not be attached, or the collector endpoint is unreachable from the gateway pod.
+
+```bash
+kubectl get agentgatewaypolicy otel-tracing -n agentgateway-system -o yaml | grep -A 10 'status:'
+kubectl exec -n agentgateway-system deploy/agentgateway-proxy -- wget -qO- --spider http://opentelemetry-collector.opentelemetry.svc.cluster.local:4317 2>&1 || true
+kubectl get referencegrant agentgateway-to-otel -n opentelemetry -o yaml
+kubectl get svc opentelemetry-collector -n opentelemetry
+kubectl logs -n agentgateway-system -l app.kubernetes.io/name=agentgateway --tail=100 | grep -i 'otel\|trace\|export'
+```
+---
+
+### Health check timeout causing Kustomization to report not ready
+
+**Symptoms:** `flux get kustomization agentgateway-config` shows `Health check failed after 5m0s timeout` referencing the `agentgateway-proxy` Gateway health check. The Gateway resource exists but its status conditions are not satisfying the Flux health check.
+
+```bash
+kubectl get gateway agentgateway-proxy -n agentgateway-system -o jsonpath='{.status.conditions}' | jq .
+kubectl get agentgatewayparameters agentgateway-proxy-params -n agentgateway-system -o yaml | grep -A 5 'status:'
+kubectl get endpoints -n agentgateway-system
+kubectl describe gateway agentgateway-proxy -n agentgateway-system | tail -30
+flux reconcile kustomization agentgateway-config -n flux-system
+```
+---
+
+### ReferenceGrant deleted or misconfigured blocking cross-namespace tracing
+
+**Symptoms:** The `otel-tracing` AgentgatewayPolicy shows a status condition indicating the backend reference is not permitted. Tracing stops working but traffic routing continues normally since tracing is a sidecar concern.
+
+```bash
+kubectl get referencegrant -n opentelemetry
+kubectl get agentgatewaypolicy otel-tracing -n agentgateway-system -o jsonpath='{.status}' | jq .
+kubectl get referencegrant agentgateway-to-otel -n opentelemetry -o yaml
+flux reconcile kustomization agentgateway-config -n flux-system
+kubectl get referencegrant agentgateway-to-otel -n opentelemetry -o jsonpath='{.spec}' | jq .
+```
+---
+
 
 ## Related
 
@@ -135,4 +199,4 @@ _No environment-specific configuration variables for this service._
 - [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env) — environment variables
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `2d36e22` · catalog sha `4d088b0b3a67b4c4`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `40b9e90` · catalog sha `4d088b0b3a67b4c4`*

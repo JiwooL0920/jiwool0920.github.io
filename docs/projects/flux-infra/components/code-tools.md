@@ -1,7 +1,7 @@
 ---
 catalog_sha: 4d088b0b3a67b4c4
-fleet_infra_commit: 2d36e22
-generated_at: 2026-06-12
+fleet_infra_commit: 40b9e90
+generated_at: 2026-06-13
 ---
 
 # Code Tools
@@ -130,7 +130,86 @@ All values sourced from [`base/services/environment.env`](https://github.com/Jiw
 
 ## Operations
 
-<!-- TODO: Add operations in service-insights/code-tools.yaml → operations field -->
+### Pod stuck in Init phase — pip install timeout
+
+**Symptoms:** Pod shows `Init:0/1` for >5 minutes. `kubectl describe pod` shows initContainer `pip-install` still running or OOMKilled. Network-restricted environments may show pip timeout errors in init logs.
+
+```bash
+kubectl -n code-tools logs -l app.kubernetes.io/name=code-tools -c pip-install --tail=50
+kubectl -n code-tools describe pod -l app.kubernetes.io/name=code-tools | grep -A5 'Init Containers'
+kubectl -n code-tools get pvc code-tools-data -o jsonpath='{.status.phase}'
+# If PVC not bound, check storage class availability:
+kubectl get pv | grep code-tools
+# If pip consistently fails, exec into a debug pod to test outbound connectivity:
+kubectl -n code-tools run debug --rm -it --image=python:3.11-slim -- pip install --dry-run fastmcp
+```
+---
+
+### MCP server unreachable from kagent
+
+**Symptoms:** Kagent agent logs show connection refused or timeout when invoking code-tools. The `RemoteMCPServer` resource shows unhealthy status. Service endpoint list may be empty.
+
+```bash
+kubectl -n code-tools get endpoints code-tools
+kubectl -n code-tools get pods -l app.kubernetes.io/name=code-tools -o wide
+kubectl -n code-tools logs -l app.kubernetes.io/name=code-tools --tail=30
+# Verify the server is listening on port 8765:
+kubectl -n code-tools exec deploy/code-tools -- ss -tlnp | grep 8765
+# Test MCP endpoint from within the cluster:
+kubectl -n code-tools run curl-test --rm -it --image=curlimages/curl -- curl -s http://code-tools.code-tools.svc:8765/mcp
+```
+---
+
+### Memory tools failing — Ollama connection refused
+
+**Symptoms:** `add_memory` or `search_memories` returns `ConnectionRefusedError` or `httpx.ConnectError`. execute_python and make_http_request still work normally since they don't depend on Ollama.
+
+```bash
+kubectl -n code-tools logs -l app.kubernetes.io/name=code-tools --tail=20 | grep -i ollama
+# Verify OLLAMA_HOST env var resolves correctly:
+kubectl -n code-tools exec deploy/code-tools -- python3 -c "import os; print(os.environ.get('OLLAMA_HOST'))"
+# Test Ollama connectivity from the pod:
+kubectl -n code-tools exec deploy/code-tools -- python3 -c "import httpx; print(httpx.get(os.environ['OLLAMA_HOST']+'/api/tags').status_code)"
+# If using host.docker.internal (native Ollama), verify host networking:
+kubectl -n code-tools exec deploy/code-tools -- getent hosts host.docker.internal
+# Check if Ollama process is running on the host:
+curl -s http://localhost:11434/api/tags | jq '.models[].name'
+```
+---
+
+### FAISS index corruption — search returns errors
+
+**Symptoms:** `search_memories` or `list_memories` returns `RuntimeError` or `faiss` deserialization errors. `add_memory` may also fail if the index file is locked or corrupted. Pod logs show mem0 initialization failure.
+
+```bash
+kubectl -n code-tools logs -l app.kubernetes.io/name=code-tools --tail=50 | grep -i 'faiss\|mem0\|index'
+# Check PVC contents and index file sizes:
+kubectl -n code-tools exec deploy/code-tools -- ls -la /data/mem0/
+# If index is corrupted, backup and reset (memories will be lost):
+kubectl -n code-tools exec deploy/code-tools -- cp -r /data/mem0 /data/mem0-backup-$(date +%s)
+kubectl -n code-tools exec deploy/code-tools -- rm -rf /data/mem0/kagent_memories*
+# Restart pod to reinitialize mem0 with fresh index:
+kubectl -n code-tools rollout restart deploy/code-tools
+```
+---
+
+### execute_python tool hanging — zombie subprocess
+
+**Symptoms:** Agent tool calls to `execute_python` never return. Pod CPU usage spikes. Subsequent calls also hang because the subprocess pool is exhausted or the event loop is blocked.
+
+```bash
+kubectl -n code-tools top pod -l app.kubernetes.io/name=code-tools
+# Check for zombie or long-running python subprocesses:
+kubectl -n code-tools exec deploy/code-tools -- ps aux | grep python
+# Kill stuck subprocesses manually:
+kubectl -n code-tools exec deploy/code-tools -- pkill -f 'python3 /tmp/tmp'
+# If pod is unresponsive, force restart:
+kubectl -n code-tools delete pod -l app.kubernetes.io/name=code-tools --force --grace-period=0
+# Check if the timeout mechanism is working (should cap at 120s):
+kubectl -n code-tools logs -l app.kubernetes.io/name=code-tools --tail=100 | grep -i timeout
+```
+---
+
 
 ## Related
 
@@ -140,4 +219,4 @@ All values sourced from [`base/services/environment.env`](https://github.com/Jiw
 - [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env) — environment variables
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `2d36e22` · catalog sha `4d088b0b3a67b4c4`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `40b9e90` · catalog sha `4d088b0b3a67b4c4`*
