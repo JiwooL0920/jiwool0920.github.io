@@ -1,7 +1,7 @@
 ---
 catalog_sha: 4d088b0b3a67b4c4
 fleet_infra_commit: 40b9e90
-generated_at: 2026-06-13
+generated_at: 2026-06-12
 ---
 
 # N8N
@@ -123,6 +123,7 @@ kubectl get secret -n n8n n8n-postgres-credentials -o json | jq '.data | keys'
 aws --endpoint-url=http://localstack.localstack.svc:4566 secretsmanager get-secret-value --secret-id cnpg/postgresql-cluster-app/host
 ```
 **See also:** docs/adr/004-single-shared-postgresql-cluster.md
+
 ---
 
 ### Pod CrashLoopBackOff — database connection refused
@@ -137,6 +138,7 @@ kubectl get pods -n cnpg-system -l cnpg.io/cluster=postgresql-cluster
 kubectl exec -n n8n deployment/n8n -- nc -zv $(kubectl get secret n8n-postgres-credentials -n n8n -o jsonpath='{.data.POSTGRES_HOST}' | base64 -d) 5432
 ```
 **See also:** docs/adr/004-single-shared-postgresql-cluster.md
+
 ---
 
 ### HelmRelease reconciliation failure — chart fetch error
@@ -150,6 +152,7 @@ flux reconcile source git n8n-helm-chart
 flux reconcile helmrelease n8n
 kubectl get events -n flux-system --field-selector involvedObject.name=n8n --sort-by=.lastTimestamp
 ```
+
 ---
 
 ### n8n unreachable via ingress — IngressRoute misconfiguration
@@ -163,6 +166,7 @@ kubectl get endpoints n8n -n n8n
 kubectl exec -n traefik deployment/traefik -- wget -qO- http://localhost:8080/api/http/routers | grep n8n
 kubectl port-forward -n n8n svc/n8n 5678:5678 & curl -s http://localhost:5678/healthz
 ```
+
 ---
 
 ### n8n readiness probe failing after PostgreSQL failover
@@ -177,6 +181,7 @@ kubectl rollout restart deployment/n8n -n n8n
 kubectl get pods -n n8n -w
 ```
 **See also:** docs/adr/004-single-shared-postgresql-cluster.md
+
 ---
 
 ### Flux Kustomization suspended or dependency not satisfied
@@ -192,6 +197,7 @@ flux resume kustomization n8n
 flux reconcile kustomization n8n --with-source
 ```
 **See also:** docs/adr/001-fine-grained-service-dependencies.md
+
 ---
 
 

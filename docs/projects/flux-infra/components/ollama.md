@@ -1,7 +1,7 @@
 ---
 catalog_sha: 4d088b0b3a67b4c4
 fleet_infra_commit: 40b9e90
-generated_at: 2026-06-13
+generated_at: 2026-06-12
 ---
 
 # Ollama
@@ -134,6 +134,7 @@ kubectl get events -n ollama --sort-by='.lastTimestamp' | tail -20
 kubectl get pvc -n ollama -o wide
 kubectl describe helmrelease ollama -n flux-system | grep -A10 "Status"
 ```
+
 ---
 
 ### OOMKilled during model loading
@@ -147,6 +148,7 @@ kubectl describe pod -n ollama -l app.kubernetes.io/name=ollama | grep -A3 "Last
 kubectl logs -n ollama deploy/ollama --previous | tail -50
 kubectl get configmap cluster-vars -n flux-system -o yaml | grep -i "OLLAMA_MEMORY"
 ```
+
 ---
 
 ### PersistentVolumeClaim stuck in Pending
@@ -160,6 +162,7 @@ kubectl get storageclass
 kubectl get events -n ollama --field-selector reason=ProvisioningFailed
 kubectl get pod -n ollama -o wide
 ```
+
 ---
 
 ### Inference requests timing out through Agent Gateway
@@ -173,6 +176,7 @@ kubectl run curl-test2 --rm -i --restart=Never --image=curlimages/curl -- curl -
 kubectl logs -n agentgateway-system deploy/agentgateway-proxy --tail=50 | grep -i "ollama\|timeout\|error"
 kubectl get endpoints ollama -n ollama
 ```
+
 ---
 
 ### Model not available after pod reschedule
@@ -186,6 +190,7 @@ kubectl get pvc -n ollama -o jsonpath='{.items[0].status.phase}'
 kubectl logs -n ollama deploy/ollama | grep -i "pull\|model\|error"
 kubectl rollout restart deployment/ollama -n ollama
 ```
+
 ---
 
 

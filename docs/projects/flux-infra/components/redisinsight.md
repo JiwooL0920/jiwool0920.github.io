@@ -1,7 +1,7 @@
 ---
 catalog_sha: 4d088b0b3a67b4c4
 fleet_infra_commit: 40b9e90
-generated_at: 2026-06-13
+generated_at: 2026-06-12
 ---
 
 # RedisInsight
@@ -100,6 +100,7 @@ kubectl logs -l app=redisinsight -n redisinsight --tail=50
 kubectl get events -n redisinsight --sort-by=.lastTimestamp | tail -20
 kubectl get deployment redisinsight -n redisinsight -o jsonpath='{.spec.template.spec.containers[0].resources}'
 ```
+
 ---
 
 ### RedisInsight UI unreachable via redis.local
@@ -113,6 +114,7 @@ kubectl logs -l app.kubernetes.io/name=traefik -n traefik --tail=30 | grep redis
 kubectl port-forward svc/redisinsight 8080:8080 -n redisinsight
 curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/
 ```
+
 ---
 
 ### Cannot connect to Redis from RedisInsight UI
@@ -125,6 +127,7 @@ kubectl get statefulset redis-sentinel-node -n redis-sentinel
 kubectl exec -it redis-sentinel-node-0 -n redis-sentinel -c sentinel -- redis-cli -p 26379 sentinel masters
 kubectl exec -it redis-sentinel-node-0 -n redis-sentinel -c redis -- redis-cli -p 6379 ping
 ```
+
 ---
 
 ### Flux Kustomization stuck due to healthCheck failure
@@ -139,6 +142,7 @@ kubectl get deployment redisinsight -n redisinsight -o jsonpath='{.status.condit
 flux reconcile kustomization redisinsight --with-source
 ```
 **See also:** docs/adr/001-fine-grained-service-dependencies.md
+
 ---
 
 ### OOMKilled during heavy query visualization
@@ -151,6 +155,7 @@ kubectl top pod -l app=redisinsight -n redisinsight
 kubectl get deployment redisinsight -n redisinsight -o jsonpath='{.spec.template.spec.containers[0].resources.limits.memory}'
 kubectl logs -l app=redisinsight -n redisinsight --previous --tail=30
 ```
+
 ---
 
 

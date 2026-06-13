@@ -1,7 +1,7 @@
 ---
 catalog_sha: 4d088b0b3a67b4c4
 fleet_infra_commit: 40b9e90
-generated_at: 2026-06-13
+generated_at: 2026-06-12
 ---
 
 # KEDA
@@ -129,6 +129,7 @@ kubectl get endpoints -n keda keda-metrics-apiserver
 kubectl describe apiservice v1beta1.external.metrics.k8s.io | grep -A5 Conditions
 kubectl rollout restart deployment -n keda keda-metrics-apiserver
 ```
+
 ---
 
 ### Operator CrashLoopBackOff after upgrade
@@ -143,6 +144,7 @@ kubectl get secret -n keda | grep keda-admission
 kubectl delete validatingwebhookconfiguration keda-admission 2>/dev/null; kubectl delete mutatingwebhookconfiguration keda-admission 2>/dev/null
 flux reconcile helmrelease keda -n flux-system --force
 ```
+
 ---
 
 ### ScaledObject stuck at minReplicaCount despite trigger threshold exceeded
@@ -156,6 +158,7 @@ kubectl logs -n keda -l app=keda-operator --tail=200 | grep <scaledobject-name>
 kubectl get deployment <target-deployment> -n <workload-namespace> -o jsonpath='{.spec.replicas}'
 kubectl get events -n <workload-namespace> --sort-by=.lastTimestamp | grep -i scale
 ```
+
 ---
 
 ### KEDA and existing metrics-server conflict on custom metrics API
@@ -171,6 +174,7 @@ kubectl logs -n keda -l app=keda-metrics-apiserver --tail=100 | grep -i conflict
 kubectl get pods -n kube-system -l k8s-app=metrics-server
 ```
 **See also:** docs/adr/011-keda-autoscaling.md
+
 ---
 
 ### Flux Kustomization fails to reconcile KEDA CRDs
@@ -185,6 +189,7 @@ kubectl get helmrelease keda -n flux-system -o yaml | grep -A10 status
 flux suspend helmrelease keda -n flux-system && flux resume helmrelease keda -n flux-system
 kubectl get events -n flux-system --sort-by=.lastTimestamp | grep keda
 ```
+
 ---
 
 

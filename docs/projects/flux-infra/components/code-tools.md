@@ -1,7 +1,7 @@
 ---
 catalog_sha: 4d088b0b3a67b4c4
 fleet_infra_commit: 40b9e90
-generated_at: 2026-06-13
+generated_at: 2026-06-12
 ---
 
 # Code Tools
@@ -143,6 +143,7 @@ kubectl get pv | grep code-tools
 # If pip consistently fails, exec into a debug pod to test outbound connectivity:
 kubectl -n code-tools run debug --rm -it --image=python:3.11-slim -- pip install --dry-run fastmcp
 ```
+
 ---
 
 ### MCP server unreachable from kagent
@@ -158,6 +159,7 @@ kubectl -n code-tools exec deploy/code-tools -- ss -tlnp | grep 8765
 # Test MCP endpoint from within the cluster:
 kubectl -n code-tools run curl-test --rm -it --image=curlimages/curl -- curl -s http://code-tools.code-tools.svc:8765/mcp
 ```
+
 ---
 
 ### Memory tools failing — Ollama connection refused
@@ -175,6 +177,7 @@ kubectl -n code-tools exec deploy/code-tools -- getent hosts host.docker.interna
 # Check if Ollama process is running on the host:
 curl -s http://localhost:11434/api/tags | jq '.models[].name'
 ```
+
 ---
 
 ### FAISS index corruption — search returns errors
@@ -191,6 +194,7 @@ kubectl -n code-tools exec deploy/code-tools -- rm -rf /data/mem0/kagent_memorie
 # Restart pod to reinitialize mem0 with fresh index:
 kubectl -n code-tools rollout restart deploy/code-tools
 ```
+
 ---
 
 ### execute_python tool hanging — zombie subprocess
@@ -208,6 +212,7 @@ kubectl -n code-tools delete pod -l app.kubernetes.io/name=code-tools --force --
 # Check if the timeout mechanism is working (should cap at 120s):
 kubectl -n code-tools logs -l app.kubernetes.io/name=code-tools --tail=100 | grep -i timeout
 ```
+
 ---
 
 

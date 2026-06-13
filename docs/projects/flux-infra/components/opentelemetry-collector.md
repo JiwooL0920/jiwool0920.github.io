@@ -1,7 +1,7 @@
 ---
 catalog_sha: 4d088b0b3a67b4c4
 fleet_infra_commit: 40b9e90
-generated_at: 2026-06-13
+generated_at: 2026-06-12
 ---
 
 # OpenTelemetry Collector
@@ -165,6 +165,7 @@ kubectl -n opentelemetry logs -l app.kubernetes.io/name=opentelemetry-collector 
 kubectl -n flux-system get helmrelease opentelemetry-collector -o jsonpath='{.spec.values.config.processors.memory_limiter}'
 kubectl -n opentelemetry port-forward svc/opentelemetry-collector 55679:55679 & sleep 2 && curl -s http://localhost:55679/debug/tracez | head -50
 ```
+
 ---
 
 ### Traces not reaching Jaeger — exporter queue saturation
@@ -178,6 +179,7 @@ kubectl -n opentelemetry exec -it deploy/opentelemetry-collector -- wget -qO- ht
 kubectl -n opentelemetry exec -it deploy/opentelemetry-collector -- wget -qO- --spider http://jaeger-collector.jaeger.svc.cluster.local:4317 2>&1 | head -5
 kubectl -n jaeger logs -l app.kubernetes.io/component=collector --tail=50 | grep -i error
 ```
+
 ---
 
 ### Logs not reaching Loki — OTLP HTTP export failures
@@ -191,6 +193,7 @@ kubectl -n opentelemetry exec -it deploy/opentelemetry-collector -- wget -qO- --
 kubectl -n monitoring logs -l app.kubernetes.io/name=loki --tail=50 | grep -iE 'otlp|error|reject'
 kubectl -n opentelemetry exec -it deploy/opentelemetry-collector -- wget -qO- http://localhost:8888/metrics | grep 'otelcol_exporter.*loki'
 ```
+
 ---
 
 ### Collector pod CrashLoopBackOff after config change
@@ -205,6 +208,7 @@ kubectl -n opentelemetry get events --sort-by='.lastTimestamp' | tail -20
 kubectl -n flux-system get configmap cluster-vars -o yaml | grep OTEL_COLLECTOR
 ```
 **See also:** docs/adr/010-opentelemetry-collector.md
+
 ---
 
 ### ServiceMonitor not scraping — metrics missing from Prometheus
@@ -218,6 +222,7 @@ kubectl -n opentelemetry exec -it deploy/opentelemetry-collector -- wget -qO- ht
 kubectl -n monitoring exec -it deploy/kube-prometheus-stack-prometheus -- promtool query instant http://localhost:9090 'up{job=~".*opentelemetry.*"}'
 kubectl -n monitoring logs -l app.kubernetes.io/name=prometheus --tail=50 | grep -i 'opentelemetry\|scrape.*error'
 ```
+
 ---
 
 ### k8sattributes processor failing — missing Kubernetes metadata on signals
@@ -231,6 +236,7 @@ kubectl get clusterrolebinding -l app.kubernetes.io/name=opentelemetry-collector
 kubectl auth can-i list pods --as=system:serviceaccount:opentelemetry:opentelemetry-collector --all-namespaces
 kubectl auth can-i get nodes --as=system:serviceaccount:opentelemetry:opentelemetry-collector
 ```
+
 ---
 
 

@@ -1,7 +1,7 @@
 ---
 catalog_sha: 4d088b0b3a67b4c4
 fleet_infra_commit: 40b9e90
-generated_at: 2026-06-13
+generated_at: 2026-06-12
 ---
 
 # Loki
@@ -158,6 +158,7 @@ kubectl get events -n monitoring --sort-by=.lastTimestamp | grep -i pvc
 # If StorageClass missing or misconfigured, verify Kind provisioner is running:
 kubectl get pods -n local-path-storage
 ```
+
 ---
 
 ### Log ingestion rejected — rate limit exceeded
@@ -171,6 +172,7 @@ kubectl exec -n monitoring statefulset/loki -- wget -qO- http://localhost:3100/m
 # Check if a single stream is flooding — identify high-cardinality labels:
 kubectl exec -n monitoring statefulset/loki -- wget -qO- 'http://localhost:3100/loki/api/v1/label' | python3 -m json.tool
 ```
+
 ---
 
 ### Loki OOMKilled — query or compaction memory spike
@@ -185,6 +187,7 @@ kubectl top pod -n monitoring -l app.kubernetes.io/name=loki
 kubectl exec -n monitoring statefulset/loki -- ls -lhS /var/loki/tsdb-shipper-active/
 kubectl exec -n monitoring statefulset/loki -- wget -qO- http://localhost:3100/metrics | grep loki_compactor
 ```
+
 ---
 
 ### Gateway returning 502 — backend SingleBinary not ready
@@ -199,6 +202,7 @@ kubectl logs -n monitoring statefulset/loki --tail=100 --previous
 # Check if loki binary is failing on startup config validation:
 kubectl exec -n monitoring statefulset/loki -- cat /etc/loki/config/config.yaml | head -50
 ```
+
 ---
 
 ### ExternalSecret not syncing Redis password
@@ -213,6 +217,7 @@ kubectl get secret redis-password -n monitoring -o jsonpath='{.data.password}' |
 kubectl exec -n localstack deploy/localstack -- awslocal secretsmanager get-secret-value --secret-id redis/credentials/password
 ```
 **See also:** docs/adr/002-loki-redis-direct-connection.md
+
 ---
 
 ### Filesystem storage full — ingestion halted
@@ -229,6 +234,7 @@ kubectl exec -n monitoring statefulset/loki -- wget -qO- -post-data '' http://lo
 # As last resort, expand PVC if StorageClass supports it:
 kubectl patch pvc -n monitoring -l app.kubernetes.io/name=loki -p '{"spec":{"resources":{"requests":{"storage":"10Gi"}}}}'
 ```
+
 ---
 
 

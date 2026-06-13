@@ -1,7 +1,7 @@
 ---
 catalog_sha: 4d088b0b3a67b4c4
 fleet_infra_commit: 40b9e90
-generated_at: 2026-06-13
+generated_at: 2026-06-12
 ---
 
 # Grafana Config
@@ -105,6 +105,7 @@ kubectl run curl-test --rm -it --image=curlimages/curl --restart=Never -- curl -
 kubectl get secret grafana-admin-credentials -n monitoring -o jsonpath='{.data.admin-user}' | base64 -d
 kubectl get secret grafana-admin-credentials -n monitoring -o jsonpath='{.data.admin-password}' | base64 -d
 ```
+
 ---
 
 ### Admin credentials secret missing or malformed
@@ -117,6 +118,7 @@ kubectl get secret grafana-admin-credentials -n monitoring -o jsonpath='{.data}'
 kubectl get externalsecrets -n monitoring -l app=grafana-config
 kubectl logs -n external-secrets -l app.kubernetes.io/name=external-secrets --tail=30 | grep grafana
 ```
+
 ---
 
 ### Flux Kustomization not reconciling after git push
@@ -129,6 +131,7 @@ flux get kustomization grafana-operator
 kubectl get kustomization grafana-config -n flux-system -o jsonpath='{.status.conditions[*].message}'
 flux reconcile kustomization grafana-config --with-source
 ```
+
 ---
 
 ### Downstream dashboards not provisioning despite healthy Grafana CR
@@ -141,6 +144,7 @@ kubectl get grafanadashboards -n monitoring -o yaml | grep -A 3 instanceSelector
 kubectl logs -n grafana-operator -l app.kubernetes.io/name=grafana-operator --tail=50 | grep -i "instance"
 kubectl get grafana -n monitoring --show-labels
 ```
+
 ---
 
 

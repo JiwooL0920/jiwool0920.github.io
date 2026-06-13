@@ -1,7 +1,7 @@
 ---
 catalog_sha: 4d088b0b3a67b4c4
 fleet_infra_commit: 40b9e90
-generated_at: 2026-06-13
+generated_at: 2026-06-12
 ---
 
 # Weave GitOps
@@ -107,6 +107,7 @@ kubectl logs -n flux-system deploy/helm-controller --since=10m | grep weave-gito
 flux reconcile source helm weave-gitops
 flux reconcile helmrelease weave-gitops
 ```
+
 ---
 
 ### Dashboard unreachable via IngressRoute
@@ -121,6 +122,7 @@ kubectl port-forward -n weave-gitops svc/weave-gitops 9001:9001
 curl -s http://localhost:9001 | head -20
 kubectl logs -n traefik deploy/traefik --since=5m | grep weave
 ```
+
 ---
 
 ### Pod CrashLoopBackOff — RBAC or permission denied
@@ -134,6 +136,7 @@ kubectl get clusterrole | grep weave
 kubectl auth can-i impersonate users --as=system:serviceaccount:weave-gitops:ww-gitops-weave-gitops
 kubectl describe clusterrole ww-gitops-weave-gitops | grep -A5 impersonate
 ```
+
 ---
 
 ### Authentication failure — admin login rejected
@@ -146,6 +149,7 @@ kubectl get helmrelease weave-gitops -n flux-system -o jsonpath='{.spec.values.a
 kubectl exec -n weave-gitops deploy/ww-gitops-weave-gitops -- env | grep -i admin
 htpasswd -nbBC 5 admin 'your-password' | cut -d: -f2
 ```
+
 ---
 
 ### Kustomization health check timeout
@@ -160,6 +164,7 @@ kubectl top pod -n weave-gitops
 flux reconcile kustomization weave-gitops
 ```
 **See also:** docs/adr/001-fine-grained-service-dependencies.md
+
 ---
 
 

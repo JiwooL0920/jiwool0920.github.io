@@ -1,7 +1,7 @@
 ---
 catalog_sha: 4d088b0b3a67b4c4
 fleet_infra_commit: 40b9e90
-generated_at: 2026-06-13
+generated_at: 2026-06-12
 ---
 
 # Cilium
@@ -121,6 +121,7 @@ docker exec dev-services-amer-control-plane mount | grep cgroup
 kubectl -n flux-system get helmrelease cilium -o jsonpath='{.spec.values.cgroup}'
 ```
 **See also:** docs/adr/008-cilium-cni.md
+
 ---
 
 ### kube-proxy replacement fails — services unreachable
@@ -135,6 +136,7 @@ docker exec dev-services-amer-control-plane ss -tlnp | grep 6443
 kubectl -n flux-system get helmrelease cilium -o jsonpath='{.spec.values.k8sServiceHost}'
 ```
 **See also:** docs/adr/008-cilium-cni.md
+
 ---
 
 ### Hubble relay unable to connect to agents
@@ -148,6 +150,7 @@ kubectl -n kube-system exec ds/cilium -- cilium status | grep Hubble
 kubectl -n kube-system exec ds/cilium -- hubble observe --last 5
 kubectl -n kube-system get svc hubble-relay -o jsonpath='{.spec.ports}'
 ```
+
 ---
 
 ### Cilium operator not reconciling — CiliumIdentity or CiliumEndpoint stale
@@ -161,6 +164,7 @@ kubectl get ciliumidentities --no-headers | wc -l
 kubectl get ciliumendpoints -A --no-headers | wc -l
 kubectl -n kube-system exec ds/cilium -- cilium endpoint list | grep -c "ready"
 ```
+
 ---
 
 ### HelmRelease stuck in upgrade — Cilium DaemonSet rollout blocked
@@ -174,6 +178,7 @@ kubectl -n kube-system get pods -l app.kubernetes.io/name=cilium -o wide | grep 
 kubectl -n kube-system describe pod $(kubectl -n kube-system get pods -l app.kubernetes.io/name=cilium --field-selector=status.phase!=Running -o name | head -1)
 flux suspend helmrelease -n flux-system cilium && flux resume helmrelease -n flux-system cilium
 ```
+
 ---
 
 

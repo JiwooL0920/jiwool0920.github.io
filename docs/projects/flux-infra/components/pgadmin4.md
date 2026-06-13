@@ -1,7 +1,7 @@
 ---
 catalog_sha: 4d088b0b3a67b4c4
 fleet_infra_commit: 40b9e90
-generated_at: 2026-06-13
+generated_at: 2026-06-12
 ---
 
 # pgAdmin4
@@ -120,6 +120,7 @@ kubectl exec -it deployment/pgadmin4 -n pgadmin4 -- id  # Should show uid=5050 g
 kubectl get deployment pgadmin4 -n pgadmin4 -o jsonpath='{.spec.template.spec.securityContext}'
 kubectl delete pod -n pgadmin4 -l app.kubernetes.io/name=pgadmin4  # Force reschedule with correct fsGroup
 ```
+
 ---
 
 ### ExternalSecret stuck in SecretSyncedError
@@ -134,6 +135,7 @@ kubectl logs -n external-secrets -l app.kubernetes.io/name=external-secrets --ta
 kubectl annotate externalsecret pgadmin4-credentials -n pgadmin4 force-sync=$(date +%s) --overwrite
 ```
 **See also:** docs/adr/001-fine-grained-service-dependencies.md
+
 ---
 
 ### pgAdmin4 unable to connect to PostgreSQL cluster
@@ -147,6 +149,7 @@ kubectl exec -n pgadmin4 deployment/pgadmin4 -- python -c "import socket; socket
 kubectl get networkpolicies -n cnpg-system -o wide
 kubectl get endpoints postgresql-cluster-rw -n cnpg-system
 ```
+
 ---
 
 ### IngressRoute not routing traffic to pgAdmin4
@@ -160,6 +163,7 @@ kubectl get endpoints pgadmin4 -n pgadmin4
 kubectl logs -n traefik -l app.kubernetes.io/name=traefik --tail=30 | grep pgadmin
 kubectl port-forward svc/pgadmin4 -n pgadmin4 8080:80  # Bypass ingress to confirm service works
 ```
+
 ---
 
 ### pgAdmin4 login fails with valid credentials
@@ -173,6 +177,7 @@ kubectl exec -n pgadmin4 deployment/pgadmin4 -- cat /pgadmin4/config_local.py 2>
 kubectl delete pod -n pgadmin4 -l app.kubernetes.io/name=pgadmin4  # Force re-read of secret mount
 kubectl logs deployment/pgadmin4 -n pgadmin4 | grep -i 'authentication\|login\|email'
 ```
+
 ---
 
 

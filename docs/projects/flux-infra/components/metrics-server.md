@@ -1,7 +1,7 @@
 ---
 catalog_sha: 4d088b0b3a67b4c4
 fleet_infra_commit: 40b9e90
-generated_at: 2026-06-13
+generated_at: 2026-06-12
 ---
 
 # Metrics Server
@@ -107,6 +107,7 @@ kubectl get endpoints metrics-server -n kube-system
 kubectl logs -n kube-system deployment/metrics-server --tail=50
 kubectl get helmrelease metrics-server -n flux-system -o yaml | grep -A3 conditions
 ```
+
 ---
 
 ### Metrics Server CrashLoopBackOff due to TLS errors
@@ -120,6 +121,7 @@ kubectl get deployment metrics-server -n kube-system -o jsonpath='{.spec.templat
 # Verify --kubelet-insecure-tls is present in the rendered args
 kubectl get helmrelease metrics-server -n flux-system -o yaml | grep kubelet-insecure-tls
 ```
+
 ---
 
 ### Partial node metrics — some nodes return empty
@@ -133,6 +135,7 @@ kubectl exec -n kube-system deployment/metrics-server -- wget -qO- --no-check-ce
 # Check if kubelet is listening on the expected port
 kubectl get nodes -o jsonpath='{range .items[*]}{.metadata.name} {.status.addresses[?(@.type=="InternalIP")].address}{"\n"}{end}'
 ```
+
 ---
 
 ### HPA not scaling — metrics delayed or stale
@@ -148,6 +151,7 @@ kubectl get --raw /apis/metrics.k8s.io/v1beta1/namespaces/kube-system/pods | jq 
 kubectl logs -n kube-system deployment/metrics-server | grep -c 'successfully scraped'
 ```
 **See also:** docs/adr/011-keda-autoscaling.md
+
 ---
 
 ### Metrics Server OOMKilled on large cluster
@@ -161,6 +165,7 @@ kubectl get nodes --no-headers | wc -l  # memory scales with node+pod count
 kubectl get configmap cluster-vars -n flux-system -o yaml | grep METRICS_SERVER_MEMORY
 # If limit is too low for cluster size, update METRICS_SERVER_MEMORY_LIMIT in cluster-vars
 ```
+
 ---
 
 

@@ -1,7 +1,7 @@
 ---
 catalog_sha: 4d088b0b3a67b4c4
 fleet_infra_commit: 40b9e90
-generated_at: 2026-06-13
+generated_at: 2026-06-12
 ---
 
 # ScyllaDB Cluster
@@ -159,6 +159,7 @@ kubectl get pods -n local-path-storage
 # If provisioner is healthy but PVC stuck, delete the PVC and let operator recreate:
 kubectl delete pvc -n scylla -l app.kubernetes.io/name=scylla
 ```
+
 ---
 
 ### ScyllaCluster CRD not found — operator dependency race
@@ -175,6 +176,7 @@ kubectl wait --for=condition=Established crd/scyllaclusters.scylla.scylladb.com 
 flux reconcile kustomization scylla-cluster
 ```
 **See also:** docs/adr/001-fine-grained-service-dependencies.md
+
 ---
 
 ### Alternator not responding on port 8000
@@ -192,6 +194,7 @@ kubectl get ingressroute scylla-alternator -n scylla -o yaml
 # Verify Traefik sees the route:
 kubectl logs -n traefik -l app.kubernetes.io/name=traefik --tail=50 | grep scylla
 ```
+
 ---
 
 ### Pod OOMKilled during startup or under load
@@ -209,6 +212,7 @@ kubectl get configmap cluster-vars -n flux-system -o jsonpath='{.data.SCYLLA_MEM
 # If OOM persists in developer mode, check node available memory:
 kubectl describe node | grep -A5 'Allocated resources'
 ```
+
 ---
 
 ### Flux health check timeout — scylla-client service never becomes ready
@@ -227,6 +231,7 @@ kubectl exec -n scylla -it $(kubectl get pod -n scylla -l app.kubernetes.io/name
 # If node shows DN (Down/Normal), check scylla logs:
 kubectl logs -n scylla $(kubectl get pod -n scylla -l app.kubernetes.io/name=scylla -o jsonpath='{.items[0].metadata.name}') -c scylla --tail=200
 ```
+
 ---
 
 

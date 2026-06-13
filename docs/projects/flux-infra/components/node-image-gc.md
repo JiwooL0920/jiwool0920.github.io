@@ -1,7 +1,7 @@
 ---
 catalog_sha: 4d088b0b3a67b4c4
 fleet_infra_commit: 40b9e90
-generated_at: 2026-06-13
+generated_at: 2026-06-12
 ---
 
 # Node Image GC
@@ -100,6 +100,7 @@ kubectl get nodes -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.metadata
 # Verify PodSecurityAdmission is not blocking privileged pods in node-maintenance namespace:
 kubectl get ns node-maintenance -o jsonpath='{.metadata.labels}' | grep -i pod-security
 ```
+
 ---
 
 ### CronJob not scheduling new jobs
@@ -115,6 +116,7 @@ kubectl -n node-maintenance get pods --field-selector=status.phase!=Succeeded,st
 # If a job is stuck, delete it to unblock scheduling:
 kubectl -n node-maintenance delete job $(kubectl -n node-maintenance get jobs --field-selector status.successful=0,status.failed=0 -o jsonpath='{.items[0].metadata.name}')
 ```
+
 ---
 
 ### Cleanup runs but disk space not reclaimed
@@ -130,6 +132,7 @@ kubectl debug node/$(kubectl get nodes -o jsonpath='{.items[0].metadata.name}') 
 # Disk pressure may be from logs or emptyDir volumes, not images:
 kubectl debug node/$(kubectl get nodes -o jsonpath='{.items[0].metadata.name}') -it --image=alpine:3.19 -- nsenter -t 1 -m -u -i -n -p -- du -sh /var/log/pods/* | sort -rh | head -10
 ```
+
 ---
 
 ### crictl commands failing with runtime not found
@@ -145,6 +148,7 @@ kubectl get nodes -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.status.n
 # Test nsenter manually from a debug pod on the affected node:
 kubectl debug node/$(kubectl get nodes -o jsonpath='{.items[0].metadata.name}') -it --image=alpine:3.19 -- nsenter -t 1 -m -u -i -n -p -- which crictl
 ```
+
 ---
 
 ### Job pods pending due to resource constraints or scheduling
@@ -161,6 +165,7 @@ kubectl top nodes
 # Verify the ServiceAccount exists:
 kubectl -n node-maintenance get serviceaccount node-image-gc
 ```
+
 ---
 
 

@@ -1,7 +1,7 @@
 ---
 catalog_sha: 4d088b0b3a67b4c4
 fleet_infra_commit: 40b9e90
-generated_at: 2026-06-13
+generated_at: 2026-06-12
 ---
 
 # CNPG Operator
@@ -120,6 +120,7 @@ kubectl -n flux-system get helmrelease cnpg-operator -o jsonpath='{.status.condi
 # If CRD version mismatch — force CRD update from chart:
 kubectl -n flux-system annotate helmrelease cnpg-operator reconcile.fluxcd.io/requestedAt=$(date +%s) --overwrite
 ```
+
 ---
 
 ### Webhook certificate not ready — admission failures
@@ -134,6 +135,7 @@ kubectl -n cnpg-system rollout restart deploy/cnpg-operator-cloudnative-pg
 kubectl -n cnpg-system wait --for=condition=Available deploy/cnpg-operator-cloudnative-pg --timeout=120s
 kubectl get validatingwebhookconfigurations -l app.kubernetes.io/name=cloudnative-pg -o jsonpath='{.items[0].webhooks[0].clientConfig.caBundle}' | wc -c
 ```
+
 ---
 
 ### HelmRelease stuck in upgrade — Flux timeout
@@ -149,6 +151,7 @@ kubectl -n cnpg-system describe pod -l app.kubernetes.io/name=cloudnative-pg | g
 # Force Flux to retry:
 kubectl -n flux-system annotate helmrelease cnpg-operator reconcile.fluxcd.io/requestedAt=$(date +%s) --overwrite
 ```
+
 ---
 
 ### Operator not reconciling managed clusters
@@ -165,6 +168,7 @@ kubectl auth can-i list clusters.postgresql.cnpg.io --as=system:serviceaccount:c
 # If leader lease is stale, restart to force re-election:
 kubectl -n cnpg-system rollout restart deploy/cnpg-operator-cloudnative-pg
 ```
+
 ---
 
 ### ConfigMap substitution not applied — raw variable placeholders in resources
@@ -180,6 +184,7 @@ kubectl -n flux-system get kustomization cnpg-operator -o jsonpath='{.spec.postB
 kubectl -n flux-system annotate kustomization cnpg-operator reconcile.fluxcd.io/requestedAt=$(date +%s) --overwrite
 ```
 **See also:** docs/adr/004-single-shared-postgresql-cluster.md
+
 ---
 
 

@@ -1,7 +1,7 @@
 ---
 catalog_sha: 4d088b0b3a67b4c4
 fleet_infra_commit: 40b9e90
-generated_at: 2026-06-13
+generated_at: 2026-06-12
 ---
 
 # Grafana Dashboards
@@ -110,6 +110,7 @@ kubectl get events -n flux-system --field-selector involvedObject.name=grafana-d
 ssh -T -i /dev/stdin git@github.com <<< "$(kubectl get secret flux-system -n flux-system -o jsonpath='{.data.identity}' | base64 -d)" 2>&1 | head -5
 flux reconcile source git grafana-dashboards -n flux-system
 ```
+
 ---
 
 ### Kustomization reconciliation timeout — invalid manifests in dashboards repo
@@ -123,6 +124,7 @@ flux get source git grafana-dashboards -n flux-system
 kubectl get events -n flux-system --field-selector involvedObject.name=grafana-dashboards,involvedObject.kind=Kustomization --sort-by=.lastTimestamp
 flux reconcile kustomization grafana-dashboards --with-source
 ```
+
 ---
 
 ### Dashboards not appearing in Grafana despite healthy Kustomization
@@ -137,6 +139,7 @@ kubectl logs -n grafana-operator -l app.kubernetes.io/name=grafana-operator --ta
 kubectl get grafana grafana -n monitoring -o yaml | grep -A 5 'status:'
 ```
 **See also:** docs/adr/012-grafana-operator-dashboard-as-code.md
+
 ---
 
 ### Dependency gate blocking — grafana-config not ready
@@ -151,6 +154,7 @@ kubectl get grafana grafana -n monitoring
 kubectl logs -n grafana-operator -l app.kubernetes.io/name=grafana-operator --tail=30 | grep -i "instance"
 flux reconcile kustomization grafana-config --with-source
 ```
+
 ---
 
 ### Stale dashboards after repo push — source revision not advancing
@@ -165,6 +169,7 @@ kubectl get events -n flux-system --field-selector involvedObject.name=grafana-d
 flux reconcile source git grafana-dashboards -n flux-system
 flux get source git grafana-dashboards -n flux-system
 ```
+
 ---
 
 ### Pruned dashboards not removed from Grafana
@@ -179,6 +184,7 @@ kubectl run curl-test --rm -it --image=curlimages/curl --restart=Never -- curl -
 kubectl get grafana grafana -n monitoring -o yaml | grep -A 5 'status:'
 ```
 **See also:** docs/adr/012-grafana-operator-dashboard-as-code.md
+
 ---
 
 

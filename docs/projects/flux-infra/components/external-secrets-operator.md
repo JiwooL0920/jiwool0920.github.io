@@ -1,7 +1,7 @@
 ---
 catalog_sha: 4d088b0b3a67b4c4
 fleet_infra_commit: 40b9e90
-generated_at: 2026-06-13
+generated_at: 2026-06-12
 ---
 
 # External Secrets Operator
@@ -136,6 +136,7 @@ kubectl -n secrets-manager run curl-test --rm -it --image=curlimages/curl -- cur
 kubectl -n secrets-manager get secret localstack-credentials -o jsonpath='{.data}' | base64 -d
 ```
 **See also:** docs/adr/005-localstack-external-secrets.md
+
 ---
 
 ### HelmRelease stuck in install — CRD ordering race
@@ -150,6 +151,7 @@ kubectl -n flux-system suspend helmrelease secrets-manager
 kubectl -n flux-system resume helmrelease secrets-manager
 kubectl -n flux-system get helmrelease secrets-manager -w
 ```
+
 ---
 
 ### Webhook pod failing — TLS certificate not generated
@@ -164,6 +166,7 @@ kubectl get validatingwebhookconfiguration externalsecret-validate -o yaml | gre
 kubectl -n secrets-manager delete pods -l app.kubernetes.io/component=webhook
 kubectl -n secrets-manager rollout status deployment/secrets-manager-external-secrets-webhook --timeout=120s
 ```
+
 ---
 
 ### ExternalSecrets not syncing — secret missing in LocalStack
@@ -177,6 +180,7 @@ kubectl -n secrets-manager run aws-check --rm -it --image=amazon/aws-cli --env=A
 kubectl -n localstack logs -l app.kubernetes.io/name=localstack --tail=100 | grep -i 'init\|startup\|script'
 ```
 **See also:** docs/adr/005-localstack-external-secrets.md
+
 ---
 
 ### Operator pod OOMKilled under high ExternalSecret count
@@ -190,6 +194,7 @@ kubectl get externalsecret -A --no-headers | wc -l
 kubectl -n secrets-manager describe pod -l app.kubernetes.io/component=controller | grep -A3 'Last State'
 kubectl -n flux-system get configmap cluster-vars -o yaml | grep EXTERNAL_SECRETS_MEMORY
 ```
+
 ---
 
 

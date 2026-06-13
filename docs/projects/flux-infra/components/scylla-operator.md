@@ -1,7 +1,7 @@
 ---
 catalog_sha: 4d088b0b3a67b4c4
 fleet_infra_commit: 40b9e90
-generated_at: 2026-06-13
+generated_at: 2026-06-12
 ---
 
 # Scylla Operator
@@ -116,6 +116,7 @@ kubectl delete secret -n scylla-operator -l app.kubernetes.io/component=webhook
 kubectl rollout restart deployment/scylla-operator -n scylla-operator
 kubectl wait --for=condition=Ready pod -l app.kubernetes.io/name=scylla-operator -n scylla-operator --timeout=120s
 ```
+
 ---
 
 ### CRD installation failure blocking downstream services
@@ -130,6 +131,7 @@ flux suspend helmrelease scylla-operator -n flux-system
 flux resume helmrelease scylla-operator -n flux-system
 kubectl wait --for=condition=Ready helmrelease/scylla-operator -n flux-system --timeout=600s
 ```
+
 ---
 
 ### Leader election lease stuck after pod eviction
@@ -144,6 +146,7 @@ kubectl logs -n scylla-operator deploy/scylla-operator | grep -i 'leader\|lease\
 kubectl delete lease scylla-operator-leader-election -n scylla-operator
 kubectl rollout restart deployment/scylla-operator -n scylla-operator
 ```
+
 ---
 
 ### HelmRelease reconciliation timeout
@@ -158,6 +161,7 @@ kubectl get pods -n scylla-operator -l app.kubernetes.io/name=scylla-operator -o
 flux suspend helmrelease scylla-operator -n flux-system && helm rollback scylla-operator -n scylla-operator
 flux resume helmrelease scylla-operator -n flux-system
 ```
+
 ---
 
 ### Operator OOMKilled under high CRD watch load
@@ -171,6 +175,7 @@ kubectl describe pod -n scylla-operator -l app.kubernetes.io/name=scylla-operato
 kubectl get configmap cluster-vars -n flux-system -o jsonpath='{.data.SCYLLA_OPERATOR_MEMORY_LIMIT}'
 kubectl logs -n scylla-operator deploy/scylla-operator --previous | tail -50
 ```
+
 ---
 
 

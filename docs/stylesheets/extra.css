@@ -1,3 +1,29 @@
+/* ===== Code block typography ===== */
+
+/* Fenced code blocks: match GitHub/VS Code convention (~85% of body text) */
+.md-typeset pre,
+.md-typeset pre > code {
+  font-size: 0.8125rem; /* 13px — readable but clearly smaller than prose */
+  line-height: 1.6;
+}
+
+/* Inline code: slightly smaller than body, same family */
+.md-typeset code {
+  font-size: 0.8125rem;
+}
+
+/* Prevent code inside headings from inheriting heading font-size
+   (guards against setext-H2 rendering artefacts from markdown) */
+.md-typeset h1 code,
+.md-typeset h2 code,
+.md-typeset h3 code,
+.md-typeset h4 code,
+.md-typeset h2 pre,
+.md-typeset h2 .highlight,
+.md-typeset h2 .language-bash {
+  font-size: 0.8125rem !important;
+}
+
 /* Custom navigation styling for better visibility */
 
 /* Navigation section labels (Projects, Fleet Infrastructure, etc.) */

@@ -1,7 +1,7 @@
 ---
 catalog_sha: 4d088b0b3a67b4c4
 fleet_infra_commit: 40b9e90
-generated_at: 2026-06-13
+generated_at: 2026-06-12
 ---
 
 # Traefik
@@ -90,6 +90,7 @@ kubectl get configmap cluster-vars -n flux-system -o yaml | grep TRAEFIK_REPLICA
 # For Kind (single node), set TRAEFIK_REPLICA_COUNT=1 in cluster-vars and reconcile
 flux reconcile kustomization traefik --with-source -n flux-system
 ```
+
 ---
 
 ### HelmRelease reconciliation failed
@@ -107,6 +108,7 @@ kubectl get configmap cluster-vars -n flux-system -o yaml | grep TRAEFIK
 # Force reconciliation after fixing
 flux reconcile helmrelease traefik -n flux-system
 ```
+
 ---
 
 ### IngressRoutes not routing traffic (cross-namespace)
@@ -125,6 +127,7 @@ kubectl get svc -A | grep <backend-service>
 kubectl get clusterrole -l app.kubernetes.io/name=traefik -o yaml | grep -A5 ingressroute
 ```
 **See also:** docs/adr/009-traefik-ingress.md
+
 ---
 
 ### NodePort unreachable from host on Kind
@@ -142,6 +145,7 @@ docker port $(docker ps -q --filter name=kind-control-plane) | grep 30080
 # Test connectivity from inside the cluster
 kubectl run curl-test --rm -i --restart=Never --image=curlimages/curl -- curl -s http://traefik.traefik.svc:8000
 ```
+
 ---
 
 ### Traefik CrashLoopBackOff on startup
@@ -158,6 +162,7 @@ kubectl get pods -A -o wide | grep $(kubectl get pod -n traefik -l app.kubernete
 # If flag errors after chart upgrade, check chart changelog for removed/renamed arguments
 helm show values traefik/traefik --version $(kubectl get helmrelease traefik -n flux-system -o jsonpath='{.spec.chart.spec.version}') | head -50
 ```
+
 ---
 
 ### Flux health check timeout for Traefik Kustomization
@@ -175,6 +180,7 @@ flux get helmreleases -n flux-system | grep traefik
 kubectl describe deployment traefik -n traefik | grep -A10 Conditions
 kubectl get pods -n traefik -l app.kubernetes.io/name=traefik -o yaml | grep -A5 containerStatuses
 ```
+
 ---
 
 

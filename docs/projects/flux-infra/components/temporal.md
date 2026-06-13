@@ -1,7 +1,7 @@
 ---
 catalog_sha: 4d088b0b3a67b4c4
 fleet_infra_commit: 40b9e90
-generated_at: 2026-06-13
+generated_at: 2026-06-12
 ---
 
 # Temporal
@@ -177,6 +177,7 @@ kubectl delete jobs -n temporal -l app.kubernetes.io/component=schema
 flux resume helmrelease temporal-server -n flux-system
 ```
 **See also:** docs/adr/004-single-shared-postgresql-cluster.md
+
 ---
 
 ### Frontend pods unable to connect to PostgreSQL
@@ -192,6 +193,7 @@ kubectl logs deployment/temporal-server-frontend -n temporal --tail=50 | grep -i
 kubectl get cluster postgresql-cluster -n cnpg-system -o jsonpath='{.status.phase}'
 ```
 **See also:** docs/adr/004-single-shared-postgresql-cluster.md
+
 ---
 
 ### History service OOMKilled under workflow load
@@ -206,6 +208,7 @@ kubectl logs -n temporal -l app.kubernetes.io/component=history --previous --tai
 # Check workflow history event counts (large histories consume history service memory):
 kubectl exec -it postgresql-cluster-1 -n cnpg-system -- psql -U app -d temporal -c "SELECT workflow_id, COUNT(*) as event_count FROM executions GROUP BY workflow_id ORDER BY event_count DESC LIMIT 10;"
 ```
+
 ---
 
 ### ExternalSecret not syncing credentials
@@ -222,6 +225,7 @@ kubectl exec -n localstack deployment/localstack -- awslocal secretsmanager get-
 # Force resync:
 kubectl annotate externalsecret postgresql-cluster-app -n temporal force-sync=$(date +%s) --overwrite
 ```
+
 ---
 
 ### Temporal Web UI unreachable via IngressRoute
@@ -237,6 +241,7 @@ curl -s -o /dev/null -w '%{http_code}' http://localhost:8080
 # If port-forward works but IngressRoute doesn't, check Traefik routing:
 kubectl logs -n traefik deployment/traefik --tail=100 | grep -i 'temporal'
 ```
+
 ---
 
 ### Task queue backlog growing with no workers processing
@@ -252,6 +257,7 @@ kubectl run grpc-check --rm -it --image=fullstorydev/grpcurl -n temporal -- -pla
 # Verify matching service can reach history:
 kubectl logs -n temporal -l app.kubernetes.io/component=matching --tail=100 | grep -i 'history\|unavailable\|connection'
 ```
+
 ---
 
 

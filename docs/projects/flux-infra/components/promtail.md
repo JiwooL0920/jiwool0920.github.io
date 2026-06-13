@@ -1,7 +1,7 @@
 ---
 catalog_sha: 4d088b0b3a67b4c4
 fleet_infra_commit: 40b9e90
-generated_at: 2026-06-13
+generated_at: 2026-06-12
 ---
 
 # Promtail
@@ -127,6 +127,7 @@ kubectl -n monitoring run curl-test --rm -it --image=curlimages/curl -- curl -s 
 kubectl -n flux-system get kustomization loki -o jsonpath='{.status.conditions[*].message}'
 kubectl -n monitoring get pods -l app.kubernetes.io/name=loki -o jsonpath='{.items[*].status.phase}'
 ```
+
 ---
 
 ### Inotify limit exhaustion despite init container
@@ -139,6 +140,7 @@ kubectl -n monitoring logs ds/promtail -c init-inotify
 kubectl -n monitoring debug $(kubectl -n monitoring get pod -l app.kubernetes.io/name=promtail --field-selector spec.nodeName=$(kubectl get nodes -o jsonpath='{.items[0].metadata.name}') -o name | head -1) --image=busybox -- cat /proc/sys/fs/inotify/max_user_instances
 kubectl -n monitoring exec ds/promtail -- cat /run/promtail/positions.yaml | wc -l
 ```
+
 ---
 
 ### Positions file reset causing log re-ingestion
@@ -151,6 +153,7 @@ kubectl -n monitoring get pods -l app.kubernetes.io/name=promtail -o jsonpath='{
 kubectl -n monitoring get events --field-selector involvedObject.kind=DaemonSet,involvedObject.name=promtail --sort-by=.lastTimestamp
 kubectl -n monitoring describe pod -l app.kubernetes.io/name=promtail | grep -A5 'Last State'
 ```
+
 ---
 
 ### Labels not extracted — logs appear without namespace/pod metadata
@@ -163,6 +166,7 @@ kubectl -n monitoring logs ds/promtail --tail=100 | grep -i 'regex\|pipeline\|la
 kubectl -n monitoring exec ds/promtail -- ls /var/log/pods/ | head -10
 kubectl -n monitoring exec ds/promtail -- promtail --dry-run --config.file=/etc/promtail/promtail.yaml 2>&1 | head -30
 ```
+
 ---
 
 ### DaemonSet not scheduled on new node
@@ -176,6 +180,7 @@ kubectl -n monitoring describe ds promtail | grep -A10 'Tolerations'
 kubectl -n monitoring get pods -l app.kubernetes.io/name=promtail -o wide --sort-by=.spec.nodeName
 kubectl -n monitoring describe pod $(kubectl -n monitoring get pods -l app.kubernetes.io/name=promtail --field-selector status.phase!=Running -o name 2>/dev/null | head -1) 2>/dev/null | grep -A5 Events
 ```
+
 ---
 
 ### High memory usage causing OOMKill
@@ -191,6 +196,7 @@ curl -s localhost:3101/metrics | grep promtail_targets_active_total
 curl -s localhost:3101/metrics | grep process_resident_memory_bytes
 ```
 **See also:** docs/adr/010-opentelemetry-collector.md
+
 ---
 
 

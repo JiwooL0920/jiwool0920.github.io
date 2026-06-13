@@ -1,7 +1,7 @@
 ---
 catalog_sha: 4d088b0b3a67b4c4
 fleet_infra_commit: 40b9e90
-generated_at: 2026-06-13
+generated_at: 2026-06-12
 ---
 
 # Grafana SA Setup
@@ -145,6 +145,7 @@ kubectl get kustomization kube-prometheus-stack -n flux-system -o jsonpath='{.st
 kubectl rollout status deployment/kube-prometheus-stack-grafana -n monitoring --timeout=120s
 kubectl delete job create-grafana-sa-token -n monitoring && flux reconcile kustomization grafana-sa-setup
 ```
+
 ---
 
 ### Token created but LocalStack PutSecretValue fails
@@ -158,6 +159,7 @@ kubectl exec -n localstack deploy/localstack -- awslocal secretsmanager describe
 kubectl exec -n localstack deploy/localstack -- awslocal secretsmanager create-secret --name kagent/grafana/api-key --secret-string placeholder-run-grafana-sa-setup --region us-east-1
 kubectl delete job create-grafana-sa-token -n monitoring && flux reconcile kustomization grafana-sa-setup
 ```
+
 ---
 
 ### grafana-admin-credentials Secret missing
@@ -170,6 +172,7 @@ kubectl get helmrelease kube-prometheus-stack -n flux-system -o jsonpath='{.stat
 kubectl get pods -n monitoring -l app.kubernetes.io/instance=kube-prometheus-stack
 flux reconcile helmrelease kube-prometheus-stack -n flux-system
 ```
+
 ---
 
 ### Job completed but kagent still cannot authenticate to Grafana
@@ -183,6 +186,7 @@ curl -sf -H "Authorization: Bearer $(kubectl exec -n localstack deploy/localstac
 kubectl delete job create-grafana-sa-token -n monitoring && flux reconcile kustomization grafana-sa-setup
 kubectl annotate externalsecret -n flux-system kagent-grafana-sa-token force-sync=$(date +%s) --overwrite
 ```
+
 ---
 
 ### Job exceeds backoffLimit with intermittent Grafana API errors
@@ -196,6 +200,7 @@ kubectl get events -n monitoring --field-selector involvedObject.name=create-gra
 kubectl top pods -n monitoring -l app.kubernetes.io/name=grafana
 kubectl delete job create-grafana-sa-token -n monitoring && flux reconcile kustomization grafana-sa-setup
 ```
+
 ---
 
 

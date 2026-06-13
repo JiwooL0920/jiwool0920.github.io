@@ -1,7 +1,7 @@
 ---
 catalog_sha: 4d088b0b3a67b4c4
 fleet_infra_commit: 40b9e90
-generated_at: 2026-06-13
+generated_at: 2026-06-12
 ---
 
 # PostgreSQL Cluster
@@ -163,6 +163,7 @@ kubectl describe pod -n cnpg-system -l cnpg.io/cluster=postgresql-cluster,cnpg.i
 kubectl get events -n cnpg-system --sort-by='.lastTimestamp' --field-selector reason!=Pulled | tail -20
 ```
 **See also:** docs/adr/004-single-shared-postgresql-cluster.md
+
 ---
 
 ### PushSecret failing to sync credentials
@@ -177,6 +178,7 @@ kubectl logs -n cnpg-system -l app.kubernetes.io/name=external-secrets --tail=50
 kubectl get events -n cnpg-system --field-selector involvedObject.name=push-cnpg-app-secret
 ```
 **See also:** docs/adr/005-localstack-external-secrets.md
+
 ---
 
 ### Database CR not creating logical database
@@ -190,6 +192,7 @@ kubectl exec -it postgresql-cluster-1 -n cnpg-system -- psql -U postgres -c '\l'
 kubectl logs -n cnpg-system -l cnpg.io/cluster=postgresql-cluster,cnpg.io/instanceRole=primary | grep -i "database"
 kubectl get cluster postgresql-cluster -n cnpg-system -o jsonpath='{.status.phase}'
 ```
+
 ---
 
 ### Connection pool exhaustion
@@ -202,6 +205,7 @@ kubectl exec -it postgresql-cluster-1 -n cnpg-system -- psql -U postgres -c "SEL
 kubectl exec -it postgresql-cluster-1 -n cnpg-system -- psql -U postgres -c "SHOW max_connections;"
 kubectl exec -it postgresql-cluster-1 -n cnpg-system -- psql -U postgres -c "SELECT pid, datname, state, query_start, query FROM pg_stat_activity WHERE state='idle in transaction' ORDER BY query_start LIMIT 10;"
 ```
+
 ---
 
 ### Primary pod OOMKilled
@@ -217,6 +221,7 @@ kubectl get events -n cnpg-system --field-selector reason=OOMKilling --sort-by='
 kubectl get cluster postgresql-cluster -n cnpg-system -o jsonpath='{.status.currentPrimary}'
 ```
 **See also:** docs/adr/004-single-shared-postgresql-cluster.md
+
 ---
 
 ### Replication lag or replica not catching up
@@ -230,6 +235,7 @@ kubectl exec -it postgresql-cluster-1 -n cnpg-system -- psql -U postgres -c "SEL
 kubectl logs -n cnpg-system postgresql-cluster-2 --tail=50 | grep -i "wal\|replication\|recovery"
 kubectl top pods -n cnpg-system -l cnpg.io/cluster=postgresql-cluster
 ```
+
 ---
 
 

@@ -1,7 +1,7 @@
 ---
 catalog_sha: 4d088b0b3a67b4c4
 fleet_infra_commit: 40b9e90
-generated_at: 2026-06-13
+generated_at: 2026-06-12
 ---
 
 # Traefik Config
@@ -130,6 +130,7 @@ kubectl get clustersecretstore localstack-secretstore -o jsonpath='{.status.cond
 kubectl annotate externalsecret traefik-dashboard-credentials -n traefik force-sync=$(date +%s) --overwrite
 kubectl get externalsecret traefik-dashboard-credentials -n traefik -w
 ```
+
 ---
 
 ### ExternalSecret stuck in SecretSyncedError
@@ -143,6 +144,7 @@ kubectl logs -n external-secrets -l app.kubernetes.io/name=external-secrets --ta
 kubectl get pods -n localstack -o wide
 kubectl exec -n localstack deploy/localstack -- awslocal secretsmanager get-secret-value --secret-id traefik/dashboard/credentials/htpasswd
 ```
+
 ---
 
 ### IngressRoute not matching requests
@@ -156,6 +158,7 @@ kubectl port-forward -n traefik svc/traefik 9000:9000
 curl -s http://localhost:9000/api/http/routers | jq '.[] | select(.name | contains("dashboard"))'
 curl -v -H 'Host: traefik.local' http://localhost:80/
 ```
+
 ---
 
 ### Flux Kustomization traefik-config stuck not ready
@@ -169,6 +172,7 @@ flux get kustomization external-secrets-config
 kubectl get helmrelease -A | grep -E 'traefik|external-secrets'
 flux reconcile kustomization traefik-config --with-source
 ```
+
 ---
 
 ### Middleware not applied to IngressRoute
@@ -182,6 +186,7 @@ kubectl get secret traefik-dashboard-credentials -n traefik
 kubectl logs -n traefik -l app.kubernetes.io/name=traefik --tail=30 | grep -i 'middleware\|error\|dashboard'
 kubectl describe ingressroute traefik-dashboard -n traefik
 ```
+
 ---
 
 

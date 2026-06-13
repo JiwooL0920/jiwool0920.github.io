@@ -1,7 +1,7 @@
 ---
 catalog_sha: 4d088b0b3a67b4c4
 fleet_infra_commit: 40b9e90
-generated_at: 2026-06-13
+generated_at: 2026-06-12
 ---
 
 # Redis Sentinel
@@ -342,6 +342,7 @@ kubectl logs -n redis-sentinel redis-sentinel-master-0 -c redis-sentinel -f
 ```
 Look for `+odown` (objective down declared), then `+elected-leader`, then `+promoted-slave`.
 
+
 ---
 
 #### Loki cache errors: `NOAUTH Authentication required`
@@ -362,6 +363,7 @@ storage_config:
 Do **not** use `:26379` in Loki config.
 
 **See also:** [ADR-002](https://github.com/JiwooL0920/flux-infra/blob/develop/docs/adr/)
+
 ---
 
 #### Stale or missing cache data after Redis was down for an extended period
@@ -385,6 +387,7 @@ kubectl exec -n redis-sentinel redis-sentinel-master-0 -c redis -- \
   xargs kubectl exec -n redis-sentinel redis-sentinel-master-0 -c redis -- redis-cli del
 ```
 
+
 ---
 
 #### `WRONGTYPE` or stale key errors immediately after failover
@@ -396,6 +399,7 @@ kubectl exec -n redis-sentinel redis-sentinel-master-0 -c redis -- \
 This is expected behavior for an eventually-consistent cache tier. Confirm the application
 handles cache misses gracefully (populate from source of truth on miss). If the data
 absolutely cannot be stale, it belongs in PostgreSQL, not the cache.
+
 
 ---
 

@@ -1,7 +1,7 @@
 ---
 catalog_sha: 4d088b0b3a67b4c4
 fleet_infra_commit: 40b9e90
-generated_at: 2026-06-13
+generated_at: 2026-06-12
 ---
 
 # Gateway API CRDs
@@ -75,6 +75,7 @@ kubectl run curl-test --rm -it --image=curlimages/curl -- curl -sI https://githu
 # Force reconciliation after transient failure resolves:
 flux reconcile kustomization gateway-api-crds --with-source
 ```
+
 ---
 
 ### CRD version conflict with pre-existing installation
@@ -91,6 +92,7 @@ kubectl annotate crd gateways.gateway.networking.k8s.io kustomize.toolkit.fluxcd
 kubectl annotate crd httproutes.gateway.networking.k8s.io kustomize.toolkit.fluxcd.io/force=enabled --overwrite
 flux reconcile kustomization gateway-api-crds
 ```
+
 ---
 
 ### Downstream agentgateway fails with "no matches for kind GatewayClass"
@@ -110,6 +112,7 @@ flux reconcile kustomization gateway-api-crds --with-source
 kubectl wait --for=condition=Established crd gatewayclasses.gateway.networking.k8s.io --timeout=60s
 flux reconcile kustomization agentgateway
 ```
+
 ---
 
 ### CRD accidentally deleted despite prune false
@@ -128,6 +131,7 @@ kubectl wait --for=condition=Established crd gatewayclasses.gateway.networking.k
 # Note: Custom resources (Gateways, HTTPRoutes) that existed are permanently lost. They must be re-created by reconciling their owning Kustomizations:
 flux reconcile kustomization agentgateway
 ```
+
 ---
 
 

@@ -1,7 +1,7 @@
 ---
 catalog_sha: 4d088b0b3a67b4c4
 fleet_infra_commit: 40b9e90
-generated_at: 2026-06-13
+generated_at: 2026-06-12
 ---
 
 # Kubescape
@@ -149,6 +149,7 @@ kubectl logs -n kubescape -l app.kubernetes.io/component=kubevuln --previous --t
 # If OOM on specific large images, check which image triggered it:
 kubectl get vulnerabilitymanifestsummaries -A -o json | jq '.items[] | select(.spec.vulnerabilitiesRef.all.status=="incomplete") | .metadata.name'
 ```
+
 ---
 
 ### Continuous scan not triggering on resource changes
@@ -165,6 +166,7 @@ kubectl logs -n kubescape -l app.kubernetes.io/component=storage --tail=100 | gr
 # Force a manual rescan to test the pipeline:
 kubectl annotate workloadconfigurationscan -n default --all kubescape.io/rescan=$(date +%s) --overwrite
 ```
+
 ---
 
 ### HelmRelease reconciliation failing
@@ -182,6 +184,7 @@ kubectl get kustomization metrics-server kube-prometheus-stack -n flux-system -o
 flux reconcile kustomization kubescape --with-source
 ```
 **See also:** docs/adr/001-fine-grained-service-dependencies.md
+
 ---
 
 ### Configuration scan results missing for specific namespaces
@@ -198,6 +201,7 @@ kubectl logs -n kubescape -l app.kubernetes.io/component=kubescape --tail=200 | 
 # List all scanned namespaces to identify the gap:
 kubectl get workloadconfigurationscans -A --no-headers | awk '{print $1}' | sort -u
 ```
+
 ---
 
 ### Storage component disk pressure or CRD accumulation
@@ -213,6 +217,7 @@ kubectl get vulnerabilitymanifests -A -o json | jq '[.items[] | select(.metadata
 # Check storage pod logs for pressure signals:
 kubectl logs -n kubescape -l app.kubernetes.io/component=storage --tail=100 | grep -i 'pressure\|evict\|memory\|full'
 ```
+
 ---
 
 

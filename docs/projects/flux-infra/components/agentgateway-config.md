@@ -1,7 +1,7 @@
 ---
 catalog_sha: 4d088b0b3a67b4c4
 fleet_infra_commit: 40b9e90
-generated_at: 2026-06-13
+generated_at: 2026-06-12
 ---
 
 # AgentGateway Config
@@ -136,6 +136,7 @@ kubectl logs -n agentgateway-system -l app.kubernetes.io/name=agentgateway --tai
 kubectl get gatewayclass agentgateway -o yaml | grep -A 10 'status:'
 kubectl get crd agentgatewayparameters.agentgateway.dev -o jsonpath='{.metadata.creationTimestamp}'
 ```
+
 ---
 
 ### Kustomization fails with "no matches for kind AgentgatewayParameters"
@@ -149,6 +150,7 @@ kubectl get crd | grep agentgateway
 flux reconcile kustomization agentgateway --with-source -n flux-system
 kubectl get kustomization agentgateway-config -n flux-system -o jsonpath='{.status.conditions[*].message}'
 ```
+
 ---
 
 ### Tracing policy not producing spans in Jaeger
@@ -162,6 +164,7 @@ kubectl get referencegrant agentgateway-to-otel -n opentelemetry -o yaml
 kubectl get svc opentelemetry-collector -n opentelemetry
 kubectl logs -n agentgateway-system -l app.kubernetes.io/name=agentgateway --tail=100 | grep -i 'otel\|trace\|export'
 ```
+
 ---
 
 ### Health check timeout causing Kustomization to report not ready
@@ -175,6 +178,7 @@ kubectl get endpoints -n agentgateway-system
 kubectl describe gateway agentgateway-proxy -n agentgateway-system | tail -30
 flux reconcile kustomization agentgateway-config -n flux-system
 ```
+
 ---
 
 ### ReferenceGrant deleted or misconfigured blocking cross-namespace tracing
@@ -188,6 +192,7 @@ kubectl get referencegrant agentgateway-to-otel -n opentelemetry -o yaml
 flux reconcile kustomization agentgateway-config -n flux-system
 kubectl get referencegrant agentgateway-to-otel -n opentelemetry -o jsonpath='{.spec}' | jq .
 ```
+
 ---
 
 

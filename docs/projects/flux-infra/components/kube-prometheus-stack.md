@@ -1,7 +1,7 @@
 ---
 catalog_sha: 4d088b0b3a67b4c4
 fleet_infra_commit: 40b9e90
-generated_at: 2026-06-13
+generated_at: 2026-06-12
 ---
 
 # Kube Prometheus Stack
@@ -175,6 +175,7 @@ kubectl get clustersecretstore localstack-secretstore -o yaml | grep -A5 status
 kubectl logs -n external-secrets -l app.kubernetes.io/name=external-secrets --tail=50 | grep -i grafana
 kubectl delete externalsecret grafana-admin-credentials -n monitoring && kubectl apply -k apps/base/kube-prometheus-stack
 ```
+
 ---
 
 ### Alertmanager not forwarding critical alerts to kagent webhook
@@ -189,6 +190,7 @@ kubectl exec -n monitoring -it $(kubectl get pod -n monitoring -l app.kubernetes
 kubectl logs -n kagent -l app=alertmanager-hook --tail=100
 kubectl run curl-test --rm -it --image=curlimages/curl --restart=Never -- curl -v http://alertmanager-hook.kagent.svc.cluster.local:8080/webhook/alertmanager -d '{"alerts":[{"labels":{"severity":"critical"}}]}' -H 'Content-Type: application/json'
 ```
+
 ---
 
 ### Prometheus storage exhaustion causing sample ingestion failures
@@ -202,6 +204,7 @@ kubectl get pvc -n monitoring -l app.kubernetes.io/name=prometheus -o custom-col
 kubectl exec -n monitoring -it $(kubectl get pod -n monitoring -l app.kubernetes.io/name=prometheus -o name | head -1) -- curl -s http://localhost:9090/api/v1/status/tsdb | jq '.data.headStats'
 kubectl exec -n monitoring -it $(kubectl get pod -n monitoring -l app.kubernetes.io/name=prometheus -o name | head -1) -- curl -XPOST http://localhost:9090/-/reload
 ```
+
 ---
 
 ### Grafana dashboard not appearing after ConfigMap apply
@@ -215,6 +218,7 @@ kubectl get configmap grafana-dashboard-kagent -n monitoring -o jsonpath='{.data
 kubectl rollout restart deployment kube-prometheus-stack-grafana -n monitoring
 kubectl wait --for=condition=available deployment/kube-prometheus-stack-grafana -n monitoring --timeout=120s
 ```
+
 ---
 
 ### Flux Kustomization stuck due to health check timeout
@@ -230,6 +234,7 @@ kubectl describe pod -n monitoring $(kubectl get pod -n monitoring -l app.kubern
 flux reconcile kustomization kube-prometheus-stack --with-source
 ```
 **See also:** docs/adr/001-fine-grained-service-dependencies.md
+
 ---
 
 ### Grafana database connection failure after secret rotation
@@ -243,6 +248,7 @@ kubectl logs -n monitoring $(kubectl get pod -n monitoring -l app.kubernetes.io/
 kubectl rollout restart deployment kube-prometheus-stack-grafana -n monitoring
 kubectl wait --for=condition=available deployment/kube-prometheus-stack-grafana -n monitoring --timeout=120s
 ```
+
 ---
 
 

@@ -1,7 +1,7 @@
 ---
 catalog_sha: 4d088b0b3a67b4c4
 fleet_infra_commit: 40b9e90
-generated_at: 2026-06-13
+generated_at: 2026-06-12
 ---
 
 # External Secrets Config
@@ -125,6 +125,7 @@ kubectl get pods -n localstack -o wide
 kubectl exec -n localstack deploy/localstack -- awslocal secretsmanager list-secrets --region us-east-1
 kubectl get configmap cluster-vars -n flux-system -o yaml | grep -i endpoint
 ```
+
 ---
 
 ### Flux Kustomization timeout during bootstrap
@@ -138,6 +139,7 @@ kubectl get pods -n localstack -o wide --show-labels
 kubectl logs -n localstack deploy/localstack --tail=100 | grep -i 'ready\|init\|secret'
 flux reconcile kustomization external-secrets-config --with-source
 ```
+
 ---
 
 ### PostBuild substitution failure
@@ -149,6 +151,7 @@ flux get kustomization external-secrets-config -o yaml | grep -A 5 'status:'
 kubectl get configmap cluster-vars -n flux-system -o yaml
 flux logs --kind=Kustomization --name=external-secrets-config --namespace=flux-system --tail=30
 ```
+
 ---
 
 ### Downstream ExternalSecrets failing after store is Ready
@@ -161,6 +164,7 @@ kubectl describe externalsecret -n <failing-namespace> <failing-name> | grep -A 
 kubectl exec -n localstack deploy/localstack -- awslocal secretsmanager list-secrets --region us-east-1 --output table
 kubectl logs -n external-secrets -l app.kubernetes.io/name=external-secrets --tail=100 | grep -i 'error\|not found'
 ```
+
 ---
 
 ### CRD not available when Kustomization reconciles
@@ -175,6 +179,7 @@ flux reconcile kustomization external-secrets-operator --with-source
 flux reconcile kustomization external-secrets-config
 ```
 **See also:** docs/adr/001-fine-grained-service-dependencies.md
+
 ---
 
 

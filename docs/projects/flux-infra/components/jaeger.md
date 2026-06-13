@@ -1,7 +1,7 @@
 ---
 catalog_sha: 4d088b0b3a67b4c4
 fleet_infra_commit: 40b9e90
-generated_at: 2026-06-13
+generated_at: 2026-06-12
 ---
 
 # Jaeger
@@ -116,6 +116,7 @@ kubectl port-forward -n jaeger svc/jaeger-query 16686:16686 & curl -s http://loc
 kubectl get kustomization jaeger -n flux-system -o jsonpath='{.status.conditions[*].message}'
 ```
 **See also:** docs/adr/010-opentelemetry-collector.md
+
 ---
 
 ### Jaeger pod OOMKilled
@@ -129,6 +130,7 @@ kubectl logs deployment/jaeger -n jaeger --previous --tail=100 | grep -i 'memory
 kubectl get helmrelease jaeger -n flux-system -o jsonpath='{.spec.values.allInOne.resources}' | jq .
 kubectl get configmap cluster-vars -n flux-system -o jsonpath='{.data.JAEGER_MEMORY_LIMIT}'
 ```
+
 ---
 
 ### IngressRoute not routing to Jaeger UI
@@ -142,6 +144,7 @@ kubectl get endpoints jaeger-query -n jaeger
 kubectl logs -n traefik deploy/traefik --tail=50 | grep -i 'jaeger\|error\|no endpoint'
 kubectl get kustomization traefik-config -n flux-system -o jsonpath='{.status.conditions[*].message}'
 ```
+
 ---
 
 ### Flux Kustomization stuck waiting on health check
@@ -156,6 +159,7 @@ kubectl describe deployment jaeger -n jaeger | grep -A5 'Conditions\|Events'
 kubectl get kustomization opentelemetry-collector -n flux-system -o jsonpath='{.status.conditions[?(@.type=="Ready")].message}'
 ```
 **See also:** docs/adr/010-opentelemetry-collector.md
+
 ---
 
 ### HelmRelease upgrade failure
@@ -169,6 +173,7 @@ kubectl logs -n flux-system deploy/helm-controller --tail=100 | grep 'jaeger'
 kubectl get helmrepository jaegertracing -n flux-system -o jsonpath='{.status.conditions[*]}' | jq .
 flux suspend helmrelease jaeger -n flux-system && flux resume helmrelease jaeger -n flux-system
 ```
+
 ---
 
 

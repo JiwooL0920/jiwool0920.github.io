@@ -1,7 +1,7 @@
 ---
 catalog_sha: 4d088b0b3a67b4c4
 fleet_infra_commit: 40b9e90
-generated_at: 2026-06-13
+generated_at: 2026-06-12
 ---
 
 # LocalStack
@@ -145,6 +145,7 @@ kubectl -n localstack exec deployment/localstack -- awslocal secretsmanager list
 # If OOMKilled, check resource limits in cluster-vars ConfigMap vs actual usage:
 kubectl -n localstack top pod
 ```
+
 ---
 
 ### ExternalSecrets stuck in SecretSyncedError
@@ -161,6 +162,7 @@ kubectl -n localstack exec deployment/localstack -- awslocal secretsmanager list
 kubectl -n external-secrets run debug --rm -it --image=curlimages/curl -- curl -s http://localstack.localstack.svc:4566/_localstack/health
 ```
 **See also:** docs/adr/005-localstack-external-secrets.md
+
 ---
 
 ### Secrets lost after pod restart despite persistence
@@ -177,6 +179,7 @@ kubectl -n localstack rollout restart deployment/localstack
 kubectl -n localstack rollout status deployment/localstack --timeout=120s
 kubectl -n localstack exec deployment/localstack -- awslocal secretsmanager list-secrets --region us-east-1
 ```
+
 ---
 
 ### GitHub PAT not propagating to Secrets Manager
@@ -192,6 +195,7 @@ kubectl -n localstack get secret github-pat-bootstrap -o jsonpath='{.data.token}
 kubectl -n localstack rollout restart deployment/localstack
 kubectl -n localstack exec deployment/localstack -- awslocal secretsmanager get-secret-value --secret-id github/mcp/token --region us-east-1
 ```
+
 ---
 
 ### Readiness probe failing — services not healthy
@@ -207,6 +211,7 @@ kubectl -n localstack logs deployment/localstack | grep -i 'error\|exception\|tr
 kubectl -n localstack exec deployment/localstack -- ss -tlnp | grep 4566
 ```
 **See also:** docs/adr/001-fine-grained-service-dependencies.md
+
 ---
 
 

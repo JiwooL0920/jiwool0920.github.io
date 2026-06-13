@@ -1,7 +1,7 @@
 ---
 catalog_sha: 4d088b0b3a67b4c4
 fleet_infra_commit: 40b9e90
-generated_at: 2026-06-13
+generated_at: 2026-06-12
 ---
 
 # Grafana Operator
@@ -123,6 +123,7 @@ kubectl run oci-test --rm -it --image=curlimages/curl -- curl -s https://ghcr.io
 flux suspend helmrelease grafana-operator -n flux-system
 flux resume helmrelease grafana-operator -n flux-system
 ```
+
 ---
 
 ### Operator pod OOMKilled under CRD load
@@ -139,6 +140,7 @@ kubectl get grafanadatasources -A --no-headers | wc -l
 # If CRD count is high, memory limit needs increasing in HelmRelease values
 kubectl logs -n grafana-operator -l app.kubernetes.io/name=grafana-operator --previous --tail=50
 ```
+
 ---
 
 ### Dashboards not appearing in Grafana after CRD creation
@@ -157,6 +159,7 @@ kubectl get grafanadashboards -A -o jsonpath='{range .items[*]}{.metadata.name}{
 kubectl auth can-i get grafanadashboards --as=system:serviceaccount:grafana-operator:grafana-operator -A
 ```
 **See also:** docs/adr/012-grafana-operator-dashboard-as-code.md
+
 ---
 
 ### CRD version conflict after operator upgrade
@@ -174,6 +177,7 @@ kubectl get grafanadashboards -A -o yaml | head -80
 # If CRDs are stale, force Flux to reapply the chart (which bundles updated CRDs)
 flux reconcile helmrelease grafana-operator -n flux-system --force
 ```
+
 ---
 
 ### Operator cannot reach Grafana API endpoint
@@ -190,6 +194,7 @@ kubectl get ciliumnetworkpolicies -n kube-prometheus-stack
 # Verify Grafana admin credentials secret exists and is referenced correctly
 kubectl get grafana -A -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.spec.external.adminPassword}{"\n"}{end}'
 ```
+
 ---
 
 
