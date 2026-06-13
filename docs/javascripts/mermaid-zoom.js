@@ -34,7 +34,7 @@
   /* ── modal ──────────────────────────────────────────────────────── */
 
   function closeModal() {
-    var m = document.getElementById("mm-modal");
+    var m = document.getElementById("mermaid-modal");
     if (m) {
       m.classList.remove("mm-open");
       document.body.style.overflow = "";
@@ -44,10 +44,10 @@
   async function openModal(source) {
     if (typeof mermaid === "undefined") return;
 
-    var modal = document.getElementById("mm-modal");
+    var modal = document.getElementById("mermaid-modal");
     if (!modal) {
       modal = document.createElement("div");
-      modal.id = "mm-modal";
+      modal.id = "mermaid-modal";
       modal.innerHTML =
         '<div class="mm-backdrop"></div>' +
         '<div class="mm-frame">' +
