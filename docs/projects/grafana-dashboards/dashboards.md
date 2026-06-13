@@ -147,7 +147,7 @@ Complete reference for all custom Prometheus metrics used by the LLM Metrics Das
 
 ### Step-by-Step Guide
 
-1. **Design the dashboard** in the Grafana UI (use the fleet-infra Grafana instance)
+1. **Design the dashboard** in the Grafana UI (use the flux-infra Grafana instance)
 
 2. **Export the JSON** from Grafana: Dashboard Settings → JSON Model → Copy
 

@@ -155,7 +155,7 @@ kubectl cluster-info
 
 ### Next Steps: Bootstrap FluxCD
 
-After the cluster is running, bootstrap FluxCD using the [fleet-infra](https://github.com/JiwooL0920/flux-infra) repository:
+After the cluster is running, bootstrap FluxCD using the [flux-infra](https://github.com/JiwooL0920/flux-infra) repository:
 
 ```bash
 # Get the bootstrap command from terraform output
@@ -164,7 +164,7 @@ make output
 # The flux_bootstrap_command output provides the exact command
 flux bootstrap github \
     --owner=<your-github-username> \
-    --repository=fleet-infra \
+    --repository=flux-infra \
     --branch=develop \
     --path=./clusters/stages/dev/clusters/services-amer \
     --personal
@@ -419,13 +419,13 @@ make restart
 !!! warning "Problem: Control plane IP changed after Colima restart"
 
 ```bash
-# In fleet-infra repo (after FluxCD is deployed)
-cd /path/to/fleet-infra
+# In flux-infra repo (after FluxCD is deployed)
+cd /path/to/flux-infra
 make fix-control-plane
 ```
 
 !!! info "Why This Happens"
-    When Colima restarts, the Docker network is recreated and the KIND control plane gets a new IP address. The `fix-control-plane` target in fleet-infra updates the kubeconfig accordingly.
+    When Colima restarts, the Docker network is recreated and the KIND control plane gets a new IP address. The `fix-control-plane` target in flux-infra updates the kubeconfig accordingly.
 
 ---
 

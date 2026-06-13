@@ -90,11 +90,11 @@ The configuration provisions a production-like local Kubernetes cluster:
 | Feature | Description |
 |---------|-------------|
 | **Node Labels** | `node-role` and `env` labels for workload scheduling |
-| **FluxCD Ready** | Naming convention matches fleet-infra cluster paths |
+| **FluxCD Ready** | Naming convention matches flux-infra cluster paths |
 | **Traefik Compatible** | NodePort mappings for ingress controller |
 | **Kubeconfig** | Auto-configured at `~/.kube/config` |
 
-## Integration with Fleet Infrastructure
+## Integration with Flux Infrastructure
 
 ```mermaid
 flowchart LR
@@ -110,7 +110,7 @@ flowchart LR
         W2[Worker 2]
     end
 
-    subgraph "fleet-infra (GitOps)"
+    subgraph "flux-infra (GitOps)"
         FLUX[Flux CD]
         SVC[23 Services]
     end

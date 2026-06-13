@@ -14,7 +14,7 @@ This GitOps approach ensures dashboards are version-controlled, reviewable, and 
 |---------|-------------|
 | **GitOps Managed** | Dashboards defined as code, deployed via Flux CD sync |
 | **Grafana Operator CRDs** | Native Kubernetes resources (GrafanaFolder, GrafanaDashboard) — not file provisioning |
-| **Fleet-Infra Integration** | Targets the Grafana instance managed by kube-prometheus-stack |
+| **Flux Infra Integration** | Targets the Grafana instance managed by kube-prometheus-stack |
 | **Folder Organization** | Dashboards organized into GrafanaFolder resources by project |
 | **Auto-Refresh** | Dashboards configured with live refresh intervals (30s default) |
 | **Kustomize Deployment** | Composable resource management with Kustomize overlays |
@@ -27,7 +27,7 @@ This GitOps approach ensures dashboards are version-controlled, reviewable, and 
 | **CRD Types** | GrafanaFolder, GrafanaDashboard |
 | **Deployment** | Kustomize, Flux CD |
 | **Monitoring Backend** | Prometheus (kube-prometheus-stack) |
-| **Platform** | Kubernetes (fleet-infra cluster) |
+| **Platform** | Kubernetes (flux-infra cluster) |
 | **Namespace** | `monitoring` |
 
 ## Quick Links
@@ -77,9 +77,9 @@ flowchart LR
     GROP -->|Reconcile| GRAF
 ```
 
-## Integration with Fleet Infrastructure
+## Integration with Flux Infrastructure
 
-The dashboards target the Grafana instance deployed by fleet-infra's kube-prometheus-stack. The Grafana Operator watches for CRDs matching the instance selector label `dashboards: grafana`.
+The dashboards target the Grafana instance deployed by flux-infra's kube-prometheus-stack. The Grafana Operator watches for CRDs matching the instance selector label `dashboards: grafana`.
 
 ```mermaid
 flowchart TB
@@ -88,7 +88,7 @@ flowchart TB
         DASH[GrafanaDashboard CRD<br/>LLM Metrics]
     end
 
-    subgraph "fleet-infra cluster"
+    subgraph "flux-infra cluster"
         subgraph "monitoring namespace"
             GROP[Grafana Operator]
             GRAF[Grafana<br/>kube-prometheus-stack]
@@ -117,7 +117,7 @@ instanceSelector:
     dashboards: grafana
 ```
 
-This label matches the Grafana instance deployed by kube-prometheus-stack in fleet-infra.
+This label matches the Grafana instance deployed by kube-prometheus-stack in flux-infra.
 
 ## Source Code
 

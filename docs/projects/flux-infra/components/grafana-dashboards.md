@@ -1,7 +1,7 @@
 ---
 catalog_sha: 4d088b0b3a67b4c4
-fleet_infra_commit: fbaac15
-generated_at: 2026-06-13
+flux_infra_commit: fbaac15
+generated_at: 2026-06-12
 ---
 
 # Grafana Dashboards
@@ -36,9 +36,9 @@ _No known downstream Flux dependencies._
 
 `grafana-dashboards` decouples dashboard content from infrastructure lifecycle. It pulls `GrafanaDashboard` and `GrafanaFolder` CRDs from a separate Git repository (`JiwooL0920/grafana-dashboards`) at a 5-minute polling interval, deploying them into the cluster where the Grafana Operator reconciles them into the running Grafana instance.
 
-This separation means dashboard changes (new panels, updated queries, folder reorganization) flow through their own Git history, PR review, and deployment cycle — independent of Helm chart bumps, operator upgrades, or dependency chain changes in the main fleet-infra repo. The result is faster iteration for observability content without risk to platform stability.
+This separation means dashboard changes (new panels, updated queries, folder reorganization) flow through their own Git history, PR review, and deployment cycle — independent of Helm chart bumps, operator upgrades, or dependency chain changes in the main flux-infra repo. The result is faster iteration for observability content without risk to platform stability.
 
-**Why a separate Git repository over inline manifests in fleet-infra:** Dashboard JSON is verbose (hundreds to thousands of lines per dashboard) and changes frequently as monitoring needs evolve. Embedding them in the infrastructure repo would pollute its Git history with large diffs unrelated to infrastructure changes, trigger unnecessary Flux reconciliation of the entire services tree, and force dashboard authors to understand the fleet-infra dependency model just to update a Prometheus query. A dedicated repo with its own `GitRepository` source isolates the blast radius and enables a tighter feedback loop — push a dashboard change, see it in Grafana within 5 minutes.
+**Why a separate Git repository over inline manifests in flux-infra:** Dashboard JSON is verbose (hundreds to thousands of lines per dashboard) and changes frequently as monitoring needs evolve. Embedding them in the infrastructure repo would pollute its Git history with large diffs unrelated to infrastructure changes, trigger unnecessary Flux reconciliation of the entire services tree, and force dashboard authors to understand the flux-infra dependency model just to update a Prometheus query. A dedicated repo with its own `GitRepository` source isolates the blast radius and enables a tighter feedback loop — push a dashboard change, see it in Grafana within 5 minutes.
 
 
 ## Features

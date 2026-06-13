@@ -148,13 +148,13 @@ The RAG pipeline requires vector storage for document embeddings and similarity 
 
 ### Decision
 
-Use **PostgreSQL with the pgvector extension** for vector storage, leveraging the existing PostgreSQL cluster from fleet-infra.
+Use **PostgreSQL with the pgvector extension** for vector storage, leveraging the existing PostgreSQL cluster from flux-infra.
 
 ### Consequences
 
 | Positive | Negative |
 |----------|----------|
-| Reuses existing PostgreSQL infrastructure (CNPG from fleet-infra) | Less optimized for vector-only workloads than dedicated vector DBs |
+| Reuses existing PostgreSQL infrastructure (CNPG from flux-infra) | Less optimized for vector-only workloads than dedicated vector DBs |
 | No additional service to manage | Limited ANN index types compared to Pinecone/Weaviate |
 | SQL-based queries — familiar interface | Scaling vector search independently is harder |
 | Open-source, self-hosted | Missing some advanced features (hybrid search, metadata filtering) |
@@ -171,7 +171,7 @@ The platform needs a key-value store for session management and chat history. Th
 
 ### Decision
 
-Use **ScyllaDB Alternator** (DynamoDB-compatible API) running in the fleet-infra cluster for session and history storage.
+Use **ScyllaDB Alternator** (DynamoDB-compatible API) running in the flux-infra cluster for session and history storage.
 
 ### Consequences
 
@@ -179,7 +179,7 @@ Use **ScyllaDB Alternator** (DynamoDB-compatible API) running in the fleet-infra
 |----------|----------|
 | DynamoDB API compatibility — works with AWS SDK | Not 100% DynamoDB feature parity |
 | Self-hosted — no AWS dependency or costs | Additional operational complexity vs managed service |
-| Already running in fleet-infra cluster | ScyllaDB has higher resource requirements than simple KV stores |
+| Already running in flux-infra cluster | ScyllaDB has higher resource requirements than simple KV stores |
 | Migration path to real DynamoDB if moving to cloud | Alternator-specific quirks may require workarounds |
 
 ---

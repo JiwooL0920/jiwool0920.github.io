@@ -1,12 +1,12 @@
 ---
 catalog_sha: 4d088b0b3a67b4c4
-fleet_infra_commit: fbaac15
-generated_at: 2026-06-13
+flux_infra_commit: fbaac15
+generated_at: 2026-06-12
 ---
 
 # Components Index
 
-All 40 services in fleet-infra, including disabled ones.
+All 40 services in flux-infra, including disabled ones.
 
 ## Enabled Services (36)
 

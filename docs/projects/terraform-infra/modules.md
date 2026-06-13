@@ -47,7 +47,7 @@ Provisions a multi-node KIND (Kubernetes in Docker) cluster with port mappings f
 
 This module creates a production-like local Kubernetes cluster designed for:
 
-- FluxCD GitOps deployments (cluster name matches fleet-infra paths)
+- FluxCD GitOps deployments (cluster name matches flux-infra paths)
 - Traefik ingress (port mappings from host 80/443 to NodePorts)
 - Multi-node testing (1 control-plane + 2 workers)
 - Development and POC workloads
@@ -180,7 +180,7 @@ kind_cluster_name = "staging-services-amer"
 ```
 
 !!! info "FluxCD Path Alignment"
-    If changing the cluster name, update the corresponding Flux bootstrap path in fleet-infra to match.
+    If changing the cluster name, update the corresponding Flux bootstrap path in flux-infra to match.
 
 ---
 
@@ -197,12 +197,12 @@ The root module (`main/`) exposes these outputs from the KIND module plus a conv
 | `cluster_info` | Cluster configuration summary |
 | `flux_bootstrap_command` | Ready-to-use Flux bootstrap command |
 
-The `flux_bootstrap_command` output provides the exact command to connect fleet-infra:
+The `flux_bootstrap_command` output provides the exact command to connect flux-infra:
 
 ```bash
 flux bootstrap github \
   --owner=<your-github-username> \
-  --repository=fleet-infra \
+  --repository=flux-infra \
   --branch=develop \
   --path=./clusters/stages/dev/clusters/services-amer \
   --personal

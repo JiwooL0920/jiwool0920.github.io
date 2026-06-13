@@ -193,7 +193,7 @@ Provisions PostgreSQL with the pgvector extension for vector similarity search, 
 
 ### observability
 
-Provisions monitoring infrastructure for the agentic-ai platform, integrating with fleet-infra's kube-prometheus-stack.
+Provisions monitoring infrastructure for the agentic-ai platform, integrating with flux-infra's kube-prometheus-stack.
 
 | Property | Value |
 |----------|-------|

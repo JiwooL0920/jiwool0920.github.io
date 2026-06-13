@@ -1,7 +1,7 @@
 ---
 catalog_sha: 4d088b0b3a67b4c4
-fleet_infra_commit: fbaac15
-generated_at: 2026-06-13
+flux_infra_commit: fbaac15
+generated_at: 2026-06-12
 ---
 
 # Redis Sentinel
@@ -27,7 +27,7 @@ generated_at: 2026-06-13
 
 | Service | Reason | Status |
 |---|---|---|
-| `external-secrets-config` | Flux `dependsOn` | **Effectively inactive** — `auth.enabled: false` in the HelmRelease and [`externalsecret.yaml`](https://github.com/JiwooL0920/fleet-infra/blob/develop/apps/base/redis-sentinel/externalsecret.yaml) is excluded from [`apps/base/redis-sentinel/kustomization.yaml`](https://github.com/JiwooL0920/fleet-infra/blob/develop/apps/base/redis-sentinel/kustomization.yaml), so no password is synced or used. The `redis-password` health check in the Flux Kustomization is a stale leftover and should be removed if auth remains disabled. |
+| `external-secrets-config` | Flux `dependsOn` | **Effectively inactive** — `auth.enabled: false` in the HelmRelease and [`externalsecret.yaml`](https://github.com/JiwooL0920/flux-infra/blob/develop/apps/base/redis-sentinel/externalsecret.yaml) is excluded from [`apps/base/redis-sentinel/kustomization.yaml`](https://github.com/JiwooL0920/flux-infra/blob/develop/apps/base/redis-sentinel/kustomization.yaml), so no password is synced or used. The `redis-password` health check in the Flux Kustomization is a stale leftover and should be removed if auth remains disabled. |
 
 ### Downstream — services that depend on Redis Sentinel
 
@@ -52,7 +52,7 @@ Each service uses a dedicated database index to avoid key collisions. New consum
 |---|---|---|---|---|
 | **kagent alertmanager-hook** | 4 | Writes `incident:events` stream when Alertmanager fires a critical alert | Sentinel :26379 | Producer side of incident queue |
 | **kagent stream-dispatcher** | 4 | Consumes `incident:events` stream, consumer group `dispatch-group`; KEDA scales replicas on pending entry count | Sentinel :26379 | KEDA uses `redis-sentinel-streams` scaler, not `redis-streams` |
-| **Loki** | — | Multi-layer cache (query results, chunks, index, write deduplication) | Direct master :6379 | Cache currently disabled in this cluster config. When enabled, must bypass Sentinel due to missing `SentinelPassword` in Loki's go-redis wrapper — see [ADR-002](https://github.com/JiwooL0920/fleet-infra/blob/develop/docs/adr/002-loki-redis-direct-connection.md) |
+| **Loki** | — | Multi-layer cache (query results, chunks, index, write deduplication) | Direct master :6379 | Cache currently disabled in this cluster config. When enabled, must bypass Sentinel due to missing `SentinelPassword` in Loki's go-redis wrapper — see [ADR-002](https://github.com/JiwooL0920/flux-infra/blob/develop/docs/adr/002-loki-redis-direct-connection.md) |
 
 ## Features
 
@@ -65,7 +65,7 @@ Each service uses a dedicated database index to avoid key collisions. New consum
 | **RDB snapshots** | Periodic persistence (`save 10800 1`, every 3 h if ≥1 key changed) with gzip compression and checksum validation; binary format is significantly more compact than AOF |
 | **AOF disabled** | Redis is a cache, not a source of truth; data regenerates from the underlying databases on miss. AOF's per-write disk I/O (10 000× slower than memory) is an unnecessary cost for this workload |
 | **LRU eviction** | `allkeys-lru` policy with configurable `maxmemory` ceiling; cache self-manages under memory pressure without requiring TTL on every key |
-| **Authentication** | Disabled (`auth.enabled: false`). To re-enable, add [`externalsecret.yaml`](https://github.com/JiwooL0920/fleet-infra/blob/develop/apps/base/redis-sentinel/externalsecret.yaml) back to [`apps/base/redis-sentinel/kustomization.yaml`](https://github.com/JiwooL0920/fleet-infra/blob/develop/apps/base/redis-sentinel/kustomization.yaml) and set `auth.enabled: true` |
+| **Authentication** | Disabled (`auth.enabled: false`). To re-enable, add [`externalsecret.yaml`](https://github.com/JiwooL0920/flux-infra/blob/develop/apps/base/redis-sentinel/externalsecret.yaml) back to [`apps/base/redis-sentinel/kustomization.yaml`](https://github.com/JiwooL0920/flux-infra/blob/develop/apps/base/redis-sentinel/kustomization.yaml) and set `auth.enabled: true` |
 | **Prometheus metrics** | Optional `redis_exporter` sidecar + ServiceMonitor; toggled via `REDIS_METRICS_ENABLED` |
 | **Soft pod anti-affinity** | Replicas prefer different nodes without hard-failing on single-node dev clusters |
 
@@ -183,7 +183,7 @@ redis-sentinel-master.redis-sentinel.svc.cluster.local:6379
 
 > Use the `:26379` Sentinel port for any client that speaks the Redis Sentinel protocol.
 > Use `:6379` direct only when the client cannot authenticate to the Sentinel port
-> (e.g. Loki — see [ADR-002](https://github.com/JiwooL0920/fleet-infra/blob/develop/docs/adr/002-loki-redis-direct-connection.md)).
+> (e.g. Loki — see [ADR-002](https://github.com/JiwooL0920/flux-infra/blob/develop/docs/adr/002-loki-redis-direct-connection.md)).
 
 ### RedisInsight UI
 
@@ -406,12 +406,12 @@ absolutely cannot be stale, it belongs in PostgreSQL, not the cache.
 
 ## Related
 
-- [RedisInsight — browser UI for Redis (http://redis.local)](https://jiwool0920.github.io/projects/fleet-infra/components/redisinsight/)
-- [Loki — uses Redis as multi-layer cache; see direct-connection workaround](https://jiwool0920.github.io/projects/fleet-infra/components/loki/)
-- [ADR-002: Loki Redis Direct Connection](https://github.com/JiwooL0920/fleet-infra/blob/develop/docs/adr/002-loki-redis-direct-connection.md)
-- [apps/base/redis-sentinel/ — Kubernetes manifests](https://github.com/JiwooL0920/fleet-infra/tree/develop/apps/base/redis-sentinel)
-- [base/services/redis-sentinel.yaml — Flux Kustomization with dependsOn](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/redis-sentinel.yaml)
-- [base/services/environment.env — all REDIS_* tuning variables](https://github.com/JiwooL0920/fleet-infra/blob/develop/base/services/environment.env)
+- [RedisInsight — browser UI for Redis (http://redis.local)](https://jiwool0920.github.io/projects/flux-infra/components/redisinsight/)
+- [Loki — uses Redis as multi-layer cache; see direct-connection workaround](https://jiwool0920.github.io/projects/flux-infra/components/loki/)
+- [ADR-002: Loki Redis Direct Connection](https://github.com/JiwooL0920/flux-infra/blob/develop/docs/adr/002-loki-redis-direct-connection.md)
+- [apps/base/redis-sentinel/ — Kubernetes manifests](https://github.com/JiwooL0920/flux-infra/tree/develop/apps/base/redis-sentinel)
+- [base/services/redis-sentinel.yaml — Flux Kustomization with dependsOn](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/redis-sentinel.yaml)
+- [base/services/environment.env — all REDIS_* tuning variables](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env)
 
 - [`apps/base/redis-sentinel/`](https://github.com/JiwooL0920/flux-infra/tree/develop/apps/base/redis-sentinel/) — Kubernetes manifests
 - [`base/services/redis-sentinel.yaml`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/redis-sentinel.yaml) — Flux Kustomization

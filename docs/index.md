@@ -1,6 +1,6 @@
 # Welcome
 
-I'm Jiwoo Lee, an infrastructure and AI engineer. This site documents my projects and engineering patterns I've learned along the way.
+I'm Jiwoo Lee, an AI Platform engineer. This site documents my homelab projects and engineering patterns I've learned along the way.
 
 ## Projects
 
@@ -8,7 +8,7 @@ I maintain several infrastructure and AI projects:
 
 | Project | Description | Stack |
 |---------|-------------|-------|
-| [Fleet Infrastructure](projects/flux-infra/index.md) | Kubernetes GitOps infrastructure | FluxCD, Kustomize |
+| [Flux Infrastructure](projects/flux-infra/index.md) | Kubernetes GitOps homelab | FluxCD, Kustomize |
 | [Terraform Infrastructure](projects/terraform-infra/index.md) | Modular cloud infrastructure | Terraform, AWS/GCP |
 | [Grafana Dashboards](projects/grafana-dashboards/index.md) | Observability dashboards | Grafana, Prometheus |
 | [Agentic AI](projects/agentic-ai/index.md) | AI agent platform with RAG | Python, LangChain |

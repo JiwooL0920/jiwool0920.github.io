@@ -216,7 +216,7 @@ flowchart LR
 | **Backend** | `uvicorn` with auto-reload |
 | **Frontend** | `next dev` with fast refresh |
 | **LLM** | Ollama running natively |
-| **Databases** | Port-forwarded from fleet-infra cluster |
+| **Databases** | Port-forwarded from flux-infra cluster |
 | **Command** | `make dev-local` |
 
 ### Kubernetes Development (Skaffold)
@@ -246,7 +246,7 @@ flowchart LR
 | **Networking** | In-cluster service discovery (no port-forwarding needed) |
 | **Command** | `make dev-k8s` or `skaffold dev -p backend-only` |
 
-## Integration with Fleet Infrastructure
+## Integration with Flux Infrastructure
 
 The agentic-ai platform runs on the Kubernetes cluster provisioned by [terraform-infra](../terraform-infra/index.md) and managed by [flux-infra](../flux-infra/index.md).
 
@@ -256,7 +256,7 @@ flowchart TB
         TF[OpenTofu/Terraform]
     end
 
-    subgraph "fleet-infra (GitOps)"
+    subgraph "flux-infra (GitOps)"
         FLUX[Flux CD]
         PROM[kube-prometheus-stack]
         PG[PostgreSQL Cluster]
