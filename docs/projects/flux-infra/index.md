@@ -1,7 +1,7 @@
 ---
 catalog_sha: 4d088b0b3a67b4c4
 fleet_infra_commit: 75ed6d0
-generated_at: 2026-06-13
+generated_at: 2026-06-12
 ---
 
 # Flux Infrastructure — Service Overview
@@ -15,6 +15,7 @@ enabling intelligent parallel deployment with precise `dependsOn` ordering.
 ### Foundation services
 
 12 enabled
+
 | Service | Namespace | Type | Chart | Dependencies |
 |---|---|---|---|---|
 | [CNPG Operator](https://jiwool0920.github.io/projects/flux-infra/components/cnpg-operator/) | `cnpg-system` | HelmRelease | `cloudnative-pg` v0.24.0 | — |
@@ -33,6 +34,7 @@ enabling intelligent parallel deployment with precise `dependsOn` ordering.
 ### Node maintenance
 
 1 enabled
+
 | Service | Namespace | Type | Chart | Dependencies |
 |---|---|---|---|---|
 | [Node Image GC](https://jiwool0920.github.io/projects/flux-infra/components/node-image-gc/) | `node-maintenance` | CronJob | — | — |
@@ -40,6 +42,7 @@ enabling intelligent parallel deployment with precise `dependsOn` ordering.
 ### Event-driven autoscaling
 
 1 enabled
+
 | Service | Namespace | Type | Chart | Dependencies |
 |---|---|---|---|---|
 | [KEDA](https://jiwool0920.github.io/projects/flux-infra/components/keda/) | `keda` | HelmRelease | `keda` v2.16.1 | — |
@@ -47,6 +50,7 @@ enabling intelligent parallel deployment with precise `dependsOn` ordering.
 ### Logging stack services
 
 2 enabled
+
 | Service | Namespace | Type | Chart | Dependencies |
 |---|---|---|---|---|
 | [Loki](https://jiwool0920.github.io/projects/flux-infra/components/loki/) | `monitoring` | HelmRelease | `loki` v6.37.0 | external-secrets-config, kube-prometheus-stack |
@@ -55,6 +59,7 @@ enabling intelligent parallel deployment with precise `dependsOn` ordering.
 ### Distributed tracing services
 
 2 enabled
+
 | Service | Namespace | Type | Chart | Dependencies |
 |---|---|---|---|---|
 | [Jaeger](https://jiwool0920.github.io/projects/flux-infra/components/jaeger/) | `jaeger` | HelmRelease | `jaeger` v3.3.1 | traefik-config |
@@ -63,6 +68,7 @@ enabling intelligent parallel deployment with precise `dependsOn` ordering.
 ### Grafana Operator
 
 3 enabled
+
 | Service | Namespace | Type | Chart | Dependencies |
 |---|---|---|---|---|
 | [Grafana Config](https://jiwool0920.github.io/projects/flux-infra/components/grafana-config/) | `grafana-config` | Kustomization | — | grafana-operator |
@@ -72,6 +78,7 @@ enabling intelligent parallel deployment with precise `dependsOn` ordering.
 ### Database management services
 
 0 enabled, 1 disabled
+
 | Service | Namespace | Type | Chart | Dependencies |
 |---|---|---|---|---|
 | ~~Scylla Manager~~ (disabled) | `scylla-manager` | HelmRelease | `scylla-manager` | — |
@@ -79,6 +86,7 @@ enabling intelligent parallel deployment with precise `dependsOn` ordering.
 ### Database services
 
 3 enabled
+
 | Service | Namespace | Type | Chart | Dependencies |
 |---|---|---|---|---|
 | [PostgreSQL Cluster](https://jiwool0920.github.io/projects/flux-infra/components/postgresql-cluster/) | `postgresql-cluster` | Kustomization | — | cnpg-operator |
@@ -88,6 +96,7 @@ enabling intelligent parallel deployment with precise `dependsOn` ordering.
 ### Application services
 
 2 enabled
+
 | Service | Namespace | Type | Chart | Dependencies |
 |---|---|---|---|---|
 | [N8N](https://jiwool0920.github.io/projects/flux-infra/components/n8n/) | `n8n` | HelmRelease | `./charts/n8n` v2.31.0 | external-secrets-config, postgresql-cluster |
@@ -96,6 +105,7 @@ enabling intelligent parallel deployment with precise `dependsOn` ordering.
 ### AI agent platform
 
 6 enabled
+
 | Service | Namespace | Type | Chart | Dependencies |
 |---|---|---|---|---|
 | [AgentGateway](https://jiwool0920.github.io/projects/flux-infra/components/agentgateway/) | `agentgateway-system` | HelmRelease | `agentgateway` vv1.3.0-alpha.1 | gateway-api-crds, kagent, traefik, external-secrets-config |
@@ -108,6 +118,7 @@ enabling intelligent parallel deployment with precise `dependsOn` ordering.
 ### Security and cost observability
 
 2 enabled
+
 | Service | Namespace | Type | Chart | Dependencies |
 |---|---|---|---|---|
 | [Kubescape](https://jiwool0920.github.io/projects/flux-infra/components/kubescape/) | `kubescape` | HelmRelease | `kubescape-operator` v1.30.4 | metrics-server, kube-prometheus-stack |
@@ -116,6 +127,7 @@ enabling intelligent parallel deployment with precise `dependsOn` ordering.
 ### Database UI services
 
 2 enabled
+
 | Service | Namespace | Type | Chart | Dependencies |
 |---|---|---|---|---|
 | [RedisInsight](https://jiwool0920.github.io/projects/flux-infra/components/redisinsight/) | `redisinsight` | Deployment | — | redis-sentinel |
@@ -124,6 +136,7 @@ enabling intelligent parallel deployment with precise `dependsOn` ordering.
 ### Infrastructure as Code services
 
 0 enabled, 3 disabled
+
 | Service | Namespace | Type | Chart | Dependencies |
 |---|---|---|---|---|
 | ~~Crossplane~~ (disabled) | `crossplane-system` | HelmRelease | `crossplane` | — |
