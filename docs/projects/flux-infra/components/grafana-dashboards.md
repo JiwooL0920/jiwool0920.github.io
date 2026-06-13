@@ -1,7 +1,7 @@
 ---
 catalog_sha: 4d088b0b3a67b4c4
-fleet_infra_commit: 40b9e90
-generated_at: 2026-06-12
+fleet_infra_commit: 75ed6d0
+generated_at: 2026-06-13
 ---
 
 # Grafana Dashboards
@@ -196,4 +196,4 @@ kubectl get grafana grafana -n monitoring -o yaml | grep -A 5 'status:'
 - [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env) — environment variables
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `40b9e90` · catalog sha `4d088b0b3a67b4c4`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `75ed6d0` · catalog sha `4d088b0b3a67b4c4`*
