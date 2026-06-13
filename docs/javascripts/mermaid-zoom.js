@@ -42,12 +42,15 @@
   }
 
   async function openModal(source) {
-    if (typeof mermaid === "undefined") return;
+    console.log("[mmz] openModal called, source len:", source ? source.length : 0);
+    if (typeof mermaid === "undefined") { console.log("[mmz] mermaid undefined, bail"); return; }
 
     var modal = document.getElementById("mermaid-modal");
+    console.log("[mmz] existing modal:", !!modal);
     if (!modal) {
       modal = document.createElement("div");
       modal.id = "mermaid-modal";
+      console.log("[mmz] created modal, id:", modal.id);
       modal.innerHTML =
         '<div class="mm-backdrop"></div>' +
         '<div class="mm-frame">' +
@@ -59,6 +62,7 @@
         '  <div class="mm-body"><p class="mm-loading">Rendering\u2026</p></div>' +
         "</div>";
       document.body.appendChild(modal);
+      console.log("[mmz] appended, inBody:", document.body.contains(modal));
       modal.querySelector(".mm-backdrop").addEventListener("click", closeModal);
       modal.querySelector(".mm-close").addEventListener("click", closeModal);
       document.addEventListener("keydown", function (e) {
