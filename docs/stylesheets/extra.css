@@ -1,15 +1,17 @@
 /* ===== Code block typography ===== */
 
-/* Fenced code blocks: match GitHub/VS Code convention (~85% of body text) */
+/* Fenced code blocks: match GitHub/VS Code convention (~85% of body text).
+   Use em (parent-relative) not rem — Material sets html{font-size:125%}
+   making 1rem=20px, so rem values overshoot. */
 .md-typeset pre,
 .md-typeset pre > code {
-  font-size: 0.8125rem; /* 13px — readable but clearly smaller than prose */
+  font-size: 0.85em; /* 0.85 × 16px md-typeset = 13.6px */
   line-height: 1.6;
 }
 
-/* Inline code: slightly smaller than body, same family */
+/* Inline code: same size as fenced blocks for visual consistency */
 .md-typeset code {
-  font-size: 0.8125rem;
+  font-size: 0.85em;
 }
 
 /* Prevent code inside headings from inheriting heading font-size
@@ -21,7 +23,7 @@
 .md-typeset h2 pre,
 .md-typeset h2 .highlight,
 .md-typeset h2 .language-bash {
-  font-size: 0.8125rem !important;
+  font-size: 13px !important; /* px anchor bypasses any em/rem cascade from heading */
 }
 
 /* Custom navigation styling for better visibility */
