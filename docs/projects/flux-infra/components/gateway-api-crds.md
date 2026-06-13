@@ -1,6 +1,6 @@
 ---
 catalog_sha: 4d088b0b3a67b4c4
-fleet_infra_commit: 75ed6d0
+fleet_infra_commit: fbaac15
 generated_at: 2026-06-13
 ---
 
@@ -143,4 +143,4 @@ flux reconcile kustomization agentgateway
 - [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env) — environment variables
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `75ed6d0` · catalog sha `4d088b0b3a67b4c4`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `fbaac15` · catalog sha `4d088b0b3a67b4c4`*
