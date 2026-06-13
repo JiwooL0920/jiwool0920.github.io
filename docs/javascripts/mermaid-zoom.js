@@ -1,158 +1,160 @@
 /**
  * mermaid-zoom.js
  *
- * Click-to-expand for Mermaid diagrams rendered by Material for MkDocs.
- * Opens a full-screen modal — no external dependencies.
+ * Click-to-expand for Mermaid diagrams rendered by Material for MkDocs 9.x.
+ *
+ * Material for MkDocs renders mermaid diagrams into a CLOSED shadow DOM
+ * on the .mermaid div, so querySelector("svg") always returns null.
+ * Instead we fetch the raw page HTML to extract the source text, then
+ * re-render it with mermaid.render() inside a full-screen modal.
  */
 (function () {
   "use strict";
 
-  /* ── modal helpers ─────────────────────────────────────────────── */
+  /* ── source cache (keyed by page URL) ──────────────────────────── */
+  var sourceCache = {};
 
-  function getModal() {
-    var existing = document.getElementById("mermaid-modal");
-    if (existing) return existing;
-
-    var modal = document.createElement("div");
-    modal.id = "mermaid-modal";
-    modal.setAttribute("role", "dialog");
-    modal.setAttribute("aria-modal", "true");
-    modal.setAttribute("aria-label", "Diagram expanded view");
-    modal.innerHTML =
-      '<div class="mm-backdrop"></div>' +
-      '<div class="mm-frame">' +
-      '  <button class="mm-close" aria-label="Close">' +
-      '    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">' +
-      '      <path d="M18 6L6 18M6 6l12 12"/>' +
-      "    </svg>" +
-      "  </button>" +
-      '  <div class="mm-body"></div>' +
-      "</div>";
-
-    document.body.appendChild(modal);
-    modal.querySelector(".mm-backdrop").addEventListener("click", closeModal);
-    modal.querySelector(".mm-close").addEventListener("click", closeModal);
-    document.addEventListener("keydown", function (e) {
-      if (e.key === "Escape") closeModal();
-    });
-    return modal;
+  async function fetchSources(url) {
+    if (sourceCache[url]) return sourceCache[url];
+    try {
+      var html = await fetch(url).then(function (r) { return r.text(); });
+      var doc = new DOMParser().parseFromString(html, "text/html");
+      var srcs = [];
+      doc.querySelectorAll("pre.mermaid code, code.language-mermaid").forEach(function (el) {
+        var s = el.textContent.trim();
+        if (s) srcs.push(s);
+      });
+      sourceCache[url] = srcs;
+      return srcs;
+    } catch (e) {
+      return [];
+    }
   }
 
-  function openModal(svgEl) {
-    var modal = getModal();
-    var body = modal.querySelector(".mm-body");
-    var clone = svgEl.cloneNode(true);
-    clone.removeAttribute("width");
-    clone.removeAttribute("height");
-    clone.style.cssText = "width:100%;height:100%;display:block;";
-    body.innerHTML = "";
-    body.appendChild(clone);
-    modal.classList.add("mm-open");
-    document.body.style.overflow = "hidden";
-  }
+  /* ── modal ──────────────────────────────────────────────────────── */
 
   function closeModal() {
-    var modal = document.getElementById("mermaid-modal");
-    if (modal) {
-      modal.classList.remove("mm-open");
+    var m = document.getElementById("mm-modal");
+    if (m) {
+      m.classList.remove("mm-open");
       document.body.style.overflow = "";
     }
   }
 
-  /* ── attach zoom to a single wrapper ───────────────────────────── */
+  async function openModal(source) {
+    if (typeof mermaid === "undefined") return;
 
-  function attachZoom(wrapper) {
-    /* Don't re-init already wired wrappers */
-    if (wrapper.dataset.mmInit) return;
+    var modal = document.getElementById("mm-modal");
+    if (!modal) {
+      modal = document.createElement("div");
+      modal.id = "mm-modal";
+      modal.innerHTML =
+        '<div class="mm-backdrop"></div>' +
+        '<div class="mm-frame">' +
+        '  <button class="mm-close" aria-label="Close">' +
+        '    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">' +
+        '      <path d="M18 6L6 18M6 6l12 12"/>' +
+        "    </svg>" +
+        "  </button>" +
+        '  <div class="mm-body"><p class="mm-loading">Rendering\u2026</p></div>' +
+        "</div>";
+      document.body.appendChild(modal);
+      modal.querySelector(".mm-backdrop").addEventListener("click", closeModal);
+      modal.querySelector(".mm-close").addEventListener("click", closeModal);
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") closeModal();
+      });
+    }
 
-    /* SVG may not be rendered yet — don't mark as init until we find it */
-    var svgEl = wrapper.querySelector("svg");
-    if (!svgEl) return;
+    var body = modal.querySelector(".mm-body");
+    body.innerHTML = '<p class="mm-loading">Rendering\u2026</p>';
+    modal.classList.add("mm-open");
+    document.body.style.overflow = "hidden";
 
-    /* Mark AFTER successful find */
-    wrapper.dataset.mmInit = "1";
+    try {
+      var id = "mmz-" + Date.now();
+      var result = await mermaid.render(id, source);
+      var svg = result.svg || result; /* mermaid 10: {svg}, older: string */
+      body.innerHTML = svg;
+      var svgEl = body.querySelector("svg");
+      if (svgEl) {
+        svgEl.removeAttribute("width");
+        svgEl.removeAttribute("height");
+        svgEl.style.cssText = "max-width:100%;height:auto;display:block;";
+      }
+    } catch (e) {
+      body.innerHTML =
+        '<pre class="mm-error">' + String(e.message || e) + "</pre>";
+    }
+  }
 
-    wrapper.setAttribute("title", "Click to expand");
-    wrapper.style.cursor = "zoom-in";
-    wrapper.style.position = "relative";
+  /* ── attach zoom handler to a .mermaid div ──────────────────────── */
 
-    var badge = document.createElement("span");
-    badge.className = "mm-hint";
-    badge.textContent = "click to expand";
-    wrapper.appendChild(badge);
+  function attachZoom(div, source) {
+    if (div.dataset.mmz) return;
+    div.dataset.mmz = "1";
+    div.setAttribute("title", "Click to expand diagram");
+    div.style.cursor = "zoom-in";
+    div.addEventListener("click", function () { openModal(source); });
+  }
 
-    wrapper.addEventListener("click", function () {
-      openModal(wrapper.querySelector("svg"));
+  /* ── scan and attach all unhandled .mermaid divs ────────────────── */
+
+  async function attachAll() {
+    var divs = Array.from(document.querySelectorAll("div.mermaid:not([data-mmz])"));
+    if (!divs.length) return;
+
+    var srcs = await fetchSources(location.href);
+    if (!srcs.length) return;
+
+    divs.forEach(function (div, i) {
+      if (srcs[i]) attachZoom(div, srcs[i]);
     });
   }
 
-  /* ── scan all .mermaid wrappers on the current page ────────────── */
+  /* ── observe DOM for new .mermaid divs (SPA navigation) ─────────── */
 
-  function scanAll() {
-    document.querySelectorAll(".mermaid").forEach(attachZoom);
+  var scanTimer = null;
+  function scheduleScan() {
+    clearTimeout(scanTimer);
+    scanTimer = setTimeout(attachAll, 150);
   }
 
-  /* ── observe DOM mutations ─────────────────────────────────────── */
-  /*
-   * Mermaid renders by INSERTING an <svg> inside an already-present
-   * .mermaid div, not by adding a new .mermaid div.  We therefore
-   * also catch SVG nodes whose closest ancestor is .mermaid.
-   */
-  function observe() {
-    var mo = new MutationObserver(function (mutations) {
-      mutations.forEach(function (m) {
-        m.addedNodes.forEach(function (node) {
-          if (node.nodeType !== 1) return;
-
-          /* Case 1: a new .mermaid container was added */
-          if (node.classList && node.classList.contains("mermaid")) {
-            attachZoom(node);
-          }
-
-          /* Case 2: an <svg> was injected inside a .mermaid parent */
-          if (node.nodeName.toLowerCase() === "svg") {
-            var parent = node.closest ? node.closest(".mermaid") : null;
-            if (!parent && node.parentElement &&
-                node.parentElement.classList &&
-                node.parentElement.classList.contains("mermaid")) {
-              parent = node.parentElement;
-            }
-            if (parent) attachZoom(parent);
-          }
-
-          /* Case 3: subtree scan (covers nested structures) */
-          if (node.querySelectorAll) {
-            node.querySelectorAll(".mermaid").forEach(attachZoom);
-          }
-        });
+  new MutationObserver(function (mutations) {
+    var relevant = mutations.some(function (m) {
+      return Array.from(m.addedNodes).some(function (n) {
+        return (
+          n.nodeType === 1 &&
+          (
+            (n.classList && n.classList.contains("mermaid")) ||
+            (n.querySelector && n.querySelector(".mermaid"))
+          )
+        );
       });
     });
+    if (relevant) scheduleScan();
+  }).observe(document.body, { childList: true, subtree: true });
 
-    mo.observe(document.body, { childList: true, subtree: true });
-  }
-
-  /* ── boot ──────────────────────────────────────────────────────── */
+  /* ── boot ───────────────────────────────────────────────────────── */
 
   function boot() {
-    /* Scan immediately, then retry progressively to catch slow renders */
-    scanAll();
-    setTimeout(scanAll, 300);
-    setTimeout(scanAll, 800);
-    setTimeout(scanAll, 2000);
-    setTimeout(scanAll, 4000);
+    /* Clear source cache on SPA navigation so fresh sources are fetched */
+    delete sourceCache[location.href];
+    /* Retry a few times to catch Material's async mermaid processing */
+    [200, 600, 1500, 3000].forEach(function (t) {
+      setTimeout(attachAll, t);
+    });
   }
 
-  /* Material exposes document$ (RxJS); hook into it for SPA navigation */
   if (typeof document$ !== "undefined") {
+    /* Material SPA: fires on every page load / navigation */
     document$.subscribe(boot);
   } else {
     document.addEventListener("DOMContentLoaded", boot);
   }
-
-  observe();
 })();
 
-/* ── Make site title text clickable (Material only wraps the logo icon) ── */
+/* ── Make site title text clickable ──────────────────────────────────── */
 (function () {
   function attachTitleLink() {
     var title = document.querySelector(".md-header__title");
@@ -160,7 +162,9 @@
     title.dataset.homeLinked = "1";
     title.style.cursor = "pointer";
     title.addEventListener("click", function () {
-      var base = document.querySelector("base") ? document.querySelector("base").href : "/";
+      var base = document.querySelector("base")
+        ? document.querySelector("base").href
+        : "/";
       window.location.href = base;
     });
   }
