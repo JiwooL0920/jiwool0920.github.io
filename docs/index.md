@@ -114,7 +114,7 @@ Activities: Student mentor and ambassador for the CS program at the McMaster Eng
     <span>Amazon Web Services · Dec 2024 – Dec 2027</span>
   </a>
   <a href="https://achieve.snowflake.com/63500245-592a-4f2c-bb57-26f4841c51ed" class="cert-card" target="_blank" rel="noopener">
-    <img src="https://api.eu.badgr.io/public/assertions/63500245-592a-4f2c-bb57-26f4841c51ed/image" class="cert-badge" alt="SnowPro Associate: Platform" onerror="this.src='https://www.snowflake.com/wp-content/themes/snowflake/assets/img/favicon/favicon-196x196.png'">
+    <img src="https://www.snowflake.com/content/dam/snowflake-site/en/landing-pages/GDS%20Snowpro_associate.png" class="cert-badge" alt="SnowPro Associate: Platform" onerror="this.style.opacity='0.3'">
     <strong>SnowPro Associate: Platform</strong>
     <span>Snowflake · Apr 2026</span>
   </a>
