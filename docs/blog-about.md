@@ -4,8 +4,22 @@ This is my personal homelab documentation and technical blog.
 
 I run a Kubernetes homelab on a local kind cluster, and use it as a playground to learn, experiment, and build things I'd otherwise only touch at work. It's the same stack I work with daily — GitOps, observability, databases, agentic AI — but entirely mine to break and rebuild.
 
-**What's documented here:**
+---
 
-- **Projects** — architecture notes and deep-dives on the systems I've built and operate (Flux infrastructure, Terraform modules, Grafana dashboards, agentic AI platform)
-- **Engineering Patterns** — reusable patterns and lessons learned from building production and homelab infrastructure
-- **Blog** — longer-form write-ups on topics I find interesting or things I've debugged the hard way
+## Projects
+
+| Project | Description | Stack |
+|---------|-------------|-------|
+| [Flux Infrastructure](projects/flux-infra/index.md) | Kubernetes GitOps homelab | FluxCD, Kustomize |
+| [Terraform Infrastructure](projects/terraform-infra/index.md) | Modular cloud infrastructure | Terraform, AWS/GCP |
+| [Grafana Dashboards](projects/grafana-dashboards/index.md) | Observability dashboards | Grafana, Prometheus |
+| [Agentic AI](projects/agentic-ai/index.md) | AI agent platform with RAG | Python, LangChain |
+
+## Engineering Patterns
+
+Documented patterns and learnings from building production systems:
+
+- [GitOps Patterns](patterns/gitops.md) - Declarative infrastructure management
+- [Terraform Module Design](patterns/terraform-modules.md) - Reusable infrastructure components
+- [Observability](patterns/observability.md) - Metrics, logging, and tracing strategies
+- [Agent Architectures](patterns/agent-architectures.md) - AI agent design patterns
