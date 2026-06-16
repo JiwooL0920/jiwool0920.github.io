@@ -1,7 +1,7 @@
 ---
-catalog_sha: 4d088b0b3a67b4c4
-flux_infra_commit: 165b485
-generated_at: 2026-06-13
+catalog_sha: e8611a61080e81c8
+flux_infra_commit: 8c38bcd
+generated_at: 2026-06-16
 ---
 
 # Redis Sentinel
@@ -33,6 +33,7 @@ generated_at: 2026-06-13
 
 | Service | Dependency type | Reason |
 |---|---|---|
+| `argocd` | Flux `dependsOn` | Requires Redis Sentinel |
 | `redisinsight` | Flux dependsOn | UI has no value without a running Redis instance |
 
 > kagent and Loki are not Flux-wired to redis-sentinel because they degrade gracefully without it (kagent falls back to direct A2A dispatch; Loki skips cache). Hard `dependsOn` would block their entire deployment on a Redis outage.
@@ -418,4 +419,4 @@ absolutely cannot be stale, it belongs in PostgreSQL, not the cache.
 - [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env) — environment variables
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `165b485` · catalog sha `4d088b0b3a67b4c4`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `8c38bcd` · catalog sha `e8611a61080e81c8`*

@@ -1,12 +1,12 @@
 ---
-catalog_sha: 4d088b0b3a67b4c4
-flux_infra_commit: 165b485
-generated_at: 2026-06-13
+catalog_sha: e8611a61080e81c8
+flux_infra_commit: 8c38bcd
+generated_at: 2026-06-16
 ---
 
 # Architecture — Dependency Graph
 
-All **36 enabled services** and their Flux `dependsOn` wiring.
+All **37 enabled services** and their Flux `dependsOn` wiring.
 Services with no dependencies start immediately; dependent services wait for their parents to become healthy.
 
 ## Full Dependency Graph
@@ -14,6 +14,7 @@ Services with no dependencies start immediately; dependent services wait for the
 ```mermaid
 flowchart TD
   subgraph Foundation_services["Foundation services"]
+    argocd["Argo CD"]
     cnpg_operator["CNPG Operator"]
     cilium["Cilium"]
     external_secrets_config["External Secrets Config"]
@@ -77,6 +78,9 @@ flowchart TD
   traefik --> traefik_config
   external_secrets_config --> traefik_config
   external_secrets_config --> kube_prometheus_stack
+  traefik_config --> argocd
+  external_secrets_config --> argocd
+  redis_sentinel --> argocd
   kube_prometheus_stack --> grafana_sa_setup
   external_secrets_config --> loki
   kube_prometheus_stack --> loki
@@ -119,7 +123,7 @@ flowchart TD
 
 | Layer | Services | Enabled | Disabled |
 |---|---|---|---|
-| Foundation services | 12 | 12 | — |
+| Foundation services | 13 | 13 | — |
 | Node maintenance | 1 | 1 | — |
 | Event-driven autoscaling | 1 | 1 | — |
 | Logging stack services | 2 | 2 | — |
@@ -134,4 +138,4 @@ flowchart TD
 | Infrastructure as Code services | 3 | 0 | 3 |
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `165b485` · catalog sha `4d088b0b3a67b4c4`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `8c38bcd` · catalog sha `e8611a61080e81c8`*

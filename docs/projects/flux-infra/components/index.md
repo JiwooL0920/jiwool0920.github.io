@@ -1,19 +1,20 @@
 ---
-catalog_sha: 4d088b0b3a67b4c4
-flux_infra_commit: 165b485
-generated_at: 2026-06-13
+catalog_sha: e8611a61080e81c8
+flux_infra_commit: 8c38bcd
+generated_at: 2026-06-16
 ---
 
 # Components Index
 
-All 40 services in flux-infra, including disabled ones.
+All 41 services in flux-infra, including disabled ones.
 
-## Enabled Services (36)
+## Enabled Services (37)
 
 | Service | Layer | Namespace | Chart | Version |
 |---|---|---|---|---|
 | [AgentGateway](https://jiwool0920.github.io/projects/flux-infra/components/agentgateway/) | AI agent platform | `agentgateway-system` | `agentgateway` | vv1.3.0-alpha.1 |
 | [AgentGateway Config](https://jiwool0920.github.io/projects/flux-infra/components/agentgateway-config/) | AI agent platform | `agentgateway-config` | — | — |
+| [Argo CD](https://jiwool0920.github.io/projects/flux-infra/components/argocd/) | Foundation services | `argocd` | `argo-cd` | v7.7.16 |
 | [Cilium](https://jiwool0920.github.io/projects/flux-infra/components/cilium/) | Foundation services | `kube-system` | `cilium` | v1.17.2 |
 | [CNPG Operator](https://jiwool0920.github.io/projects/flux-infra/components/cnpg-operator/) | Foundation services | `cnpg-system` | `cloudnative-pg` | v0.24.0 |
 | [Code Tools](https://jiwool0920.github.io/projects/flux-infra/components/code-tools/) | AI agent platform | `code-tools` | — | — |
@@ -59,4 +60,4 @@ All 40 services in flux-infra, including disabled ones.
 | Scylla Manager | Database management services | Commented out in base/services/kustomization.yaml |
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `165b485` · catalog sha `4d088b0b3a67b4c4`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `8c38bcd` · catalog sha `e8611a61080e81c8`*

@@ -1,7 +1,7 @@
 ---
-catalog_sha: 4d088b0b3a67b4c4
-flux_infra_commit: 165b485
-generated_at: 2026-06-13
+catalog_sha: e8611a61080e81c8
+flux_infra_commit: 8c38bcd
+generated_at: 2026-06-16
 ---
 
 # Promtail
@@ -208,4 +208,4 @@ curl -s localhost:3101/metrics | grep process_resident_memory_bytes
 - [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env) — environment variables
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `165b485` · catalog sha `4d088b0b3a67b4c4`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `8c38bcd` · catalog sha `e8611a61080e81c8`*
