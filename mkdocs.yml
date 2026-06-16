@@ -158,6 +158,7 @@ nav:
       - "GitOps Patterns": engineering-patterns/gitops.md
       - "Observability": engineering-patterns/observability.md
       - "Terraform Module Design": engineering-patterns/terraform-modules.md
+      - "Testing": engineering-patterns/Testing.md
   # <<< sync-nav
 extra_css:
   - stylesheets/extra.css
