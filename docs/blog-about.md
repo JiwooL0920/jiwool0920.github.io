@@ -19,7 +19,7 @@ I run a Kubernetes homelab on a local kind cluster, and use it as a playground t
 
 Documented patterns and learnings from building production systems:
 
-- [GitOps Patterns](patterns/gitops.md) - Declarative infrastructure management
-- [Terraform Module Design](patterns/terraform-modules.md) - Reusable infrastructure components
-- [Observability](patterns/observability.md) - Metrics, logging, and tracing strategies
-- [Agent Architectures](patterns/agent-architectures.md) - AI agent design patterns
+- [GitOps Patterns](engineering-patterns/gitops.md) - Declarative infrastructure management
+- [Terraform Module Design](engineering-patterns/terraform-modules.md) - Reusable infrastructure components
+- [Observability](engineering-patterns/observability.md) - Metrics, logging, and tracing strategies
+- [Agent Architectures](engineering-patterns/agent-architectures.md) - AI agent design patterns
