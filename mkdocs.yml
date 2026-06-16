@@ -82,6 +82,7 @@ nav:
         - Components:
           - Index: projects/flux-infra/components/index.md
           - Foundation services:
+            - Argo CD: projects/flux-infra/components/argocd.md
             - CNPG Operator: projects/flux-infra/components/cnpg-operator.md
             - Cilium: projects/flux-infra/components/cilium.md
             - External Secrets Config: projects/flux-infra/components/external-secrets-config.md
