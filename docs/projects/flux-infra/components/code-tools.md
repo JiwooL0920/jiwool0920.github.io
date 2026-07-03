@@ -1,6 +1,6 @@
 ---
-catalog_sha: 3ae810da5633a72b
-flux_infra_commit: b34ec5b
+catalog_sha: d34fd29d8c92c579
+flux_infra_commit: b49afa1
 generated_at: 2026-07-03
 ---
 
@@ -224,4 +224,4 @@ kubectl -n code-tools logs -l app.kubernetes.io/name=code-tools --tail=100 | gre
 - [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env) — environment variables
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `b34ec5b` · catalog sha `3ae810da5633a72b`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `b49afa1` · catalog sha `d34fd29d8c92c579`*
