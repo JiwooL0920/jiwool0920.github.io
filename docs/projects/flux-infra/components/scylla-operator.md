@@ -1,6 +1,6 @@
 ---
-catalog_sha: d34fd29d8c92c579
-flux_infra_commit: 72f0a19
+catalog_sha: 71f0757401278c36
+flux_infra_commit: 0c31410
 generated_at: 2026-07-03
 ---
 
@@ -187,4 +187,4 @@ kubectl logs -n scylla-operator deploy/scylla-operator --previous | tail -50
 - [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env) — environment variables
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `72f0a19` · catalog sha `d34fd29d8c92c579`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `0c31410` · catalog sha `71f0757401278c36`*
