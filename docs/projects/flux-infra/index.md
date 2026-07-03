@@ -1,6 +1,6 @@
 ---
-catalog_sha: 71f0757401278c36
-flux_infra_commit: ba85b93
+catalog_sha: 9be0573fcf582c2a
+flux_infra_commit: 21f8edb
 generated_at: 2026-07-03
 ---
 
@@ -18,7 +18,7 @@ enabling intelligent parallel deployment with precise `dependsOn` ordering.
 
 | Service | Namespace | Type | Chart | Dependencies |
 |---|---|---|---|---|
-| [Argo CD](https://jiwool0920.github.io/projects/flux-infra/components/argocd/) | `argocd` | HelmRelease | `argo-cd` v7.7.16 | traefik-config, external-secrets-config, redis-sentinel |
+| [Argo CD](https://jiwool0920.github.io/projects/flux-infra/components/argocd/) | `argocd` | HelmRelease | `argo-cd` v7.7.16 | traefik-config, redis-sentinel |
 | [CNPG Operator](https://jiwool0920.github.io/projects/flux-infra/components/cnpg-operator/) | `cnpg-system` | HelmRelease | `cloudnative-pg` v0.24.0 | — |
 | [Cilium](https://jiwool0920.github.io/projects/flux-infra/components/cilium/) | `kube-system` | HelmRelease | `cilium` v1.17.2 | — |
 | [External Secrets Config](https://jiwool0920.github.io/projects/flux-infra/components/external-secrets-config/) | `external-secrets-config` | Kustomization | — | external-secrets-operator, localstack |
@@ -152,4 +152,4 @@ The dependency graph is fully described in each service's Flux Kustomization und
 [`base/services/`](https://github.com/JiwooL0920/flux-infra/tree/develop/base/services/).
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `ba85b93` · catalog sha `71f0757401278c36`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `21f8edb` · catalog sha `9be0573fcf582c2a`*
