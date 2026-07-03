@@ -1,6 +1,6 @@
 ---
 catalog_sha: bbff61e079f91214
-flux_infra_commit: 0110717
+flux_infra_commit: 8ccf211
 generated_at: 2026-07-03
 ---
 
@@ -189,4 +189,4 @@ kubectl logs deployment/pgadmin4 -n pgadmin4 | grep -i 'authentication\|login\|e
 - [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env) — environment variables
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `0110717` · catalog sha `bbff61e079f91214`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `8ccf211` · catalog sha `bbff61e079f91214`*
