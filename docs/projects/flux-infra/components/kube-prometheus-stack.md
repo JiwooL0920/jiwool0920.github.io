@@ -1,6 +1,6 @@
 ---
 catalog_sha: bbff61e079f91214
-flux_infra_commit: 321879f
+flux_infra_commit: dc0790f
 generated_at: 2026-07-03
 ---
 
@@ -260,4 +260,4 @@ kubectl wait --for=condition=available deployment/kube-prometheus-stack-grafana 
 - [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env) — environment variables
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `321879f` · catalog sha `bbff61e079f91214`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `dc0790f` · catalog sha `bbff61e079f91214`*
