@@ -1,6 +1,6 @@
 ---
-catalog_sha: 71f0757401278c36
-flux_infra_commit: ba85b93
+catalog_sha: 9be0573fcf582c2a
+flux_infra_commit: 21f8edb
 generated_at: 2026-07-03
 ---
 
@@ -79,7 +79,6 @@ flowchart TD
   external_secrets_config --> traefik_config
   external_secrets_config --> kube_prometheus_stack
   traefik_config --> argocd
-  external_secrets_config --> argocd
   redis_sentinel --> argocd
   kube_prometheus_stack --> grafana_sa_setup
   external_secrets_config --> loki
@@ -138,4 +137,4 @@ flowchart TD
 | Infrastructure as Code services | 3 | 0 | 3 |
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `ba85b93` · catalog sha `71f0757401278c36`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `21f8edb` · catalog sha `9be0573fcf582c2a`*
