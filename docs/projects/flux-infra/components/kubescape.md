@@ -1,6 +1,6 @@
 ---
 catalog_sha: d34fd29d8c92c579
-flux_infra_commit: f30dc7e
+flux_infra_commit: 72f0a19
 generated_at: 2026-07-03
 ---
 
@@ -229,4 +229,4 @@ kubectl logs -n kubescape -l app.kubernetes.io/component=storage --tail=100 | gr
 - [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env) — environment variables
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `f30dc7e` · catalog sha `d34fd29d8c92c579`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `72f0a19` · catalog sha `d34fd29d8c92c579`*
