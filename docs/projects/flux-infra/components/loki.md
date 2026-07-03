@@ -1,6 +1,6 @@
 ---
 catalog_sha: 71f0757401278c36
-flux_infra_commit: 0c31410
+flux_infra_commit: 29f0e88
 generated_at: 2026-07-03
 ---
 
@@ -246,4 +246,4 @@ kubectl patch pvc -n monitoring -l app.kubernetes.io/name=loki -p '{"spec":{"res
 - [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env) — environment variables
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `0c31410` · catalog sha `71f0757401278c36`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `29f0e88` · catalog sha `71f0757401278c36`*
