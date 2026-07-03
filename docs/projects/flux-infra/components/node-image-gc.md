@@ -1,7 +1,7 @@
 ---
 catalog_sha: bbff61e079f91214
-flux_infra_commit: 63517fb
-generated_at: 2026-07-02
+flux_infra_commit: 577337a
+generated_at: 2026-07-03
 ---
 
 # Node Image GC
@@ -177,4 +177,4 @@ kubectl -n node-maintenance get serviceaccount node-image-gc
 - [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env) — environment variables
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `63517fb` · catalog sha `bbff61e079f91214`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `577337a` · catalog sha `bbff61e079f91214`*

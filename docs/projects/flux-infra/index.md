@@ -1,7 +1,7 @@
 ---
 catalog_sha: bbff61e079f91214
-flux_infra_commit: 63517fb
-generated_at: 2026-07-02
+flux_infra_commit: 577337a
+generated_at: 2026-07-03
 ---
 
 # Flux Infrastructure — Service Overview
@@ -152,4 +152,4 @@ The dependency graph is fully described in each service's Flux Kustomization und
 [`base/services/`](https://github.com/JiwooL0920/flux-infra/tree/develop/base/services/).
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `63517fb` · catalog sha `bbff61e079f91214`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `577337a` · catalog sha `bbff61e079f91214`*
