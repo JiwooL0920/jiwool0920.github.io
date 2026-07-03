@@ -1,6 +1,6 @@
 ---
-catalog_sha: bbff61e079f91214
-flux_infra_commit: dc0790f
+catalog_sha: 3ae810da5633a72b
+flux_infra_commit: b34ec5b
 generated_at: 2026-07-03
 ---
 
@@ -199,4 +199,4 @@ kubectl describe ingressroute traefik-dashboard -n traefik
 - [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env) — environment variables
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `dc0790f` · catalog sha `bbff61e079f91214`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `b34ec5b` · catalog sha `3ae810da5633a72b`*
