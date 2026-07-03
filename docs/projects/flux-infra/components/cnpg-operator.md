@@ -1,6 +1,6 @@
 ---
 catalog_sha: bbff61e079f91214
-flux_infra_commit: e5144f9
+flux_infra_commit: 2f437cf
 generated_at: 2026-07-03
 ---
 
@@ -196,4 +196,4 @@ kubectl -n flux-system annotate kustomization cnpg-operator reconcile.fluxcd.io/
 - [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env) — environment variables
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `e5144f9` · catalog sha `bbff61e079f91214`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `2f437cf` · catalog sha `bbff61e079f91214`*
