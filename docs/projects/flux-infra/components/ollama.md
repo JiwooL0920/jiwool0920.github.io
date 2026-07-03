@@ -1,6 +1,6 @@
 ---
 catalog_sha: bbff61e079f91214
-flux_infra_commit: 2f437cf
+flux_infra_commit: 0110717
 generated_at: 2026-07-03
 ---
 
@@ -202,4 +202,4 @@ kubectl rollout restart deployment/ollama -n ollama
 - [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env) — environment variables
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `2f437cf` · catalog sha `bbff61e079f91214`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `0110717` · catalog sha `bbff61e079f91214`*
