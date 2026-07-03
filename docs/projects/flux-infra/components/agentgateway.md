@@ -1,6 +1,6 @@
 ---
 catalog_sha: bbff61e079f91214
-flux_infra_commit: 577337a
+flux_infra_commit: 30fcc2e
 generated_at: 2026-07-03
 ---
 
@@ -176,4 +176,4 @@ All values sourced from [`base/services/environment.env`](https://github.com/Jiw
 - [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env) — environment variables
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `577337a` · catalog sha `bbff61e079f91214`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `30fcc2e` · catalog sha `bbff61e079f91214`*
