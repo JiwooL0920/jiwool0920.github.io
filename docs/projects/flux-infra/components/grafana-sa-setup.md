@@ -1,6 +1,6 @@
 ---
 catalog_sha: 9be0573fcf582c2a
-flux_infra_commit: 110a975
+flux_infra_commit: a81c3f5
 generated_at: 2026-07-03
 ---
 
@@ -212,4 +212,4 @@ kubectl delete job create-grafana-sa-token -n monitoring && flux reconcile kusto
 - [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env) — environment variables
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `110a975` · catalog sha `9be0573fcf582c2a`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `a81c3f5` · catalog sha `9be0573fcf582c2a`*
