@@ -1,6 +1,6 @@
 ---
-catalog_sha: 9be0573fcf582c2a
-flux_infra_commit: 31fb7e0
+catalog_sha: 13ff1d9ca5d91ec4
+flux_infra_commit: 198a018
 generated_at: 2026-07-05
 ---
 
@@ -90,7 +90,7 @@ enabling intelligent parallel deployment with precise `dependsOn` ordering.
 
 | Service | Namespace | Type | Chart | Dependencies |
 |---|---|---|---|---|
-| [PostgreSQL Cluster](https://jiwool0920.github.io/projects/flux-infra/components/postgresql-cluster/) | `postgresql-cluster` | Kustomization | — | cnpg-operator |
+| [PostgreSQL Cluster](https://jiwool0920.github.io/projects/flux-infra/components/postgresql-cluster/) | `postgresql-cluster` | Kustomization | — | cnpg-operator, external-secrets-config |
 | [Redis Sentinel](https://jiwool0920.github.io/projects/flux-infra/components/redis-sentinel/) | `redis-sentinel` | HelmRelease | `redis` v20.7.0 | external-secrets-config |
 | [ScyllaDB Cluster](https://jiwool0920.github.io/projects/flux-infra/components/scylla-cluster/) | `scylla` | HelmRelease | `scylla` v1.12.0 | scylla-operator, traefik-config |
 
@@ -152,4 +152,4 @@ The dependency graph is fully described in each service's Flux Kustomization und
 [`base/services/`](https://github.com/JiwooL0920/flux-infra/tree/develop/base/services/).
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `31fb7e0` · catalog sha `9be0573fcf582c2a`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `198a018` · catalog sha `13ff1d9ca5d91ec4`*
