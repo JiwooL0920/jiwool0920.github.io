@@ -1,6 +1,6 @@
 ---
-catalog_sha: 9be0573fcf582c2a
-flux_infra_commit: 31fb7e0
+catalog_sha: 13ff1d9ca5d91ec4
+flux_infra_commit: 198a018
 generated_at: 2026-07-05
 ---
 
@@ -38,6 +38,7 @@ This `external-secrets-config` service is not the operator itself — it is the 
 | `traefik-config` | Flux `dependsOn` | Requires External Secrets Config |
 | `kube-prometheus-stack` | Flux `dependsOn` | Requires External Secrets Config |
 | `loki` | Flux `dependsOn` | Requires External Secrets Config |
+| `postgresql-cluster` | Flux `dependsOn` | Requires External Secrets Config |
 | `redis-sentinel` | Flux `dependsOn` | Requires External Secrets Config |
 | `n8n` | Flux `dependsOn` | Requires External Secrets Config |
 | `temporal` | Flux `dependsOn` | Requires External Secrets Config |
@@ -191,4 +192,4 @@ flux reconcile kustomization external-secrets-config
 - [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env) — environment variables
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `31fb7e0` · catalog sha `9be0573fcf582c2a`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `198a018` · catalog sha `13ff1d9ca5d91ec4`*
