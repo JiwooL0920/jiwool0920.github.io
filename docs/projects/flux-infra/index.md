@@ -1,7 +1,7 @@
 ---
-catalog_sha: 13ff1d9ca5d91ec4
-flux_infra_commit: 198a018
-generated_at: 2026-07-05
+catalog_sha: 131d1c2acc629d5d
+flux_infra_commit: bbd51a0
+generated_at: 2026-07-15
 ---
 
 # Flux Infrastructure — Service Overview
@@ -24,7 +24,7 @@ enabling intelligent parallel deployment with precise `dependsOn` ordering.
 | [External Secrets Config](https://jiwool0920.github.io/projects/flux-infra/components/external-secrets-config/) | `external-secrets-config` | Kustomization | — | external-secrets-operator, localstack |
 | [External Secrets Operator](https://jiwool0920.github.io/projects/flux-infra/components/external-secrets-operator/) | `secrets-manager` | HelmRelease | `external-secrets` v0.10.7 | localstack |
 | [Grafana SA Setup](https://jiwool0920.github.io/projects/flux-infra/components/grafana-sa-setup/) | `grafana-sa-setup` | Job | — | kube-prometheus-stack |
-| [Kube Prometheus Stack](https://jiwool0920.github.io/projects/flux-infra/components/kube-prometheus-stack/) | `monitoring` | HelmRelease | `kube-prometheus-stack` v65.8.1 | external-secrets-config |
+| [Kube Prometheus Stack](https://jiwool0920.github.io/projects/flux-infra/components/kube-prometheus-stack/) | `monitoring` | HelmRelease | `kube-prometheus-stack` v65.8.1 | external-secrets-config, postgresql-cluster |
 | [LocalStack](https://jiwool0920.github.io/projects/flux-infra/components/localstack/) | `localstack` | HelmRelease | `localstack` v0.6.15 | — |
 | [Metrics Server](https://jiwool0920.github.io/projects/flux-infra/components/metrics-server/) | `kube-system` | HelmRelease | `metrics-server` v3.12.2 | — |
 | [Scylla Operator](https://jiwool0920.github.io/projects/flux-infra/components/scylla-operator/) | `scylla-operator` | HelmRelease | `scylla-operator` v1.12.0 | — |
@@ -152,4 +152,4 @@ The dependency graph is fully described in each service's Flux Kustomization und
 [`base/services/`](https://github.com/JiwooL0920/flux-infra/tree/develop/base/services/).
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `198a018` · catalog sha `13ff1d9ca5d91ec4`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `bbd51a0` · catalog sha `131d1c2acc629d5d`*
