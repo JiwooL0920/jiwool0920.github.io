@@ -1,7 +1,7 @@
 ---
-catalog_sha: 13ff1d9ca5d91ec4
-flux_infra_commit: 198a018
-generated_at: 2026-07-05
+catalog_sha: 131d1c2acc629d5d
+flux_infra_commit: bbd51a0
+generated_at: 2026-07-15
 ---
 
 # Kube Prometheus Stack
@@ -30,6 +30,7 @@ The chart also bundles recording rules and alerts for Kubernetes internals (kube
 | Service | Reason | Status |
 |---|---|---|
 | `external-secrets-config` | Flux `dependsOn` | Active |
+| `postgresql-cluster` | Flux `dependsOn` | Active |
 
 ### Downstream — services that depend on Kube Prometheus Stack
 
@@ -260,4 +261,4 @@ kubectl wait --for=condition=available deployment/kube-prometheus-stack-grafana 
 - [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env) — environment variables
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `198a018` · catalog sha `13ff1d9ca5d91ec4`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `bbd51a0` · catalog sha `131d1c2acc629d5d`*
