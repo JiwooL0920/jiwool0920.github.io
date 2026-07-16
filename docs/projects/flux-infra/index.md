@@ -1,6 +1,6 @@
 ---
-catalog_sha: afcf27119728b917
-flux_infra_commit: 2c9dabd
+catalog_sha: 7281dbc0340b7559
+flux_infra_commit: dab13c6
 generated_at: 2026-07-16
 ---
 
@@ -109,7 +109,7 @@ enabling intelligent parallel deployment with precise `dependsOn` ordering.
 
 | Service | Namespace | Type | Chart | Dependencies |
 |---|---|---|---|---|
-| [AgentGateway](https://jiwool0920.github.io/projects/flux-infra/components/agentgateway/) | `agentgateway-system` | HelmRelease | `agentgateway` vv1.3.0-alpha.1 | gateway-api-crds, kagent, traefik, external-secrets-config |
+| [AgentGateway](https://jiwool0920.github.io/projects/flux-infra/components/agentgateway/) | `agentgateway-system` | HelmRelease | `agentgateway` vv1.3.1 | gateway-api-crds, kagent, traefik, external-secrets-config |
 | [AgentGateway Config](https://jiwool0920.github.io/projects/flux-infra/components/agentgateway-config/) | `agentgateway-config` | Kustomization | — | agentgateway, opentelemetry-collector |
 | [Code Tools](https://jiwool0920.github.io/projects/flux-infra/components/code-tools/) | `code-tools` | Deployment | — | — |
 | [Gateway API CRDs](https://jiwool0920.github.io/projects/flux-infra/components/gateway-api-crds/) | `gateway-api-crds` | Kustomization | — | — |
@@ -152,4 +152,4 @@ The dependency graph is fully described in each service's Flux Kustomization und
 [`base/services/`](https://github.com/JiwooL0920/flux-infra/tree/develop/base/services/).
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `2c9dabd` · catalog sha `afcf27119728b917`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `dab13c6` · catalog sha `7281dbc0340b7559`*
