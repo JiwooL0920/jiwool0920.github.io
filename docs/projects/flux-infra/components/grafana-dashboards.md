@@ -1,6 +1,6 @@
 ---
 catalog_sha: afcf27119728b917
-flux_infra_commit: d620daf
+flux_infra_commit: 2c9dabd
 generated_at: 2026-07-16
 ---
 
@@ -196,4 +196,4 @@ kubectl get grafana grafana -n monitoring -o yaml | grep -A 5 'status:'
 - [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env) — environment variables
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `d620daf` · catalog sha `afcf27119728b917`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `2c9dabd` · catalog sha `afcf27119728b917`*
