@@ -1,6 +1,6 @@
 ---
-catalog_sha: afcf27119728b917
-flux_infra_commit: 2c9dabd
+catalog_sha: 7281dbc0340b7559
+flux_infra_commit: dab13c6
 generated_at: 2026-07-16
 ---
 
@@ -12,7 +12,7 @@ All 41 services in flux-infra, including disabled ones.
 
 | Service | Layer | Namespace | Chart | Version |
 |---|---|---|---|---|
-| [AgentGateway](https://jiwool0920.github.io/projects/flux-infra/components/agentgateway/) | AI agent platform | `agentgateway-system` | `agentgateway` | vv1.3.0-alpha.1 |
+| [AgentGateway](https://jiwool0920.github.io/projects/flux-infra/components/agentgateway/) | AI agent platform | `agentgateway-system` | `agentgateway` | vv1.3.1 |
 | [AgentGateway Config](https://jiwool0920.github.io/projects/flux-infra/components/agentgateway-config/) | AI agent platform | `agentgateway-config` | — | — |
 | [Argo CD](https://jiwool0920.github.io/projects/flux-infra/components/argocd/) | Foundation services | `argocd` | `argo-cd` | v7.7.16 |
 | [Cilium](https://jiwool0920.github.io/projects/flux-infra/components/cilium/) | Foundation services | `kube-system` | `cilium` | v1.17.2 |
@@ -60,4 +60,4 @@ All 41 services in flux-infra, including disabled ones.
 | Scylla Manager | Database management services | Commented out in base/services/kustomization.yaml |
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `2c9dabd` · catalog sha `afcf27119728b917`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `dab13c6` · catalog sha `7281dbc0340b7559`*

@@ -1,6 +1,6 @@
 ---
-catalog_sha: afcf27119728b917
-flux_infra_commit: 2c9dabd
+catalog_sha: 7281dbc0340b7559
+flux_infra_commit: dab13c6
 generated_at: 2026-07-16
 ---
 
@@ -17,7 +17,7 @@ The project uses Gateway API as its configuration surface, meaning agent routing
 | Property | Value |
 |---|---|
 | **Namespace** | `agentgateway-system` |
-| **Type** | HelmRelease (chart: `agentgateway` vv1.3.0-alpha.1) |
+| **Type** | HelmRelease (chart: `agentgateway` vv1.3.1) |
 | **Layer** | AI agent platform |
 | **Status** | Enabled |
 | **Source** | [`apps/base/agentgateway/base/`](https://github.com/JiwooL0920/flux-infra/tree/develop/apps/base/agentgateway/base/) |
@@ -156,7 +156,7 @@ All values sourced from [`base/services/environment.env`](https://github.com/Jiw
 
 | Parameter | Dev | Prod |
 |---|---|---|
-| `AGENTGATEWAY_CHART_VERSION` | `v1.3.0-alpha.1` | `v1.3.0-alpha.1` |
+| `AGENTGATEWAY_CHART_VERSION` | `v1.3.1` | `v1.3.1` |
 | `AGENTGATEWAY_CPU_LIMIT` | `500m` | `500m` |
 | `AGENTGATEWAY_CPU_REQUEST` | `100m` | `100m` |
 | `AGENTGATEWAY_MEMORY_LIMIT` | `512Mi` | `512Mi` |
@@ -176,4 +176,4 @@ All values sourced from [`base/services/environment.env`](https://github.com/Jiw
 - [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env) — environment variables
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `2c9dabd` · catalog sha `afcf27119728b917`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `dab13c6` · catalog sha `7281dbc0340b7559`*
