@@ -1,7 +1,7 @@
 ---
-catalog_sha: 131d1c2acc629d5d
-flux_infra_commit: bbd51a0
-generated_at: 2026-07-15
+catalog_sha: afcf27119728b917
+flux_infra_commit: d620daf
+generated_at: 2026-07-16
 ---
 
 # kagent
@@ -171,7 +171,7 @@ All values sourced from [`base/services/environment.env`](https://github.com/Jiw
 
 | Parameter | Dev | Prod |
 |---|---|---|
-| `KAGENT_CHART_VERSION` | `0.9.5` | `0.9.5` |
+| `KAGENT_CHART_VERSION` | `0.9.11` | `0.9.11` |
 | `KAGENT_CONTROLLER_CPU_LIMIT` | `500m` | `1000m` |
 | `KAGENT_CONTROLLER_CPU_REQUEST` | `100m` | `100m` |
 | `KAGENT_CONTROLLER_MEMORY_LIMIT` | `2Gi` | `512Mi` |
@@ -196,4 +196,4 @@ All values sourced from [`base/services/environment.env`](https://github.com/Jiw
 - [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env) — environment variables
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `bbd51a0` · catalog sha `131d1c2acc629d5d`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `d620daf` · catalog sha `afcf27119728b917`*
