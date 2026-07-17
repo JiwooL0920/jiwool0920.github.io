@@ -157,8 +157,8 @@ nav:
       - "Agent Architectures": engineering-patterns/agent-architectures.md
       - "GitOps Patterns": engineering-patterns/gitops.md
       - "Observability": engineering-patterns/observability.md
+      - "OpenSpec": engineering-patterns/openspec.md
       - "Terraform Module Design": engineering-patterns/terraform-modules.md
-      - "Testing": engineering-patterns/Testing.md
   # <<< sync-nav
 extra_css:
   - stylesheets/extra.css
