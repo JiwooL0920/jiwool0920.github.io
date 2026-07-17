@@ -1,6 +1,6 @@
 ---
-catalog_sha: 7281dbc0340b7559
-flux_infra_commit: de245e8
+catalog_sha: c57d485ae12bc679
+flux_infra_commit: afaa467
 generated_at: 2026-07-17
 ---
 
@@ -29,7 +29,7 @@ All 41 services in flux-infra, including disabled ones.
 | [kagent](https://jiwool0920.github.io/projects/flux-infra/components/kagent/) | AI agent platform | `kagent` | — | — |
 | [KEDA](https://jiwool0920.github.io/projects/flux-infra/components/keda/) | Event-driven autoscaling | `keda` | `keda` | v2.16.1 |
 | [Kube Prometheus Stack](https://jiwool0920.github.io/projects/flux-infra/components/kube-prometheus-stack/) | Foundation services | `monitoring` | `kube-prometheus-stack` | v65.8.1 |
-| [Kubescape](https://jiwool0920.github.io/projects/flux-infra/components/kubescape/) | Security and cost observability | `kubescape` | `kubescape-operator` | v1.30.4 |
+| [Kubescape](https://jiwool0920.github.io/projects/flux-infra/components/kubescape/) | Security and cost observability | `kubescape` | `kubescape-operator` | v1.30.7 |
 | [LocalStack](https://jiwool0920.github.io/projects/flux-infra/components/localstack/) | Foundation services | `localstack` | `localstack` | v0.6.15 |
 | [Loki](https://jiwool0920.github.io/projects/flux-infra/components/loki/) | Logging stack services | `monitoring` | `loki` | v6.37.0 |
 | [Metrics Server](https://jiwool0920.github.io/projects/flux-infra/components/metrics-server/) | Foundation services | `kube-system` | `metrics-server` | v3.12.2 |
@@ -60,4 +60,4 @@ All 41 services in flux-infra, including disabled ones.
 | Scylla Manager | Database management services | Commented out in base/services/kustomization.yaml |
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `de245e8` · catalog sha `7281dbc0340b7559`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `afaa467` · catalog sha `c57d485ae12bc679`*

@@ -1,6 +1,6 @@
 ---
-catalog_sha: 7281dbc0340b7559
-flux_infra_commit: de245e8
+catalog_sha: c57d485ae12bc679
+flux_infra_commit: afaa467
 generated_at: 2026-07-17
 ---
 
@@ -192,4 +192,4 @@ kubectl get pods -n traefik -l app.kubernetes.io/name=traefik -o yaml | grep -A5
 - [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env) — environment variables
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `de245e8` · catalog sha `7281dbc0340b7559`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `afaa467` · catalog sha `c57d485ae12bc679`*

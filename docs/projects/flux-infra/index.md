@@ -1,6 +1,6 @@
 ---
-catalog_sha: 7281dbc0340b7559
-flux_infra_commit: de245e8
+catalog_sha: c57d485ae12bc679
+flux_infra_commit: afaa467
 generated_at: 2026-07-17
 ---
 
@@ -122,7 +122,7 @@ enabling intelligent parallel deployment with precise `dependsOn` ordering.
 
 | Service | Namespace | Type | Chart | Dependencies |
 |---|---|---|---|---|
-| [Kubescape](https://jiwool0920.github.io/projects/flux-infra/components/kubescape/) | `kubescape` | HelmRelease | `kubescape-operator` v1.30.4 | metrics-server, kube-prometheus-stack |
+| [Kubescape](https://jiwool0920.github.io/projects/flux-infra/components/kubescape/) | `kubescape` | HelmRelease | `kubescape-operator` v1.30.7 | metrics-server, kube-prometheus-stack |
 | [OpenCost](https://jiwool0920.github.io/projects/flux-infra/components/opencost/) | `opencost` | HelmRelease | `opencost` v2.5.12 | kube-prometheus-stack |
 
 ### Database UI services
@@ -152,4 +152,4 @@ The dependency graph is fully described in each service's Flux Kustomization und
 [`base/services/`](https://github.com/JiwooL0920/flux-infra/tree/develop/base/services/).
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `de245e8` · catalog sha `7281dbc0340b7559`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `afaa467` · catalog sha `c57d485ae12bc679`*
