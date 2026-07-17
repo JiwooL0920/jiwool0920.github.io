@@ -1,7 +1,7 @@
 ---
 catalog_sha: 7281dbc0340b7559
-flux_infra_commit: dab13c6
-generated_at: 2026-07-16
+flux_infra_commit: de245e8
+generated_at: 2026-07-17
 ---
 
 # Architecture — Dependency Graph
@@ -139,4 +139,4 @@ flowchart TD
 | Infrastructure as Code services | 3 | 0 | 3 |
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `dab13c6` · catalog sha `7281dbc0340b7559`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `de245e8` · catalog sha `7281dbc0340b7559`*
