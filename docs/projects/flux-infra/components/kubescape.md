@@ -1,6 +1,6 @@
 ---
-catalog_sha: 7281dbc0340b7559
-flux_infra_commit: de245e8
+catalog_sha: c57d485ae12bc679
+flux_infra_commit: afaa467
 generated_at: 2026-07-17
 ---
 
@@ -17,9 +17,9 @@ What distinguishes Kubescape from purely external scanning tools (Snyk Container
 | Property | Value |
 |---|---|
 | **Namespace** | `kubescape` |
-| **Type** | HelmRelease (chart: `kubescape-operator` v1.30.4) |
+| **Type** | HelmRelease (chart: `kubescape-operator` v1.30.7) |
 | **Layer** | Security and cost observability |
-| **Chart** | [`kubescape-operator`](https://kubescape.github.io/helm-charts/) v1.30.4 |
+| **Chart** | [`kubescape-operator`](https://kubescape.github.io/helm-charts/) v1.30.7 |
 | **Status** | Enabled |
 | **Source** | [`apps/base/kubescape/`](https://github.com/JiwooL0920/flux-infra/tree/develop/apps/base/kubescape/) |
 
@@ -127,7 +127,7 @@ All values sourced from [`base/services/environment.env`](https://github.com/Jiw
 
 | Parameter | Dev | Prod |
 |---|---|---|
-| `KUBESCAPE_CHART_VERSION` | `1.30.4` | `1.30.4` |
+| `KUBESCAPE_CHART_VERSION` | `1.30.7` | `1.30.7` |
 | `KUBESCAPE_CPU_LIMIT` | `500m` | `500m` |
 | `KUBESCAPE_CPU_REQUEST` | `100m` | `100m` |
 | `KUBESCAPE_MEMORY_LIMIT` | `512Mi` | `512Mi` |
@@ -229,4 +229,4 @@ kubectl logs -n kubescape -l app.kubernetes.io/component=storage --tail=100 | gr
 - [`base/services/environment.env`](https://github.com/JiwooL0920/flux-infra/blob/develop/base/services/environment.env) — environment variables
 
 ---
-*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `de245e8` · catalog sha `7281dbc0340b7559`*
+*Generated from [service-catalog.json](https://github.com/JiwooL0920/flux-infra/blob/develop/service-catalog.json) at commit `afaa467` · catalog sha `c57d485ae12bc679`*
